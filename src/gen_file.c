@@ -70,6 +70,10 @@ int add_to_list(char* list, char* flag, char* datetime, char* file){
         return -1;
     }
     sprintf(content, "%s %s %s", flag, datetime, file);
+
+    #ifdef DEBUG
+    printf("%s\n", content);
+    #endif
     if (write(fd, content, strlen(content)) == -1){
         perror(list);
         close(fd);
@@ -86,13 +90,17 @@ void add(char* list, char* dir, char* flag){
     char path[DIR_LEN+FILE_LEN+1];
     char datetime[20];
 
-    get_filename(flag, file);
-    sprintf(path, "%s/%s", dir, file);
-
     if (make_dir(dir) == -1){
         fprintf(stderr, "%s exists but is not a directory\n", dir);
         exit(1);
     }
+
+    get_filename(flag, file);
+    sprintf(path, "%s/%s", dir, file);
+    #ifdef DEBUG
+    printf("Note file name: %s\n", path);
+    #endif
+
     if (make_file(path, O_CREAT | O_EXCL | O_WRONLY) == -1){
         // fprintf(stderr, "%s exists but is not a directory\n", dir);
         exit(1);
