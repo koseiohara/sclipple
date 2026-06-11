@@ -1,6 +1,6 @@
 
 EXE = nt
-OBJS = git_run.o main.o
+OBJS = get_setting.o git_run.o main.o
 
 CC = gcc
 CFLAGS = -O2 -Wall
@@ -13,11 +13,16 @@ all : $(EXE)
 $(EXE) : $(OBJS)
 	$(CC) -o $@ $^
 
-.PHONY: clean re
+.PHONY: clean re debug
 
 clean :
 	rm -vf *.o $(EXE)
 
 re : clean all
+
+debug : clean
+
+debug : CFLAGS += -O0 -DDEBUG
+debug : clean all
 
 

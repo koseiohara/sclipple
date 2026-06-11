@@ -56,6 +56,9 @@ int memo_edit(char* dir, char* editor, int editor_options_num, char** editor_opt
         perror("fork");
         return -1;
     }
+
+    wait(NULL);
+    return 0;
 }
 
 
