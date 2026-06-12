@@ -25,11 +25,11 @@ void get_command(char* editor, const int editor_options_num, char* const* editor
         #endif
     }
 
-    base_idx = editor_options_num;
+    base_idx = 1 + editor_options_num;
     for (i = 0; i < file_num; i = i + 1){
-        #ifdef DEBUG
-        printf("file[%d] = %s\n", i, file[i]);
-        #endif
+        // #ifdef DEBUG
+        // printf("file[%d] = %s\n", i, file[i]);
+        // #endif
         command[i+base_idx] = file[i];
         #ifdef DEBUG
         printf("command[%d] = %s: original=file[%d]\n", i+base_idx, command[i+base_idx], i);

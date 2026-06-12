@@ -1,6 +1,6 @@
 
 EXE = sclipple
-OBJS = help.o get_setting.o datetime.o filename.o read_list.o git_run.o memo_add.o memo_edit.o main.o
+OBJS = help.o get_setting.o datetime.o names.o read_list.o git_run.o memo_add.o memo_edit.o main.o
 
 CC = gcc
 CFLAGS = -O2 -Wall

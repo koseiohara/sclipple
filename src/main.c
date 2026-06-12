@@ -3,12 +3,13 @@
 #include <stdio.h>
 #include <strings.h>
 #include <string.h>
+#include <time.h>
 
 #include "globals.h"
 #include "help.h"
 #include "get_setting.h"
 #include "git_run.h"
-#include "filename.h"
+#include "names.h"
 #include "memo_add.h"
 #include "memo_edit.h"
 
@@ -20,9 +21,12 @@ int main(int argc, char** argv){
     char   subdir[SUBDIR_LEN];
     char   rc[RC_LEN];
     char   list[LIST_APATH_LEN];
+    char   ext[EXT_LEN];
     int    nwords;
     int    stat;
     int    i;
+    time_t now;
+    struct tm* lt;
 
     if (get_env("HOME", &home) == -1){
         return 1;
@@ -51,13 +55,16 @@ int main(int argc, char** argv){
         return 0;
     }
 
+    now = time(NULL);
+    lt  = localtime(&now);
+
     if (strcmp(argv[1], "add") == 0){
         if (argc == 2){
             show_help();
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
-                stat = add(LISTNAME, dir, subdir, argv[i]);
+                stat = add(LISTNAME, dir, subdir, argv[i], ext, lt);
                 if (stat == -1){
                     fprintf(stderr, "Failed to make new note: %s. %s is exist.\n", argv[i], argv[i]);
                 }

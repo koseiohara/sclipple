@@ -8,10 +8,11 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "globals.h"
 #include "datetime.h"
-#include "filename.h"
+#include "names.h"
 #include "read_list.h"
 
 
@@ -101,7 +102,7 @@ int add_to_list(const char* list, const char* flag, const char* datetime, const 
 // if successfully added, return 0
 // if flag is exist, return -1
 // otherwise, stop process
-int add(const char* list, const char* dir, const char* note_stock, char* flag){
+int add(const char* list, const char* dir, const char* note_stock, char* flag, char* ext, struct tm* clock){
     char file[FILE_LEN];
     char path[DIR_LEN+SUBDIR_LEN+FILE_LEN+2];
     char list_path[DIR_LEN+LIST_LEN+1];
@@ -129,7 +130,8 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag){
         exit(1);
     }
 
-    get_filename(flag, file);
+    get_datetime(clock, '\0', datetime);
+    get_filename(flag, datetime, ext, file);
     sprintf(path, "%s/%s", note_stock, file);
     sprintf(list_path, "%s/%s", dir, list);
     #ifdef DEBUG
@@ -163,7 +165,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag){
         exit(1);
     }
 
-    get_datetime(datetime);
+    get_datetime(clock, '-', datetime);
     if (add_to_list(list_path, flag, datetime, path) == -1){
         exit(1);
     }
