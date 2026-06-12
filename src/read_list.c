@@ -22,7 +22,7 @@ int read_list_by_key(char* list, char* target_flag, int col, char* result){
     fp = fopen(list, "r");
 
     while(fgets(line, sizeof(line), fp) != NULL){
-        flag = strtok(line, " ");
+        flag = strtok(line, ",");
         if (strcmp(flag, target_flag) == 0){
             if (col == 0){
                 // result = flag;
@@ -30,7 +30,7 @@ int read_list_by_key(char* list, char* target_flag, int col, char* result){
             }
             i = 1;
             while (flag != NULL){
-                result = strtok(NULL, " ");
+                result = strtok(NULL, ",");
                 if (i == col){
                     return 0;
                 }
