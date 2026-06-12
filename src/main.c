@@ -1,5 +1,6 @@
 
-// #include <stdlib.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <strings.h>
 #include <string.h>
 
@@ -7,19 +8,38 @@
 #include "help.h"
 #include "get_setting.h"
 #include "git_run.h"
+#include "filename.h"
 #include "memo_add.h"
 
 int main(int argc, char** argv){
     char editor[] = "vim -p";
     char** editor_commands;
+    char*  home;
+    char   dir[DIR_LEN];
+    char   rc[RC_LEN];
     int  nwords;
     int  i;
+
+    if (get_env("HOME", &home) == -1){
+        return 1;
+    }
+    #ifdef DEBUG
+    printf("$HOME = %s\n", home);
+    #endif
+
+    sprintf(dir, "%s/%s", home, DIR);
+    sprintf(rc , "%s/%s", home, RCNAME);
+    #ifdef DEBUG
+    printf("dir = %s\n", dir);
+    printf("rc  = %s\n", rc);
+    #endif
+
 
     if (argc == 1){
         show_help();
         return 0;
     } else if (strcmp(argv[1], "git") == 0){
-        git_run(DIR, &argv[1]);
+        git_run(dir, &argv[1]);
         return 0;
     }
 
@@ -29,7 +49,7 @@ int main(int argc, char** argv){
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
-                add(LISTNAME, DIR, SUBDIR, argv[i]);
+                add(LISTNAME, dir, SUBDIR, argv[i]);
             }
         }
 

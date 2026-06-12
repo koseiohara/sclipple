@@ -21,13 +21,28 @@ int make_dir(char* dir){
     struct stat st;
 
     if (stat(dir, &st) == 0){
+        #ifdef DEBUG
+        printf("%s already exist\n", dir);
+        #endif
         if (S_ISDIR(st.st_mode)){
+            #ifdef DEBUG
+            printf("%s is a directory\n", dir);
+            #endif
             return 0;
         } else {
+            #ifdef DEBUG
+            printf("%s is NOT a directory\n", dir);
+            #endif
             return -1;
         }
     } else {
-        mkdir(dir, 0731);
+        #ifdef DEBUG
+        printf("mkdir %s\n", dir);
+        #endif
+        if (mkdir(dir, 0731) == -1){
+            perror(dir);
+            return -2;
+        }
         return 0;
     }
 }
@@ -59,7 +74,7 @@ int make_file(char* path, int cond){
 // otherwise, return 0
 int add_to_list(char* list, char* flag, char* datetime, char* file){
     int fd;
-    char list_path[DIR_LEN+FILE_LEN+1];
+    // char list_path[DIR_LEN+FILE_LEN+1];
     char content[FLAG_LEN+DIR_LEN+FILE_LEN+24];
 
     fd = open(list, O_WRONLY | O_APPEND);
@@ -93,8 +108,11 @@ int add(char* list, char* dir, char* subdir, char* flag){
     char datetime[20];
     int  stat;
 
-    if (make_dir(dir) == -1){
-        fprintf(stderr, "%s exists but is not a directory\n", dir);
+    stat = make_dir(dir);
+    if (stat < 0){
+        if (stat == -1){
+            fprintf(stderr, "%s exists but is not a directory\n", dir);
+        }
         exit(1);
     }
 

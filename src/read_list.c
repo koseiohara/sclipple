@@ -45,7 +45,7 @@ int read_list_by_key(char* list, char* target_flag, int col, char* result){
 }
 
 int flag_exist_check(char* list, char* flag){
-    char* dummy;
+    char dummy[128];
     return read_list_by_key(list, flag, 0, dummy);
 }
 
@@ -55,6 +55,7 @@ int get_datetime_by_key(char* list, char* flag, char* datetime){
         perror("list");
         return -1;
     }
+    return 0;
 }
 
 
@@ -63,6 +64,7 @@ int get_filename_by_key(char* list, char* flag, char* filename){
         perror("list");
         return -1;
     }
+    return 0;
 }
 
 
