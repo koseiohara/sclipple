@@ -1,3 +1,3 @@
 
-int add(char* list, char* dir, char* subdir, char* flag);
+int add(const char* list, const char* dir, const char* subdir, const char* flag);
 

@@ -17,7 +17,7 @@
 
 // if directory does not exist, run mkdir()
 // if file, return -1
-int make_dir(char* dir){
+int make_dir(const char* dir){
     struct stat st;
 
     if (stat(dir, &st) == 0){
@@ -51,20 +51,20 @@ int make_dir(char* dir){
 // if file does not exist, open and close the specified file to make it
 // if already exist, return -1
 // if failed to open, return -2
-int make_file(char* path, int cond){
+int make_file(const char* path, const int cond){
     struct stat st;
     int fd;
 
     if (stat(path, &st) != 0){
         fd = open(path, cond, 0644);
         if (fd == -1){
-            perror("open");
-            return -1;
+            perror(path);
+            return -2;
         }
         close(fd);
         return 0;
     } else {
-        perror("open");
+        // perror(path);
         return -1;
     }
 }
@@ -72,7 +72,7 @@ int make_file(char* path, int cond){
 
 // if failed to open list file or failed to write info to list, return -1
 // otherwise, return 0
-int add_to_list(char* list, char* flag, char* datetime, char* file){
+int add_to_list(const char* list, const char* flag, const char* datetime, const char* file){
     int fd;
     // char list_path[DIR_LEN+FILE_LEN+1];
     char content[FLAG_LEN+DIR_LEN+FILE_LEN+24];
@@ -82,7 +82,7 @@ int add_to_list(char* list, char* flag, char* datetime, char* file){
         perror(list);
         return -1;
     }
-    sprintf(content, "%s,%s,%s", flag, datetime, file);
+    sprintf(content, "%s,%s,%s\n", flag, datetime, file);
 
     #ifdef DEBUG
     printf("%s\n", content);
@@ -101,12 +101,17 @@ int add_to_list(char* list, char* flag, char* datetime, char* file){
 // if successfully added, return 0
 // if flag is exist, return -1
 // otherwise, stop process
-int add(char* list, char* dir, char* subdir, char* flag){
+int add(const char* list, const char* dir, const char* note_stock, const char* flag){
     char file[FILE_LEN];
     char path[DIR_LEN+SUBDIR_LEN+FILE_LEN+2];
     char list_path[DIR_LEN+LIST_LEN+1];
     char datetime[20];
     int  stat;
+
+    if (strlen(flag) >= FLAG_LEN){
+        fprintf(stderr, "Too long keyword: %s. Length should be less than %d", flag, FLAG_LEN);
+        exit(1);
+    }
 
     stat = make_dir(dir);
     if (stat < 0){
@@ -116,26 +121,46 @@ int add(char* list, char* dir, char* subdir, char* flag){
         exit(1);
     }
 
+    stat = make_dir(note_stock);
+    if (stat < 0){
+        if (stat == -1){
+            fprintf(stderr, "%s exists but is not a directory\n", dir);
+        }
+        exit(1);
+    }
+
     get_filename(flag, file);
-    sprintf(path, "%s/%s/%s", dir, subdir, file);
+    sprintf(path, "%s/%s", note_stock, file);
     sprintf(list_path, "%s/%s", dir, list);
     #ifdef DEBUG
     printf("Note file name: %s\n", path);
     printf("List file name: %s\n", list_path);
     #endif
 
-    if (make_file(path, O_CREAT | O_EXCL | O_WRONLY) < 0){
-        // fprintf(stderr, "%s exists but is not a directory\n", dir);
+    stat = make_file(list_path, O_CREAT | O_WRONLY);
+    if (stat == -2){
         exit(1);
     }
 
-    stat = make_file(list_path, O_CREAT | O_WRONLY);
-    if (stat == -1){
-        return -1;
-    } else if (stat == -2){
+    stat = flag_exist_check(list_path, flag);
+    if (stat < 0){
+        return stat;
+    }
+    #ifdef DEBUG
+    printf("%s: Passed Flag Existence Check\n", flag);
+    #endif
+
+    stat = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
+    if (stat < 0){
+        if (stat == -1){
+            fprintf(stderr, "%s is exists\n", dir);
+            exit(1);
+        } else if (stat == -2){
+            fprintf(stderr, "Failed to open %s\n", dir);
+            exit(1);
+        }
+        fprintf(stderr, "Undefined Error\n");
         exit(1);
-    } else{
-        flag_exist_check(list_path, flag);
     }
 
     get_datetime(datetime);

@@ -10,15 +10,18 @@
 #include "git_run.h"
 #include "filename.h"
 #include "memo_add.h"
+#include "memo_edit.h"
 
 int main(int argc, char** argv){
-    char editor[] = "vim -p";
+    char editor[] = "nvim -p";
     char** editor_commands;
     char*  home;
     char   dir[DIR_LEN];
+    char   subdir[SUBDIR_LEN];
     char   rc[RC_LEN];
-    int  nwords;
-    int  i;
+    int    nwords;
+    int    stat;
+    int    i;
 
     if (get_env("HOME", &home) == -1){
         return 1;
@@ -27,8 +30,9 @@ int main(int argc, char** argv){
     printf("$HOME = %s\n", home);
     #endif
 
-    sprintf(dir, "%s/%s", home, DIR);
-    sprintf(rc , "%s/%s", home, RCNAME);
+    sprintf(dir   , "%s/%s", home, DIR);
+    sprintf(subdir, "%s/%s", dir , SUBDIR);
+    sprintf(rc    , "%s/%s", home, RCNAME);
     #ifdef DEBUG
     printf("dir = %s\n", dir);
     printf("rc  = %s\n", rc);
@@ -49,7 +53,10 @@ int main(int argc, char** argv){
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
-                add(LISTNAME, dir, SUBDIR, argv[i]);
+                stat = add(LISTNAME, dir, subdir, argv[i]);
+                if (stat == -1){
+                    fprintf(stderr, "Failed to make new note: %s. %s is exist.\n", argv[i], argv[i]);
+                }
             }
         }
 
@@ -60,6 +67,11 @@ int main(int argc, char** argv){
     } else if (strcmp(argv[1], "show") == 0){
     } else {
         separate_words(editor, &nwords, &editor_commands);
+// int memo_edit(const char* dir, char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char* const* file){
+        stat = memo_edit(subdir, editor_commands[0], nwords, &editor_commands[1], argc, &argv[1]);
+        if (stat == -1){
+            return 1;
+        }
     }
 
     return 0;

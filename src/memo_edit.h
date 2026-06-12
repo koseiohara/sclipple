@@ -1,3 +1,3 @@
 
-int memo_edit(char* dir, char* editor, int editor_options_num, char** editor_options, int file_num, char** file);
+int memo_edit(const char* dir, char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char* const* file);
 

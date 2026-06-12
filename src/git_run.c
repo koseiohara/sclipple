@@ -4,7 +4,7 @@
 #include <sys/wait.h>
 
 
-int git_run(char* dir, char** git_cmmd){
+int git_run(const char* dir, char* const* git_cmmd){
     pid_t pid;
 
     pid = fork();
