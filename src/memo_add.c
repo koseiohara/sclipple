@@ -101,7 +101,7 @@ int add_to_list(const char* list, const char* flag, const char* datetime, const 
 // if successfully added, return 0
 // if flag is exist, return -1
 // otherwise, stop process
-int add(const char* list, const char* dir, const char* note_stock, const char* flag){
+int add(const char* list, const char* dir, const char* note_stock, char* flag){
     char file[FILE_LEN];
     char path[DIR_LEN+SUBDIR_LEN+FILE_LEN+2];
     char list_path[DIR_LEN+LIST_LEN+1];

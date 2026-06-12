@@ -59,9 +59,11 @@ void separate_words(char* editor, int* n, char*** output){
             curr_space = false;
             if (prev_space){
                 #ifdef DEBUG
-                printf(" ... increment word counter\n");
                 #endif
                 (*output)[j] = &editor[i];
+                #ifdef DEBUG
+                printf(" ... new word defined: %s\n", (*output)[j]);
+                #endif
                 j = j + 1;
             }
             #ifdef DEBUG

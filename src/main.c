@@ -19,6 +19,7 @@ int main(int argc, char** argv){
     char   dir[DIR_LEN];
     char   subdir[SUBDIR_LEN];
     char   rc[RC_LEN];
+    char   list[LIST_APATH_LEN];
     int    nwords;
     int    stat;
     int    i;
@@ -33,9 +34,12 @@ int main(int argc, char** argv){
     sprintf(dir   , "%s/%s", home, DIR);
     sprintf(subdir, "%s/%s", dir , SUBDIR);
     sprintf(rc    , "%s/%s", home, RCNAME);
+    sprintf(list  , "%s/%s", dir , LISTNAME);
     #ifdef DEBUG
-    printf("dir = %s\n", dir);
-    printf("rc  = %s\n", rc);
+    printf("dir   = %s\n", dir);
+    printf("subdir= %s\n", subdir);
+    printf("rc    = %s\n", rc);
+    printf("list  = %s\n", list);
     #endif
 
 
@@ -67,8 +71,7 @@ int main(int argc, char** argv){
     } else if (strcmp(argv[1], "show") == 0){
     } else {
         separate_words(editor, &nwords, &editor_commands);
-// int memo_edit(const char* dir, char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char* const* file){
-        stat = memo_edit(subdir, editor_commands[0], nwords, &editor_commands[1], argc, &argv[1]);
+        stat = memo_edit(list, subdir, editor_commands[0], nwords-1, &editor_commands[1], argc-1, &argv[1]);
         if (stat == -1){
             return 1;
         }

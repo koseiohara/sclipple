@@ -5,39 +5,50 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+#include "read_list.h"
+#include "globals.h"
 
-void get_command(char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char* const* file, char** command){
+void get_command(char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char file[][FILE_APATH_LEN], char** command){
     int i;
-    int first_idx;
+    int base_idx;
 
     command[0] = editor;
     #ifdef DEBUG
     printf("command[0] = %s\n", command[0]);
     #endif
 
-    first_idx = 1;
+    base_idx = 1;
     for (i = 0; i < editor_options_num; i = i + 1){
-        command[i+first_idx] = editor_options[i];
+        command[i+base_idx] = editor_options[i];
         #ifdef DEBUG
-        printf("command[%d] = %s\n", i+first_idx, command[i+first_idx]);
+        printf("command[%d] = %s: original=editor_options[%d]\n", i+base_idx, command[i+base_idx], i);
         #endif
     }
 
-    first_idx = 1+editor_options_num;
+    base_idx = editor_options_num;
     for (i = 0; i < file_num; i = i + 1){
-        command[i+first_idx] = file[i];
         #ifdef DEBUG
-        printf("command[%d] = %s\n", i+first_idx, command[i+first_idx]);
+        printf("file[%d] = %s\n", i, file[i]);
+        #endif
+        command[i+base_idx] = file[i];
+        #ifdef DEBUG
+        printf("command[%d] = %s: original=file[%d]\n", i+base_idx, command[i+base_idx], i);
         #endif
     }
 
     command[1+editor_options_num+file_num] = NULL;
+    #ifdef DEBUG
+    printf("command[%d] set null manually\n", 1+editor_options_num+file_num);
+    #endif
 }
 
 
-int memo_edit(const char* dir, char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char* const* file){
+int memo_edit(const char* list, const char* dir, char* editor, const int editor_options_num, char* const* editor_options, const int flag_num, char** flags){
     pid_t pid;
     char** command;
+    char   files[flag_num][FILE_APATH_LEN];
+    int i;
+    int stat;
 
     pid = fork();
     if (pid == 0){
@@ -46,8 +57,18 @@ int memo_edit(const char* dir, char* editor, const int editor_options_num, char*
             _exit(1);
         }
 
-        command = malloc((1+editor_options_num+file_num+1) * sizeof(char*));   // $(editor) $(editor_option) $(file) NULL
-        get_command(editor, editor_options_num, editor_options, file_num, file, command);
+        for (i = 0; i < flag_num; i = i + 1){
+            stat = get_filename_by_key(list, flags[i], files[i]);
+            #ifdef DEBUG
+            printf("Checked existence of %s\n", files[i]);
+            #endif
+            if (stat == -1){
+                fprintf(stderr, "Invalid keyword. %s does not exist\n", flags[i]);
+                _exit(1);
+            }
+        }
+        command = malloc((1+editor_options_num+flag_num+1) * sizeof(char*));   // $(editor) $(editor_option) $(file) NULL
+        get_command(editor, editor_options_num, editor_options, flag_num, files, command);
 
         execvp(editor, command);
         perror(editor);

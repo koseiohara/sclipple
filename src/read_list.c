@@ -14,7 +14,7 @@
 
 // col is zero-based
 // if col=0 is specified, result is not overrided
-int read_list_by_key(const char* list, const char* target_flag, const int col, char* result){
+int read_list_by_key(const char* list, char* target_flag, const int col, char* result){
     int i;
     FILE* fp;
     char  line[DATETIME_LEN+PATH_LEN+FLAG_LEN+4];
@@ -27,6 +27,7 @@ int read_list_by_key(const char* list, const char* target_flag, const int col, c
     }
 
     while(fgets(line, sizeof(line), fp) != NULL){
+        line[strcspn(line, "\n")] = '\0';
         flag = strtok(line, ",");
         #ifdef DEBUG
         printf("DEBUG: Flag = %s\n", flag);
@@ -63,7 +64,10 @@ int read_list_by_key(const char* list, const char* target_flag, const int col, c
     return -1;
 }
 
-int flag_exist_check(const char* list, const char* flag){
+
+// return 0 if flag does not exist
+// return -1 if flag exist
+int flag_exist_check(const char* list, char* flag){
     char dummy[128];
     int  stat;
     stat = read_list_by_key(list, flag, 0, dummy);
@@ -79,25 +83,25 @@ int flag_exist_check(const char* list, const char* flag){
 }
 
 
-int get_datetime_by_key(const char* list, const char* flag, char* datetime){
+int get_datetime_by_key(const char* list, char* flag, char* datetime){
     int  stat;
     stat = read_list_by_key(list, flag, 1, datetime);
 
     if (stat < 0){
         perror(list);
-        exit(1);
+        return -1;
     }
     return 0;
 }
 
 
-int get_filename_by_key(const char* list, const char* flag, char* filename){
+int get_filename_by_key(const char* list, char* flag, char* filename){
     int  stat;
-    stat = read_list_by_key(list, flag, 1, filename);
+    stat = read_list_by_key(list, flag, 2, filename);
 
     if (stat < 0){
         perror(list);
-        exit(1);
+        return -1;
     }
     return 0;
 }
