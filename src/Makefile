@@ -1,5 +1,5 @@
 
-EXE = nt
+EXE = sclipple
 OBJS = get_setting.o git_run.o main.o
 
 CC = gcc

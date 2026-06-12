@@ -11,8 +11,12 @@
 
 #include "globals.h"
 #include "datetime.h"
+#include "filename.h"
+#include "read_list.h"
 
 
+// if directory does not exist, run mkdir()
+// if file, return -1
 int make_dir(char* dir){
     struct stat st;
 
@@ -29,6 +33,9 @@ int make_dir(char* dir){
 }
 
 
+// if file does not exist, open and close the specified file to make it
+// if already exist, return -1
+// if failed to open, return -2
 int make_file(char* path, int cond){
     struct stat st;
     int fd;
@@ -48,21 +55,10 @@ int make_file(char* path, int cond){
 }
 
 
-void get_filename(char* flag, char* output){
-    sprintf(output, "%s.txt", flag);
-}
-
-
 int add_to_list(char* list, char* flag, char* datetime, char* file){
     int fd;
     char list_path[DIR_LEN+FILE_LEN+1];
     char content[FLAG_LEN+DIR_LEN+FILE_LEN+24];
-
-    // sprintf(list_path, "%s/%s", list_dir, list_file);
-    if (make_file(list, O_CREAT | O_WRONLY) == -1){
-        // fprintf(stderr, "%s exists but is not a directory\n", dir);
-        return -1;
-    }
 
     fd = open(list, O_WRONLY | O_APPEND);
     if (fd == -1){
@@ -85,10 +81,11 @@ int add_to_list(char* list, char* flag, char* datetime, char* file){
 }
 
 
-void add(char* list, char* dir, char* flag){
+int add(char* list, char* dir, char* flag){
     char file[FILE_LEN];
     char path[DIR_LEN+FILE_LEN+1];
     char datetime[20];
+    int  stat;
 
     if (make_dir(dir) == -1){
         fprintf(stderr, "%s exists but is not a directory\n", dir);
@@ -101,15 +98,26 @@ void add(char* list, char* dir, char* flag){
     printf("Note file name: %s\n", path);
     #endif
 
-    if (make_file(path, O_CREAT | O_EXCL | O_WRONLY) == -1){
+    if (make_file(path, O_CREAT | O_EXCL | O_WRONLY) != 0){
         // fprintf(stderr, "%s exists but is not a directory\n", dir);
         exit(1);
+    }
+
+    stat = make_file(list, O_CREAT | O_WRONLY);
+    if (stat == -1){
+        return -1;
+    } else if (stat == -2){
+        exit(1);
+    } else{
+        flag_exist_check(list, flag);
     }
 
     get_datetime(datetime);
     if (add_to_list(list, flag, datetime, path) == -1){
         exit(1);
     }
+
+    return 0;
 }
 
 
