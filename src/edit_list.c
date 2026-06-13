@@ -44,17 +44,10 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
 
 // col is zero-based
 // if col=0 is specified, result is not overrided
-int read_list_by_key(const char* list, char* target_flag, const int col, char* result){
+int read_list_by_key(FILE* fp, char* target_flag, const int col, char* result){
     int i;
-    FILE* fp;
     char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
     char* flag;
-
-    fp = fopen(list, "r");
-    if (fp == NULL){
-        perror(list);
-        return -2;
-    }
 
     // read line by line
     while(fgets(line, sizeof(line), fp) != NULL){
@@ -94,7 +87,7 @@ int read_list_by_key(const char* list, char* target_flag, const int col, char* r
                 i = i + 1;
             }
             // if col exceeds the actual number of columns
-            fprintf(stderr, "%s: Specified column is too large: %d", flag, 0);
+            fprintf(stderr, "%s: %s: Specified column is too large: %d", PROGRAM, flag, 0);
             fclose(fp);
             exit(1);
         }
@@ -110,7 +103,18 @@ int read_list_by_key(const char* list, char* target_flag, const int col, char* r
 int flag_exist_check(const char* list, char* flag){
     char dummy[128];
     int  stat;
-    stat = read_list_by_key(list, flag, 0, dummy);
+    FILE* fp;
+
+    fp = fopen(list, "r");
+    if (fp == NULL){
+        perror(list);
+        fclose(fp);
+        return -2;
+    }
+
+    stat = read_list_by_key(fp, flag, 0, dummy);
+
+    fclose(fp);
 
     if (stat == -1){
         return 0;
@@ -125,7 +129,18 @@ int flag_exist_check(const char* list, char* flag){
 
 int get_datetime_by_key(const char* list, char* flag, char* datetime){
     int  stat;
-    stat = read_list_by_key(list, flag, 1, datetime);
+    FILE* fp;
+
+    fp = fopen(list, "r");
+    if (fp == NULL){
+        perror(list);
+        fclose(fp);
+        return -2;
+    }
+
+    stat = read_list_by_key(fp, flag, 1, datetime);
+
+    fclose(fp);
 
     if (stat < 0){
         return -1;
@@ -136,7 +151,18 @@ int get_datetime_by_key(const char* list, char* flag, char* datetime){
 
 int get_filename_by_key(const char* list, char* flag, char* filename){
     int  stat;
-    stat = read_list_by_key(list, flag, 2, filename);
+    FILE* fp;
+
+    fp = fopen(list, "r");
+    if (fp == NULL){
+        perror(list);
+        fclose(fp);
+        return -2;
+    }
+
+    stat = read_list_by_key(fp, flag, 2, filename);
+
+    fclose(fp);
 
     if (stat < 0){
         return -1;
@@ -148,8 +174,9 @@ int get_filename_by_key(const char* list, char* flag, char* filename){
 // IO error, return -1
 // if failed to copy tmporary file to list, return -2
 // if flag is not found, return 1
+// if new flag is exist, return 2
 // otherwise, return 0
-int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag){
+int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     FILE* fpr;
     FILE* fpw;
     char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
@@ -158,6 +185,7 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
     char* datetime;
     char* notename;
     char  new_notename[FILE_APATH_LEN];
+    char  dummy[128];
     const char* out_flag;
     int   fd;
     int   changed;
@@ -201,6 +229,15 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         return -1;
     }
 
+    // check existence of the new flag
+    if (read_list_by_key(fpr, new_flag, 0, dummy) != -1){
+        fclose(fpr);
+        fclose(fpw);
+        unlink(tmpfile);
+        return 2;
+    }
+    rewind(fpr);
+
     // rename loop
     while (fgets(line, sizeof(line), fpr) != NULL){
         // replace '\n' to '\0'
@@ -222,7 +259,7 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         #endif
 
         if (flag == NULL || datetime == NULL || notename == NULL){
-            fprintf(stderr, "Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", flag, datetime, notename);
+            fprintf(stderr, "%s: Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", PROGRAM, flag, datetime, notename);
             fclose(fpr);
             fclose(fpw);
             unlink(tmpfile);
@@ -364,7 +401,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         #endif
 
         if (flag == NULL || datetime == NULL || notename == NULL){
-            fprintf(stderr, "Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", flag, datetime, notename);
+            fprintf(stderr, "%s: Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", PROGRAM, flag, datetime, notename);
             fclose(fpr);
             fclose(fpw);
             unlink(tmpfile);

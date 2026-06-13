@@ -37,7 +37,7 @@ int rm(const char* list, char* flag){
 
     result = delete_note(list, flag);
     if (result == -1){
-        fprintf(stderr, "%s: No such key.\n", flag);
+        fprintf(stderr, "%s: %s: No such key.\n", PROGRAM, flag);
         return -1;
     } else if (result == -2){
         return -1;
@@ -47,7 +47,7 @@ int rm(const char* list, char* flag){
     if (result < 0){
         return -1;
     } else if (result == 1){
-        fprintf(stderr, "%s: No such key.\n", flag);
+        fprintf(stderr, "%s: %s: No such key.\n", PROGRAM, flag);
         return 1;
     }
 

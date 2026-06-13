@@ -22,6 +22,7 @@ int rename_note(const char* list, char* old_flag, char* new_flag){
 
     #ifdef DEBUG
     printf("<DEBUG> Rename %s to %s\n", old_file, new_file);
+    return 0;
     #endif
 
     if (rename(old_file, new_file) == 0){
@@ -33,8 +34,29 @@ int rename_note(const char* list, char* old_flag, char* new_flag){
 }
 
 
-int mv(){
-    flag_exist_check(new_flag)
+int mv(const char* list, char* old_flag, char* new_flag){
+    int result;
+
+    result = rename_note(list, old_flag, new_flag);
+    if (result == -1){
+        fprintf(stderr, "%s: %s: No such key.\n", PROGRAM, old_flag);
+        return -1;
+    } else if (result == -2){
+        return -1;
+    }
+
+    result = mv_key_in_list(list, old_flag, new_flag);
+    if (result < 0){
+        return -1;
+    } else if (result == 1){
+        fprintf(stderr, "%s: %s: No such key.\n", PROGRAM, old_flag);
+        return 1;
+    } else if (result == 2){
+        fprintf(stderr, "%s: New Keyword %s already exists.", PROGRAM, new_flag);
+        return 2;
+    }
+
+    return 0;
 }
 
 
