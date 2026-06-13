@@ -71,34 +71,6 @@ int make_file(const char* path, const int cond){
 }
 
 
-// if failed to open list file or failed to write info to list, return -1
-// otherwise, return 0
-int add_to_list(const char* list, const char* flag, const char* datetime, const char* file){
-    int fd;
-    // char list_path[DIR_LEN+FILE_LEN+1];
-    char content[FLAG_LEN+DIR_LEN+FILE_LEN+24];
-
-    fd = open(list, O_WRONLY | O_APPEND);
-    if (fd == -1){
-        perror(list);
-        return -1;
-    }
-    snprintf(content, sizeof(content), "%s,%s,%s\n", flag, datetime, file);
-
-    #ifdef DEBUG
-    printf("%s\n", content);
-    #endif
-    if (write(fd, content, strlen(content)) == -1){
-        perror(list);
-        close(fd);
-        return -1;
-    }
-
-    close(fd);
-    return 0;
-}
-
-
 // if successfully added, return 0
 // if flag is exist, return -1
 // otherwise, stop process
@@ -166,7 +138,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     }
 
     get_datetime(clock, '-', datetime);
-    if (add_to_list(list_path, flag, datetime, path) == -1){
+    if (write_new_content_to_list(list_path, flag, datetime, path) == -1){
         exit(1);
     }
 

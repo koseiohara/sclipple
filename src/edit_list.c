@@ -12,6 +12,34 @@
 #define DATETIME_LEN 20
 
 
+// if failed to open list file or failed to write info to list, return -1
+// otherwise, return 0
+int write_new_content_to_list(const char* list, const char* flag, const char* datetime, const char* file){
+    int fd;
+    // char list_path[DIR_LEN+FILE_LEN+1];
+    char content[FLAG_LEN+DIR_LEN+FILE_LEN+24];
+
+    fd = open(list, O_WRONLY | O_APPEND);
+    if (fd == -1){
+        perror(list);
+        return -1;
+    }
+    snprintf(content, sizeof(content), "%s,%s,%s\n", flag, datetime, file);
+
+    #ifdef DEBUG
+    printf("%s\n", content);
+    #endif
+    if (write(fd, content, strlen(content)) == -1){
+        perror(list);
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+    return 0;
+}
+
+
 // col is zero-based
 // if col=0 is specified, result is not overrided
 int read_list_by_key(const char* list, char* target_flag, const int col, char* result){
