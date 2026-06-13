@@ -146,7 +146,8 @@ int get_filename_by_key(const char* list, char* flag, char* filename){
 
 
 int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag){
-    FILE* fp;
+    FILE* fpr;
+    FILE* fpw;
     char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
     char  tmpfile[LIST_APATH_LEN+8];
     char* flag;
@@ -161,44 +162,99 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         return -1;
     }
 
-    fp = fopen(list, "r");
-    if (fp == NULL){
+    fpw = fdopen(fd, "w");
+    if (fpw == NULL){
+        perror(tmpfile);
+        close(fd);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    fpr = fopen(list, "r");
+    if (fpr == NULL){
         perror(list);
         close(fd);
         unlink(tmpfile);
         return -1;
     }
 
-    while (fgets(line, sizeof(line), fp) != NULL){
+    while (fgets(line, sizeof(line), fpr) != NULL){
+        // replace '\n' to '\0'
+        line[strcspn(line, "\n")] = '\0';
+
         // skip empty line
         if (line[0] == '\0'){
             continue;
         }
 
         // find the first delimiter
-        flag = strtok(line, ",");
-
+        flag     = strtok(line, ",");
+        datetime = strtok(NULL, ",");
+        notename = strtok(NULL, ",");
         #ifdef DEBUG
-        printf("<DEBUG> Flag = %s\n", flag);
+        printf("<DEBUG> FLAG    : %s\n", flag);
+        printf("<DEBUG> DATETIME: %s\n", datetime);
+        printf("<DEBUG> NOTENAME: %s\n", notename);
         #endif
+
+        if (flag == NULL || datetime == NULL || notename == NULL){
+            fprintf(stderr, "Invalid line format\n");
+            fclose(fpr);
+            fclose(fpw);
+            unlink(tmpfile);
+            return -1;
+        }
+
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
-            strcpy(datetime, strtok(NULL, ","));
-            strcpy(notename, strtok(NULL, ","));
-            #ifdef DEBUG
-            printf("<DEBUG> FLAG    : %s\n", flag);
-            printf("<DEBUG> DATETIME: %s\n", daetime);
-            printf("<DEBUG> NOTENAME: %s\n", notename);
-            #endif
-
             mv_filename(new_flag, notename);
-            snprintf(line, sizeof(line), "%s,%s,%s\n", new_flag, datetime, notename);
+            *flag = *new_flag;
         }
-        fprintf(fp, line);
+
+        snprintf(line, sizeof(line), "%s,%s,%s\n", flag, datetime, notename);
+        if (fputs(line, fpw) == EOF){
+            perror(tmpfile);
+            fclose(fpr);
+            fclose(fpw);
+            unlink(tmpfile);
+            return -1;
+        }
+        // if (write(fd, line, strlen(line)) == -1){
+        //     fclose(fpr);
+        //     close(fd);
+        //     unlink(tmpfile);
+        //     perror(tmpfile);
+        //     return -1;
+        // }
     }
 
-    // if target_flag is not found
-    fclose(fp);
+    if (ferror(fpr)){
+        perror(list);
+        fclose(fpr);
+        fclose(fpw);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    if (fclose(fpr)){
+        perror(list);
+        fclose(fpw);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    if (fclose(fpw)){
+        perror(tmpfile);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    if (rename(tmpfile, list) != 0){
+        perror("list rename");
+        unlink(tmpfile);
+        return -2;
+    }
+
     return 0;
 }
 
