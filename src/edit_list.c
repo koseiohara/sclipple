@@ -5,11 +5,13 @@
 #include <unistd.h>
 // #include <strings.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "names.h"
 #include "globals.h"
 
 #define DATETIME_LEN 20
+#define DELIM ","
 
 
 // if failed to open list file or failed to write info to list, return -1
@@ -64,7 +66,7 @@ int read_list_by_key(const char* list, char* target_flag, const int col, char* r
         }
 
         // find the first delimiter
-        flag = strtok(line, ",");
+        flag = strtok(line, DELIM);
 
         #ifdef DEBUG
         printf("<DEBUG> Flag = %s\n", flag);
@@ -78,7 +80,7 @@ int read_list_by_key(const char* list, char* target_flag, const int col, char* r
             i = 1;
             while (flag != NULL){
                 // find target column...
-                strcpy(result, strtok(NULL, ","));
+                strcpy(result, strtok(NULL, DELIM));
                 #ifdef DEBUG
                 printf("<DEBUG> Col = %d, Word = %s\n", i, result);
                 #endif
@@ -153,7 +155,15 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
     char* flag;
     char* datetime;
     char* notename;
+    const char* out_flag;
     int   fd;
+    struct stat st;
+
+    if (stat(list, &st) != 0){
+        perror(list);
+        return -1;
+    }
+
 
     snprintf(tmpfile, sizeof(tmpfile), "%s.XXXXXX", list);
     fd = mkstemp(tmpfile);
@@ -170,10 +180,17 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         return -1;
     }
 
+    if (fchmod(fd, st.st_mode) != 0){
+        perror(tmpfile);
+        close(fd);
+        unlink(tmpfile);
+        return -1;
+    }
+
     fpr = fopen(list, "r");
     if (fpr == NULL){
         perror(list);
-        close(fd);
+        fclose(fpw);
         unlink(tmpfile);
         return -1;
     }
@@ -188,9 +205,9 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         }
 
         // find the first delimiter
-        flag     = strtok(line, ",");
-        datetime = strtok(NULL, ",");
-        notename = strtok(NULL, ",");
+        flag     = strtok(line, DELIM);
+        datetime = strtok(NULL, DELIM);
+        notename = strtok(NULL, DELIM);
         #ifdef DEBUG
         printf("<DEBUG> FLAG    : %s\n", flag);
         printf("<DEBUG> DATETIME: %s\n", datetime);
@@ -198,20 +215,21 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         #endif
 
         if (flag == NULL || datetime == NULL || notename == NULL){
-            fprintf(stderr, "Invalid line format\n");
+            fprintf(stderr, "Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", flag, datetime, notename);
             fclose(fpr);
             fclose(fpw);
             unlink(tmpfile);
             return -1;
         }
 
+        out_flag = flag;
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
             mv_filename(new_flag, notename);
-            *flag = *new_flag;
+            out_flag = new_flag;
         }
 
-        snprintf(line, sizeof(line), "%s,%s,%s\n", flag, datetime, notename);
+        snprintf(line, sizeof(line), "%s,%s,%s\n", out_flag, datetime, notename);
         if (fputs(line, fpw) == EOF){
             perror(tmpfile);
             fclose(fpr);
@@ -226,6 +244,126 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         //     perror(tmpfile);
         //     return -1;
         // }
+    }
+
+    if (ferror(fpr)){
+        perror(list);
+        fclose(fpr);
+        fclose(fpw);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    if (fclose(fpr)){
+        perror(list);
+        fclose(fpw);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    if (fclose(fpw)){
+        perror(tmpfile);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    if (rename(tmpfile, list) != 0){
+        perror("list rename");
+        unlink(tmpfile);
+        return -2;
+    }
+
+    return 0;
+}
+
+
+int rm_key_in_list(const char* list, const char* target_flag){
+    FILE* fpr;
+    FILE* fpw;
+    char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
+    char  tmpfile[LIST_APATH_LEN+8];
+    char* flag;
+    char* datetime;
+    char* notename;
+    int   fd;
+    struct stat st;
+
+    if (stat(list, &st) != 0){
+        perror(list);
+        return -1;
+    }
+
+
+    snprintf(tmpfile, sizeof(tmpfile), "%s.XXXXXX", list);
+    fd = mkstemp(tmpfile);
+    if (fd == -1){
+        perror(tmpfile);
+        return -1;
+    }
+
+    if (fchmod(fd, st.st_mode) != 0){
+        perror(tmpfile);
+        close(fd);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    fpw = fdopen(fd, "w");
+    if (fpw == NULL){
+        perror(tmpfile);
+        close(fd);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    fpr = fopen(list, "r");
+    if (fpr == NULL){
+        perror(list);
+        fclose(fpw);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    while (fgets(line, sizeof(line), fpr) != NULL){
+        // replace '\n' to '\0'
+        line[strcspn(line, "\n")] = '\0';
+
+        // skip empty line
+        if (line[0] == '\0'){
+            continue;
+        }
+
+        // find the first delimiter
+        flag     = strtok(line, DELIM);
+        datetime = strtok(NULL, DELIM);
+        notename = strtok(NULL, DELIM);
+        #ifdef DEBUG
+        printf("<DEBUG> FLAG : %s\n", flag);
+        printf("<DEBUG> DATETIME: %s\n", datetime);
+        printf("<DEBUG> NOTENAME: %s\n", notename);
+        #endif
+
+        if (flag == NULL || datetime == NULL || notename == NULL){
+            fprintf(stderr, "Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", flag, datetime, notename);
+            fclose(fpr);
+            fclose(fpw);
+            unlink(tmpfile);
+            return -1;
+        }
+
+        // if the flag of the current line is target_flag
+        if (strcmp(flag, target_flag) == 0){
+            continue;
+        }
+
+        snprintf(line, sizeof(line), "%s,%s,%s\n", flag, datetime, notename);
+        if (fputs(line, fpw) == EOF){
+            perror(tmpfile);
+            fclose(fpr);
+            fclose(fpw);
+            unlink(tmpfile);
+            return -1;
+        }
     }
 
     if (ferror(fpr)){
