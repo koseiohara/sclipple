@@ -128,7 +128,6 @@ int get_datetime_by_key(const char* list, char* flag, char* datetime){
     stat = read_list_by_key(list, flag, 1, datetime);
 
     if (stat < 0){
-        perror(list);
         return -1;
     }
     return 0;
@@ -140,13 +139,16 @@ int get_filename_by_key(const char* list, char* flag, char* filename){
     stat = read_list_by_key(list, flag, 2, filename);
 
     if (stat < 0){
-        perror(list);
         return -1;
     }
     return 0;
 }
 
 
+// IO error, return -1
+// if failed to copy tmporary file to list, return -2
+// if flag is not found, return 1
+// otherwise, return 0
 int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag){
     FILE* fpr;
     FILE* fpw;
@@ -157,7 +159,10 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
     char* notename;
     const char* out_flag;
     int   fd;
+    int   changed;
     struct stat st;
+
+    changed = 0;
 
     if (stat(list, &st) != 0){
         perror(list);
@@ -227,6 +232,7 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         if (strcmp(flag, old_flag) == 0){
             mv_filename(new_flag, notename);
             out_flag = new_flag;
+            changed = 1;
         }
 
         snprintf(line, sizeof(line), "%s,%s,%s\n", out_flag, datetime, notename);
@@ -272,11 +278,19 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         unlink(tmpfile);
         return -2;
     }
+    
+    if (changed == 0){
+        return 1;
+    }
 
     return 0;
 }
 
 
+// IO error, return -1
+// if failed to copy tmporary file to list, return -2
+// if flag is not found, return 1
+// otherwise, return 0
 int rm_key_in_list(const char* list, const char* target_flag){
     FILE* fpr;
     FILE* fpw;
@@ -286,7 +300,10 @@ int rm_key_in_list(const char* list, const char* target_flag){
     char* datetime;
     char* notename;
     int   fd;
+    int   removed;
     struct stat st;
+
+    removed = 0;
 
     if (stat(list, &st) != 0){
         perror(list);
@@ -353,6 +370,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
 
         // if the flag of the current line is target_flag
         if (strcmp(flag, target_flag) == 0){
+            removed = 1;
             continue;
         }
 
@@ -391,6 +409,10 @@ int rm_key_in_list(const char* list, const char* target_flag){
         perror("list rename");
         unlink(tmpfile);
         return -2;
+    }
+
+    if (removed == 0){
+        return 1;
     }
 
     return 0;

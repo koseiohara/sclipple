@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "globals.h"
 #include "datetime.h"
 
 int get_env(const char* env, char** output){
@@ -20,8 +21,16 @@ int get_env(const char* env, char** output){
 }
 
 
-void get_filename(const char* flag, char* datetime, char* ext, char* output){
-    snprintf(output, sizeof(output), "%s--%s.%s", flag, datetime, ext);
+int check_flag_length(char* flag){
+    if (strlen(flag) > FLAG_LEN){
+        return -1;
+    }
+    return 0;
+}
+
+
+void get_filename(const char* flag, char* datetime, char* ext, size_t output_len, char* output){
+    snprintf(output, output_len, "%s--%s.%s", flag, datetime, ext);
 }
 
 

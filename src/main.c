@@ -12,6 +12,7 @@
 #include "names.h"
 #include "memo_add.h"
 #include "memo_edit.h"
+#include "memo_rm.h"
 
 int main(int argc, char** argv){
     char editor[] = "nvim -p";
@@ -39,11 +40,13 @@ int main(int argc, char** argv){
     snprintf(subdir, sizeof(subdir), "%s/%s", dir , SUBDIR);
     snprintf(rc    , sizeof(rc)    , "%s/%s", home, RCNAME);
     snprintf(list  , sizeof(list)  , "%s/%s", dir , LISTNAME);
+    strcpy(ext, EXT);
     #ifdef DEBUG
     printf("dir   = %s\n", dir);
     printf("subdir= %s\n", subdir);
     printf("rc    = %s\n", rc);
     printf("list  = %s\n", list);
+    printf("ext   = %s\n", ext);
     #endif
 
 
@@ -72,6 +75,15 @@ int main(int argc, char** argv){
         }
 
     } else if (strcmp(argv[1], "rm") == 0){
+        if (argc == 2){
+            show_help();
+            return 0;
+        } else{
+            for (i = 2; i < argc; i = i + 1){
+                stat = rm(LISTNAME, argv[i]);
+            }
+        }
+
     } else if (strcmp(argv[1], "mv") == 0){
     } else if (strcmp(argv[1], "grep") == 0){
     } else if (strcmp(argv[1], "list") == 0){

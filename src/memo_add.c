@@ -76,12 +76,22 @@ int make_file(const char* path, const int cond){
 // otherwise, stop process
 int add(const char* list, const char* dir, const char* note_stock, char* flag, char* ext, struct tm* clock){
     char file[FILE_LEN];
-    char path[DIR_LEN+SUBDIR_LEN+FILE_LEN+2];
-    char list_path[DIR_LEN+LIST_LEN+1];
-    char datetime[20];
+    char path[FILE_APATH_LEN];
+    char list_path[LIST_APATH_LEN];
+    char datetime[DATETIME_LEN];
     int  stat;
 
-    if (strlen(flag) >= FLAG_LEN){
+    #ifdef DEBUG
+    printf("list      : %s\n", list);
+    printf("dir       : %s\n", dir);
+    printf("note_stock: %s\n", note_stock);
+    printf("flag      : %s\n", flag);
+    printf("ext       : %s\n", ext);
+    printf("FILE_LEN      : %d\n", FILE_LEN);
+    printf("Length of file: %lu\n", strlen(file));
+    #endif
+
+    if (check_flag_length(flag) < 0){
         fprintf(stderr, "Too long keyword: %s. Length should be less than %d", flag, FLAG_LEN);
         exit(1);
     }
@@ -102,13 +112,15 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         exit(1);
     }
 
-    get_datetime(clock, '\0', datetime);
-    get_filename(flag, datetime, ext, file);
+    get_datetime(clock, '-', sizeof(datetime), datetime);
+    get_filename(flag, datetime, ext, sizeof(file), file);
     snprintf(path, sizeof(path), "%s/%s", note_stock, file);
     snprintf(list_path, sizeof(list_path), "%s/%s", dir, list);
     #ifdef DEBUG
+    printf("File name     : %s\n", file);
     printf("Note file name: %s\n", path);
     printf("List file name: %s\n", list_path);
+    printf("Length of file: %lu\n", strlen(file));
     #endif
 
     stat = make_file(list_path, O_CREAT | O_WRONLY);
@@ -137,7 +149,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         exit(1);
     }
 
-    get_datetime(clock, '-', datetime);
+    get_datetime(clock, '-', sizeof(datetime), datetime);
     if (write_new_content_to_list(list_path, flag, datetime, path) == -1){
         exit(1);
     }
