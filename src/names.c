@@ -10,7 +10,7 @@ int get_env(const char* env, char** output){
     *output = getenv(env);
 
     #ifdef DEBUG
-    printf("Expand %s: %s\n", env, *output);
+    printf("<DEBUG> Expand %s: %s\n", env, *output);
     #endif
     if (*output == NULL){
         perror(env);
@@ -35,7 +35,7 @@ void mv_filename(const char* new_flag, char* output){
         cp = cp + 2;
     }
     #ifdef DEBUG
-    printf("File name after '--': %s\n", last);
+    printf("<DEBUG> File name after '--': %s\n", last);
     #endif
 
     snprintf(output, sizeof(output), "%s%s", new_flag, last);

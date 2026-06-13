@@ -6,6 +6,7 @@
 // #include <strings.h>
 #include <string.h>
 
+#include "names.h"
 #include "globals.h"
 
 #define DATETIME_LEN 20
@@ -38,7 +39,7 @@ int read_list_by_key(const char* list, char* target_flag, const int col, char* r
         flag = strtok(line, ",");
 
         #ifdef DEBUG
-        printf("DEBUG: Flag = %s\n", flag);
+        printf("<DEBUG> Flag = %s\n", flag);
         #endif
         // if the flag of the current line is target_flag
         if (strcmp(flag, target_flag) == 0){
@@ -51,11 +52,11 @@ int read_list_by_key(const char* list, char* target_flag, const int col, char* r
                 // find target column...
                 strcpy(result, strtok(NULL, ","));
                 #ifdef DEBUG
-                printf("DEBUG: Col = %d, Word = %s\n", i, result);
+                printf("<DEBUG> Col = %d, Word = %s\n", i, result);
                 #endif
                 if (i == col){
                     #ifdef DEBUG
-                    printf("DEBUG: Extracted Word = %s\n", result);
+                    printf("<DEBUG> Extracted Word = %s\n", result);
                     #endif
                     fclose(fp);
                     return 0;
@@ -117,18 +118,60 @@ int get_filename_by_key(const char* list, char* flag, char* filename){
 
 
 int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag){
-    FILE* fpr;
-    FILE* fpw;
+    FILE* fp;
     char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
     char  tmpfile[LIST_APATH_LEN+8];
+    char* flag;
+    char* datetime;
+    char* notename;
+    int   fd;
 
     snprintf(tmpfile, sizeof(tmpfile), "%s.XXXXXX", list);
-
-    fpr = fopen(list, "r");
-    if (fpr == NULL){
-        perror(list);
+    fd = mkstemp(tmpfile);
+    if (fd == -1){
+        perror(tmpfile);
         return -1;
     }
+
+    fp = fopen(list, "r");
+    if (fp == NULL){
+        perror(list);
+        close(fd);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    while (fgets(line, sizeof(line), fp) != NULL){
+        // skip empty line
+        if (line[0] == '\0'){
+            continue;
+        }
+
+        // find the first delimiter
+        flag = strtok(line, ",");
+
+        #ifdef DEBUG
+        printf("<DEBUG> Flag = %s\n", flag);
+        #endif
+        // if the flag of the current line is target_flag
+        if (strcmp(flag, old_flag) == 0){
+            strcpy(datetime, strtok(NULL, ","));
+            strcpy(notename, strtok(NULL, ","));
+            #ifdef DEBUG
+            printf("<DEBUG> FLAG    : %s\n", flag);
+            printf("<DEBUG> DATETIME: %s\n", daetime);
+            printf("<DEBUG> NOTENAME: %s\n", notename);
+            #endif
+
+            mv_filename(new_flag, notename);
+            snprintf(line, sizeof(line), "%s,%s,%s\n", new_flag, datetime, notename);
+        }
+        fprintf(fp, line);
+    }
+
+    // if target_flag is not found
+    fclose(fp);
+    return 0;
 }
 
 
