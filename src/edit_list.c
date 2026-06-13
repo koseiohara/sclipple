@@ -9,7 +9,6 @@
 #include "globals.h"
 
 #define DATETIME_LEN 20
-#define PATH_LEN     (DIR_LEN+FILE_LEN+1)
 
 
 // col is zero-based
@@ -17,7 +16,7 @@
 int read_list_by_key(const char* list, char* target_flag, const int col, char* result){
     int i;
     FILE* fp;
-    char  line[DATETIME_LEN+PATH_LEN+FLAG_LEN+4];
+    char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
     char* flag;
 
     fp = fopen(list, "r");
@@ -26,21 +25,30 @@ int read_list_by_key(const char* list, char* target_flag, const int col, char* r
         return -2;
     }
 
+    // read line by line
     while(fgets(line, sizeof(line), fp) != NULL){
+        // replace '\n' to '\0'
         line[strcspn(line, "\n")] = '\0';
+
+        if (line[0] == '\0'){
+            continue;
+        }
+
+        // find the first delimiter
         flag = strtok(line, ",");
+
         #ifdef DEBUG
         printf("DEBUG: Flag = %s\n", flag);
         #endif
+        // if the flag of the current line is target_flag
         if (strcmp(flag, target_flag) == 0){
             if (col == 0){
-                // result = flag;
                 fclose(fp);
                 return 0;
             }
             i = 1;
             while (flag != NULL){
-                // result = strtok(NULL, ",");
+                // find target column...
                 strcpy(result, strtok(NULL, ","));
                 #ifdef DEBUG
                 printf("DEBUG: Col = %d, Word = %s\n", i, result);
@@ -54,12 +62,13 @@ int read_list_by_key(const char* list, char* target_flag, const int col, char* r
                 }
                 i = i + 1;
             }
+            // if col exceeds the actual number of columns
             fprintf(stderr, "%s: Specified column is too large: %d", flag, 0);
             fclose(fp);
             exit(1);
         }
     }
-    // perror(target_flag);
+    // if target_flag is not found
     fclose(fp);
     return -1;
 }
@@ -104,6 +113,22 @@ int get_filename_by_key(const char* list, char* flag, char* filename){
         return -1;
     }
     return 0;
+}
+
+
+int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag){
+    FILE* fpr;
+    FILE* fpw;
+    char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
+    char  tmpfile[LIST_APATH_LEN+8];
+
+    snprintf(tmpfile, sizeof(tmpfile), "%s.XXXXXX", list);
+
+    fpr = fopen(list, "r");
+    if (fpr == NULL){
+        perror(list);
+        return -1;
+    }
 }
 
 

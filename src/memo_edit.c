@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#include "read_list.h"
+#include "edit_list.h"
 #include "globals.h"
 
 void get_command(char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char file[][FILE_APATH_LEN], char** command){

@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "datetime.h"
@@ -18,12 +19,26 @@ int get_env(const char* env, char** output){
     return 0;
 }
 
+
 void get_filename(const char* flag, char* datetime, char* ext, char* output){
-    sprintf(output, "%s--%s.%s", flag, datetime, ext);
+    snprintf(output, sizeof(output), "%s--%s.%s", flag, datetime, ext);
 }
 
 
-void mv_filename(char* output){
+void mv_filename(const char* new_flag, char* output){
+    char* cp;
+    char* last;
+
+    cp = output;
+    while ((cp = strstr(cp, "--")) != NULL){
+        last = cp;
+        cp = cp + 2;
+    }
+    #ifdef DEBUG
+    printf("File name after '--': %s\n", last);
+    #endif
+
+    snprintf(output, sizeof(output), "%s%s", new_flag, last);
 }
 
 

@@ -35,10 +35,10 @@ int main(int argc, char** argv){
     printf("$HOME = %s\n", home);
     #endif
 
-    sprintf(dir   , "%s/%s", home, DIR);
-    sprintf(subdir, "%s/%s", dir , SUBDIR);
-    sprintf(rc    , "%s/%s", home, RCNAME);
-    sprintf(list  , "%s/%s", dir , LISTNAME);
+    snprintf(dir   , sizeof(dir)   , "%s/%s", home, DIR);
+    snprintf(subdir, sizeof(subdir), "%s/%s", dir , SUBDIR);
+    snprintf(rc    , sizeof(rc)    , "%s/%s", home, RCNAME);
+    snprintf(list  , sizeof(list)  , "%s/%s", dir , LISTNAME);
     #ifdef DEBUG
     printf("dir   = %s\n", dir);
     printf("subdir= %s\n", subdir);

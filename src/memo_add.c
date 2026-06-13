@@ -13,7 +13,7 @@
 #include "globals.h"
 #include "datetime.h"
 #include "names.h"
-#include "read_list.h"
+#include "edit_list.h"
 
 
 // if directory does not exist, run mkdir()
@@ -83,7 +83,7 @@ int add_to_list(const char* list, const char* flag, const char* datetime, const 
         perror(list);
         return -1;
     }
-    sprintf(content, "%s,%s,%s\n", flag, datetime, file);
+    snprintf(content, sizeof(content), "%s,%s,%s\n", flag, datetime, file);
 
     #ifdef DEBUG
     printf("%s\n", content);
@@ -132,8 +132,8 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
 
     get_datetime(clock, '\0', datetime);
     get_filename(flag, datetime, ext, file);
-    sprintf(path, "%s/%s", note_stock, file);
-    sprintf(list_path, "%s/%s", dir, list);
+    snprintf(path, sizeof(path), "%s/%s", note_stock, file);
+    snprintf(list_path, sizeof(list_path), "%s/%s", dir, list);
     #ifdef DEBUG
     printf("Note file name: %s\n", path);
     printf("List file name: %s\n", list_path);

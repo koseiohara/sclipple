@@ -9,8 +9,12 @@
 #define RC_LEN         (HOME_LEN+32)            // Length of $HOME/$RCNAME
 #define LIST_APATH_LEN (DIR_LEN+LIST_LEN)       // Length of $HOME/$DIR/$LIST
 #define FILE_APATH_LEN (SUBDIR_LEN+FILE_LEN)    // Length of $HOME/$DIR/$SUBDIR/*.txt
+
 #define DIR      ".sclipple"
 #define EXT      "txt"
 #define SUBDIR   "notes"
 #define LISTNAME "list.csv"
 #define RCNAME   ".sclipplerc"
+
+// #define MAX_NUM_NOTE   2048                     // Maximum number of Notes
+
