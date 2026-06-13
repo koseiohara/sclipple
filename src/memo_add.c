@@ -2,7 +2,7 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <strings.h>
+// #include <strings.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -77,7 +77,6 @@ int make_file(const char* path, const int cond){
 int add(const char* list, const char* dir, const char* note_stock, char* flag, char* ext, struct tm* clock){
     char file[FILE_LEN];
     char path[FILE_APATH_LEN];
-    char list_path[LIST_APATH_LEN];
     char datetime[DATETIME_LEN];
     int  stat;
 
@@ -115,20 +114,19 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     get_datetime(clock, '-', sizeof(datetime), datetime);
     get_filename(flag, datetime, ext, sizeof(file), file);
     snprintf(path, sizeof(path), "%s/%s", note_stock, file);
-    snprintf(list_path, sizeof(list_path), "%s/%s", dir, list);
     #ifdef DEBUG
     printf("File name     : %s\n", file);
     printf("Note file name: %s\n", path);
-    printf("List file name: %s\n", list_path);
+    printf("List file name: %s\n", list);
     printf("Length of file: %lu\n", strlen(file));
     #endif
 
-    stat = make_file(list_path, O_CREAT | O_WRONLY);
+    stat = make_file(list, O_CREAT | O_WRONLY);
     if (stat == -2){
         exit(1);
     }
 
-    stat = flag_exist_check(list_path, flag);
+    stat = flag_exist_check(list, flag);
     if (stat < 0){
         return stat;
     }
@@ -139,7 +137,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     stat = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s is exists\n", dir);
+            fprintf(stderr, "%s exists\n", dir);
             exit(1);
         } else if (stat == -2){
             fprintf(stderr, "Failed to open %s\n", dir);
@@ -150,7 +148,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     }
 
     get_datetime(clock, '-', sizeof(datetime), datetime);
-    if (write_new_content_to_list(list_path, flag, datetime, path) == -1){
+    if (write_new_content_to_list(list, flag, datetime, path) == -1){
         exit(1);
     }
 

@@ -16,8 +16,7 @@ int delete_note(const char* list, char* flag){
     }
 
     #ifdef DEBUG
-    printf("<DEBUG> Delete %s", filename);
-    return 0;
+    printf("<DEBUG> Delete %s\n", filename);
     #endif
 
     if (unlink(filename) == 0){

@@ -19,7 +19,7 @@
 int write_new_content_to_list(const char* list, const char* flag, const char* datetime, const char* file){
     int fd;
     // char list_path[DIR_LEN+FILE_LEN+1];
-    char content[FLAG_LEN+DIR_LEN+FILE_LEN+24];
+    char content[FLAG_LEN+1+DATETIME_LEN+1+FILE_APATH_LEN+16];
 
     fd = open(list, O_WRONLY | O_APPEND);
     if (fd == -1){
@@ -230,7 +230,7 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         out_flag = flag;
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
-            mv_filename(new_flag, notename);
+            mv_filename(new_flag, sizeof(notename), notename);
             out_flag = new_flag;
             changed = 1;
         }

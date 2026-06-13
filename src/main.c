@@ -67,9 +67,9 @@ int main(int argc, char** argv){
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
-                stat = add(LISTNAME, dir, subdir, argv[i], ext, lt);
+                stat = add(list, dir, subdir, argv[i], ext, lt);
                 if (stat == -1){
-                    fprintf(stderr, "Failed to make new note: %s. %s is exist.\n", argv[i], argv[i]);
+                    fprintf(stderr, "Failed to make new note: %s. %s exist.\n", argv[i], argv[i]);
                 }
             }
         }
@@ -80,7 +80,7 @@ int main(int argc, char** argv){
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
-                stat = rm(LISTNAME, argv[i]);
+                stat = rm(list, argv[i]);
             }
         }
 

@@ -34,7 +34,7 @@ void get_filename(const char* flag, char* datetime, char* ext, size_t output_len
 }
 
 
-void mv_filename(const char* new_flag, char* output){
+void mv_filename(const char* new_flag, size_t output_len, char* output){
     char* cp;
     char* last;
 
@@ -47,7 +47,7 @@ void mv_filename(const char* new_flag, char* output){
     printf("<DEBUG> File name after '--': %s\n", last);
     #endif
 
-    snprintf(output, sizeof(output), "%s%s", new_flag, last);
+    snprintf(output, output_len, "%s%s", new_flag, last);
 }
 
 
