@@ -34,11 +34,11 @@ void get_filename(const char* flag, char* datetime, char* ext, size_t output_len
 }
 
 
-void mv_filename(const char* new_flag, size_t output_len, char* output){
+void mv_filename(const char* old_file, const char* new_flag, size_t output_len, char* output){
     char* cp;
     char* last;
 
-    cp = output;
+    cp = old_file;
     while ((cp = strstr(cp, "--")) != NULL){
         last = cp;
         cp = cp + 2;

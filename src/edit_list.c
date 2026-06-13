@@ -157,6 +157,7 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
     char* flag;
     char* datetime;
     char* notename;
+    char  new_notename[FILE_APATH_LEN];
     const char* out_flag;
     int   fd;
     int   changed;
@@ -200,6 +201,7 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         return -1;
     }
 
+    // rename loop
     while (fgets(line, sizeof(line), fpr) != NULL){
         // replace '\n' to '\0'
         line[strcspn(line, "\n")] = '\0';
@@ -230,7 +232,8 @@ int mv_key_in_list(const char* list, const char* old_flag, const char* new_flag)
         out_flag = flag;
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
-            mv_filename(new_flag, sizeof(notename), notename);
+            mv_filename(notename, new_flag, sizeof(new_notename), new_notename);
+            strncpy(notename, new_notename, sizeof(new_notename));
             out_flag = new_flag;
             changed = 1;
         }
