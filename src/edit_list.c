@@ -236,7 +236,13 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         unlink(tmpfile);
         return 2;
     }
+    #ifdef DEBUG
+    printf("Completed checking flag list\n");
+    #endif
     rewind(fpr);
+    #ifdef DEBUG
+    printf("rewind successed\n");
+    #endif
 
     // rename loop
     while (fgets(line, sizeof(line), fpr) != NULL){
@@ -283,13 +289,6 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
             unlink(tmpfile);
             return -1;
         }
-        // if (write(fd, line, strlen(line)) == -1){
-        //     fclose(fpr);
-        //     close(fd);
-        //     unlink(tmpfile);
-        //     perror(tmpfile);
-        //     return -1;
-        // }
     }
 
     if (ferror(fpr)){

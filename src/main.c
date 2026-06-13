@@ -13,6 +13,7 @@
 #include "memo_add.h"
 #include "memo_edit.h"
 #include "memo_rm.h"
+#include "memo_mv.h"
 
 int main(int argc, char** argv){
     char editor[] = "nvim -p";
@@ -88,6 +89,16 @@ int main(int argc, char** argv){
         }
 
     } else if (strcmp(argv[1], "mv") == 0){
+        if (argc != 4){
+            show_help();
+            return 0;
+        } else{
+            stat = mv(list, argv[2], argv[3]);
+            if (stat < 0){
+                return 1;
+            }
+        }
+
     } else if (strcmp(argv[1], "grep") == 0){
     } else if (strcmp(argv[1], "list") == 0){
     } else if (strcmp(argv[1], "show") == 0){
