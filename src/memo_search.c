@@ -69,7 +69,11 @@ int search_one_file(char* file, char* word){
             }
 
             if (1 - say_linenumber){
-                printf("%d:", ln);
+                if (atty){
+                    printf("\033[33m%d\033[0m:", ln);
+                } else{
+                    printf("%d:", ln);
+                }
                 say_linenumber = true;
             }
 
