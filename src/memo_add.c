@@ -81,34 +81,34 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     int  stat;
 
     #ifdef DEBUG
-    printf("list      : %s\n", list);
-    printf("dir       : %s\n", dir);
-    printf("note_stock: %s\n", note_stock);
-    printf("flag      : %s\n", flag);
-    printf("ext       : %s\n", ext);
-    printf("FILE_LEN      : %d\n", FILE_LEN);
-    printf("Length of file: %lu\n", strlen(file));
+    printf("<DEBUG> list      : %s\n", list);
+    printf("<DEBUG> dir       : %s\n", dir);
+    printf("<DEBUG> note_stock: %s\n", note_stock);
+    printf("<DEBUG> flag      : %s\n", flag);
+    printf("<DEBUG> ext       : %s\n", ext);
+    printf("<DEBUG> FILE_LEN      : %d\n", FILE_LEN);
+    printf("<DEBUG> Length of file: %lu\n", strlen(file));
     #endif
 
     if (check_flag_length(flag) < 0){
-        fprintf(stderr, "Too long keyword: %s. Length should be less than %d", flag, FLAG_LEN);
-        exit(1);
+        fprintf(stderr, "%s: Too long keyword: %s. Length should be less than %d", PROGRAM, flag, FLAG_LEN);
+        return -1;
     }
 
     stat = make_dir(dir);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s exists but is not a directory\n", dir);
+            fprintf(stderr, "%s: %s exists but is not a directory\n", PROGRAM, dir);
         }
-        exit(1);
+        return -1;
     }
 
     stat = make_dir(note_stock);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s exists but is not a directory\n", dir);
+            fprintf(stderr, "%s: %s exists but is not a directory\n", PROGRAM, dir);
         }
-        exit(1);
+        return -1;
     }
 
     get_datetime(clock, '-', sizeof(datetime), datetime);
@@ -123,7 +123,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
 
     stat = make_file(list, O_CREAT | O_WRONLY);
     if (stat == -2){
-        exit(1);
+        return -1;
     }
 
     stat = flag_exist_check(list, flag);
@@ -137,19 +137,19 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     stat = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s exists\n", dir);
-            exit(1);
+            fprintf(stderr, "%s: %s already exists\n", PROGRAM, dir);
+            return -1;
         } else if (stat == -2){
-            fprintf(stderr, "Failed to open %s\n", dir);
-            exit(1);
+            fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, dir);
+            return -1;
         }
-        fprintf(stderr, "Undefined Error\n");
-        exit(1);
+        fprintf(stderr, "%s: Undefined Error\n", PROGRAM);
+        return -1;
     }
 
     get_datetime(clock, '-', sizeof(datetime), datetime);
     if (write_new_content_to_list(list, flag, datetime, path) == -1){
-        exit(1);
+        return -1;
     }
 
     return 0;

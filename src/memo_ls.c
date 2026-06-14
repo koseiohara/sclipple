@@ -82,13 +82,13 @@ int ls(const char* list, int flag_num, char** flag_list){
     #endif
 
     if (flag_num < 0){
-        fprintf(stderr, "Invalid number of flags: %d\n", flag_num);
+        fprintf(stderr, "%s: Invalid number of flags: %d\n", PROGRAM, flag_num);
         return -1;
     } else if (flag_num > 0){
         lines = malloc((size_t)flag_num * sizeof(*lines));
         if (lines == NULL){
             perror("malloc");
-            exit(1);
+            return -1;
         }
 
         for (j = 0; j < flag_num; j = j + 1){
