@@ -84,9 +84,7 @@ int ls(const char* list, int flag_num, char** flag_list){
     if (flag_num < 0){
         fprintf(stderr, "Invalid number of flags: %d\n", flag_num);
         return -1;
-    }
-
-    if (flag_num > 0){
+    } else if (flag_num > 0){
         lines = malloc((size_t)flag_num * sizeof(*lines));
         if (lines == NULL){
             perror("malloc");

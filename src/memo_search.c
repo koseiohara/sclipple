@@ -1,6 +1,7 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <regex.h>
 #include <unistd.h>
@@ -39,18 +40,19 @@ int search_one_file(char* file, char* word){
 
     rewind(fp);
     say_name = false;
-    matched  = false;
     while (fgets(line, sizeof(line), fp) != NULL){
-        matched = true;
+        matched  = false;
 
         // replace '\n' with '\0'
         line[strcspn(line, "\n")] = '\0';
 
         lp = line;
         while (regexec(&regex, lp, 1, match, 0) == 0){
+            matched = true;
+
             if (1 - say_name){
                 if (atty){
-                    printf("\033[34m%s\033[0m", file);
+                    printf("\033[34m%s\033[0m\n", file);
                 } else{
                     printf("%s\n", file);
                 }
@@ -99,19 +101,28 @@ int search(char* list, char* word, int flag_num, char** flag_list){
     char  flag[FLAG_LEN];
     char  datetime[DATETIME_LEN];
     char  notename[FILE_APATH_LEN];
-    char  notename_list[flag_num][FILE_APATH_LEN];
+    char  (*notename_list)[FILE_APATH_LEN] = NULL;
     int   result;
     int   i;
     int   j;
 
+    if (flag_num > 0){
+        notename_list = malloc((size_t)flag_num * sizeof(*notename_list));
+        if (notename_list == NULL){
+            perror("malloc");
+            return -1;
+        }
+
+        for (j = 0; j < flag_num; j = j + 1){
+            notename_list[j][0] = '\0';
+        }
+    }
+
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
+        free(notename_list);
         return -1;
-    }
-
-    for (j = 0; j < flag_num; j = j + 1){
-        notename_list[j][0] = '\0';
     }
 
     i = 0;
@@ -124,6 +135,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             continue;
         } else if (result < 0){
             fprintf(stderr, "%s: Invalid line is found in list file\nlist file is broken in line %d\n", PROGRAM, i);
+            free(notename_list);
             fclose(fp);
             return -1;
         }
@@ -136,6 +148,8 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             }
         } else{
             if (search_one_file(notename, word) != 0){
+                free(notename_list);
+                fclose(fp);
                 return -1;
             }
         }
@@ -144,16 +158,22 @@ int search(char* list, char* word, int flag_num, char** flag_list){
     if (flag_num > 0){
         for (j = 0; j <  flag_num; j = j + 1){
             if (notename_list[j][0] == '\0'){
-                fprintf(stderr, "%s: Note '%s' was not found\n", PROGRAM, flag_list[i]);
+                fprintf(stderr, "%s: Note '%s' was not found\n", PROGRAM, flag_list[j]);
+                free(notename_list);
+                fclose(fp);
                 return -1;
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
             if (search_one_file(notename_list[j], word) != 0){
+                free(notename_list);
+                fclose(fp);
                 return -1;
             }
         }
     }
+    free(notename_list);
+    fclose(fp);
     return 0;
 }
 
