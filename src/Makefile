@@ -1,6 +1,7 @@
 
 EXE = sclipple
 OBJS = help.o 		 \
+	   strutils.o	 \
 	   get_setting.o \
 	   datetime.o 	 \
 	   names.o 		 \

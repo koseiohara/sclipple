@@ -4,8 +4,7 @@
 #endif
 #include <stdlib.h>
 
-#define true  1
-#define false 0
+#include "globals.h"
 
 void separate_words(char* editor, int* n, char*** output){
     int i;

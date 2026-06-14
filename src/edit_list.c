@@ -8,27 +8,12 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
-#include "names.h"
 #include "globals.h"
+#include "strutils.h"
+#include "names.h"
 
 #define DATETIME_LEN 20
 #define DELIM ","
-
-
-// return 1 if line is null or white space
-// return 0 if line is not a white space
-int is_white_space(const char* line){
-    int i;
-
-    i = 0;
-    while(line[i] != '\0'){
-        if (isspace(line[i]) == 0){
-            return 0;
-        }
-        i = i + 1;
-    }
-    return 1;
-}
 
 
 // if failed to open list file or failed to write info to list, return -1

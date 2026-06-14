@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "globals.h"
+#include "strutils.h"
 #include "edit_list.h"
 
 
