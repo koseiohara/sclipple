@@ -5,6 +5,7 @@
 #include <unistd.h>
 // #include <strings.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/stat.h>
 
 #include "names.h"
@@ -12,6 +13,22 @@
 
 #define DATETIME_LEN 20
 #define DELIM ","
+
+
+// return 0 if line is null or white space
+// return 1 if line is not a white space
+int is_white_space(const char* line){
+    int i;
+
+    i = 0;
+    while(line[i] != '\0'){
+        if (isspace(line[i]) != 0){
+            return 0;
+        }
+        i = i + 1;
+    }
+    return 1;
+}
 
 
 // if failed to open list file or failed to write info to list, return -1
@@ -54,7 +71,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char* result){
         // replace '\n' to '\0'
         line[strcspn(line, "\n")] = '\0';
 
-        if (line[0] == '\0'){
+        if (is_white_space(line) == 0){
             continue;
         }
 
@@ -253,7 +270,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         line[strcspn(line, "\n")] = '\0';
 
         // skip empty line
-        if (line[0] == '\0'){
+        if (is_white_space(line) == 0){
             continue;
         }
 
@@ -391,7 +408,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         line[strcspn(line, "\n")] = '\0';
 
         // skip empty line
-        if (line[0] == '\0'){
+        if (is_white_space(line) == 0){
             continue;
         }
 
@@ -459,6 +476,42 @@ int rm_key_in_list(const char* list, const char* target_flag){
     if (removed == 0){
         return 1;
     }
+
+    return 0;
+}
+
+
+// return 0 if successed
+// return 1 if input failed
+// return 2 if line is white space
+// return -1 if list file is broken: does not have thee elements
+int get_content_line(FILE* fp, size_t flag_len, char* flag, size_t datetime_len, char* datetime, size_t notename_len, char* notename){
+    char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
+    char* in_flag;
+    char* in_datetime;
+    char* in_notename;
+    char* dummy;
+
+    if (fgets(line, sizeof(line), fp) == NULL){
+        return 1;
+    }
+
+    if (is_white_space(line)){
+        return 2;
+    }
+
+    in_flag     = strtok(line, DELIM);
+    in_datetime = strtok(NULL, DELIM);
+    in_notename = strtok(NULL, DELIM);
+    dummy       = strtok(NULL, DELIM);
+
+    if (in_flag == NULL || in_datetime == NULL || in_notename == NULL || dummy != NULL){
+        return -1;
+    }
+
+    snprintf(flag    , flag_len    , "%s", in_flag    );
+    snprintf(datetime, datetime_len, "%s", in_datetime);
+    snprintf(notename, notename_len, "%s", in_notename);
 
     return 0;
 }

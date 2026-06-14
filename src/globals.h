@@ -10,6 +10,7 @@
 #define RC_LEN         (HOME_LEN+32)                        // Length of $HOME/$RCNAME
 #define LIST_APATH_LEN (DIR_LEN+1+LIST_LEN)                 // Length of $HOME/$DIR/$LIST
 #define FILE_APATH_LEN (SUBDIR_LEN+1+FILE_LEN)              // Length of $HOME/$DIR/$SUBDIR/*.txt
+#define LS_LINE_LEN    128                                  // Length of the 1st line shown when ls run
 
 #define PROGRAM  "sclipple"
 #define DIR      ".sclipple"
