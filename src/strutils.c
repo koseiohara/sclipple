@@ -63,8 +63,12 @@ int is_white_space(const char* line){
 
 // return -1 if '=' is not found
 // return 0 otherwise
-int line_to_dict(char* line, char* key, char* value){
+int line_to_dict(char* line, char** key, char** value){
     char* pt;
+
+    if (line == NULL){
+        return -1;
+    }
 
     // replace \n with \0
     line[strcspn(line, "\n")] = '\0';
@@ -73,14 +77,49 @@ int line_to_dict(char* line, char* key, char* value){
     if (pt == NULL){
         return -1;
     }
-    *pt   = '\0';
-    key   = line;
-    value = pt + 1;
+    *pt    = '\0';
+    *key   = line;
+    *value = pt + 1;
 
-    key   = trim(key);
-    value = trim(value);
+    *key   = trim(*key);
+    *value = trim(*value);
 
     return 0;
+}
+
+
+void delete_bracket(char** s, int n, const char* lbracket, const char* rbracket){
+    int last;
+    int i;
+    int count;
+
+    if (s == NULL || *s == NULL) {
+        return;
+    }
+
+    last = (int)strlen(*s) - 1;
+    if (last < 1){
+        return;
+    }
+
+    while (true){
+        count = 0;
+        for (i = 0; i < n; i = i + 1){
+            if ((*s)[0] == lbracket[i] && (*s)[last] == rbracket[i]){
+                (*s)[last] = '\0';
+                *s = *s + 1;
+                last = last - 2;
+                count = count + 1;
+
+                if (last < 1){
+                    return;
+                }
+            }
+        }
+        if (count == 0){
+            return;
+        }
+    }
 }
 
 
@@ -89,8 +128,10 @@ int read_rc(const char* rc, const int n, const char** key, char** value){
     FILE*  fp;
     char*  line;
     char*  decomm;
-    char   in_key[RC_KEY_LEN];
-    char   in_value[RC_VALUE_LEN];
+    char*  in_key;
+    char*  in_value;
+    const char* lbrack = "\"'";
+    const char* rbrack = "\"'";
     int    i;
     size_t size;
 
@@ -104,15 +145,19 @@ int read_rc(const char* rc, const int n, const char** key, char** value){
     size = 0;
     while(getline(&line, &size, fp) != -1){
         // delete comment
-        decomm = strtok(line, "#");
+        decomm = strchr(line, RC_COMMENT);
+        if (decomm != NULL){
+            *decomm = '\0';
+        }
 
-        if (line_to_dict(decomm, in_key, in_value) < 0){
+        if (line_to_dict(line, &in_key, &in_value) < 0){
             continue;
         }
 
         for (i = 0; i < n; i = i + 1){
             if (strcmp(in_key, key[i]) == 0){
-                snprintf(value[i], RC_VALUE_LEN, "%s", in_key);
+                delete_bracket(&in_value, (int)strlen(lbrack), lbrack, rbrack);
+                snprintf(value[i], RC_VALUE_LEN, "%s", in_value);
             }
         }
     }
@@ -120,7 +165,5 @@ int read_rc(const char* rc, const int n, const char** key, char** value){
     free(line);
     return 0;
 }
-
-
 
 

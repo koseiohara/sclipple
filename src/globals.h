@@ -15,12 +15,13 @@
 #define RC_KEY_LEN       32
 #define RC_VALUE_LEN    128
 
-#define PROGRAM  "sclipple"
-#define DIR      ".sclipple"
-#define EXT      "txt"
-#define SUBDIR   "notes"
-#define LISTNAME "list.csv"
-#define RCNAME   ".sclipplerc"
+#define PROGRAM    "sclipple"
+#define DIR        ".sclipple"
+#define EXT        "txt"
+#define SUBDIR     "notes"
+#define LISTNAME   "list.csv"
+#define RCNAME     ".sclipplerc"
+#define RC_COMMENT '#'
 
 // #define MAX_NUM_NOTE   2048                     // Maximum number of Notes
 

@@ -10,6 +10,7 @@
 #include "get_setting.h"
 #include "git_run.h"
 #include "names.h"
+#include "strutils.h"
 #include "memo_add.h"
 #include "memo_edit.h"
 #include "memo_rm.h"
