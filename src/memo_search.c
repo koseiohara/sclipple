@@ -108,6 +108,10 @@ int search_one_file(char* file, char* word){
         }
     }
 
+    if (say_name){
+        printf("\n");
+    }
+
     regfree(&regex);
     fclose(fp);
     return 0;
