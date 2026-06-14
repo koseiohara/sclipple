@@ -13,18 +13,19 @@
 // return -1 when io error or regex error
 // return 0 otherwise
 int search_one_file(char* file, char* word){
-    char  line[LINE_LEN];
-    char* lp;
-    char  errbuf[256];
-    int   errcode;
-    int   start;
-    int   end;
-    int   atty;
-    int   say_linenumber;
-    int   say_name;
-    int   matched;
-    int   ln;
-    FILE* fp;
+    char*  line;
+    char*  lp;
+    char   errbuf[256];
+    int    errcode;
+    int    start;
+    int    end;
+    int    atty;
+    int    say_linenumber;
+    int    say_name;
+    int    matched;
+    int    ln;
+    FILE*  fp;
+    size_t size;
     regex_t    regex;
     regmatch_t match[1];
 
@@ -33,6 +34,7 @@ int search_one_file(char* file, char* word){
         perror(file);
         return -1;
     }
+
 
     errcode = regcomp(&regex, word, REG_EXTENDED | REG_ICASE);
     if (errcode != 0){
@@ -46,8 +48,10 @@ int search_one_file(char* file, char* word){
 
     rewind(fp);
     say_name = false;
-    ln = 0;
-    while (fgets(line, sizeof(line), fp) != NULL){
+    ln   = 0;
+    size = 0;
+    line = NULL;
+    while (getline(&line, &size, fp) != -1){
         matched = false;
         say_linenumber = false;
         ln = ln + 1;
@@ -114,6 +118,7 @@ int search_one_file(char* file, char* word){
 
     regfree(&regex);
     fclose(fp);
+    free(line);
     return 0;
 }
 
