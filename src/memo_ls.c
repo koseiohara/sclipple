@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "globals.h"
+#include "names.h"
 #include "strutils.h"
 #include "edit_list.h"
 
@@ -82,8 +83,13 @@ int ls(const char* list, int flag_num, char** flag_list){
     }
     #endif
 
+    if (1 - path_exist(list)){
+        fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        return -1;
+    }
+
     if (flag_num < 0){
-        fprintf(stderr, "%s: Invalid number of flags: %d\n", PROGRAM, flag_num);
+        fprintf(stderr, "%s Error: Invalid number of flags: %d\n", PROGRAM, flag_num);
         return -1;
     } else if (flag_num > 0){
         lines = malloc((size_t)flag_num * sizeof(*lines));
@@ -118,7 +124,7 @@ int ls(const char* list, int flag_num, char** flag_list){
         } else if (result == 2){
             continue;
         } else if (result == -1){
-            fprintf(stderr, "%s: Invalid line is found in list file\nlist file is broken in line %d\n", PROGRAM, i);
+            fprintf(stderr, "%s Error: Invalid line is found in list file\nlist file is broken in line %d\n", PROGRAM, i);
             free(lines);
             fclose(fp);
             return -1;
@@ -155,7 +161,7 @@ int ls(const char* list, int flag_num, char** flag_list){
             printf("Note %d: %s\n", i, flag_list[i]);
             #endif
             if (lines[i][0] == '\0'){
-                fprintf(stderr, "%s: Note '%s' was not found\n", PROGRAM, flag_list[i]);
+                fprintf(stderr, "%s Error: Note '%s' was not found\n", PROGRAM, flag_list[i]);
                 free(lines);
                 fclose(fp);
                 return -2;

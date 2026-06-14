@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #include "globals.h"
 #include "datetime.h"
@@ -82,6 +83,18 @@ void mv_filename(char* old_file, const char* new_flag, size_t output_len, char* 
     #endif
 
     snprintf(output, output_len, "%s%s%s", prefix, new_flag, last);
+}
+
+
+int path_exist(const char* file){
+    struct stat st;
+    if (stat(file, &st) == 0){
+        // file exists
+        return true;
+    } else{
+        // file does not exist
+        return false;
+    }
 }
 
 

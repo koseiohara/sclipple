@@ -21,7 +21,7 @@
 int make_dir(const char* dir){
     struct stat st;
 
-    if (stat(dir, &st) == 0){
+    if (path_exist(dir)){
         #ifdef DEBUG
         printf("%s already exist\n", dir);
         #endif
@@ -53,10 +53,9 @@ int make_dir(const char* dir){
 // if already exist, return -1
 // if failed to open, return -2
 int make_file(const char* path, const int cond){
-    struct stat st;
     int fd;
 
-    if (stat(path, &st) != 0){
+    if (path_exist(path)){
         fd = open(path, cond, 0644);
         if (fd == -1){
             perror(path);
@@ -91,14 +90,14 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     #endif
 
     if (check_flag_length(flag) < 0){
-        fprintf(stderr, "%s: Too long keyword: %s. Length should be less than %d", PROGRAM, flag, FLAG_LEN);
+        fprintf(stderr, "%s Error: Too long keyword: %s. Length should be less than %d", PROGRAM, flag, FLAG_LEN);
         return -1;
     }
 
     stat = make_dir(dir);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s: %s exists but is not a directory\n", PROGRAM, dir);
+            fprintf(stderr, "%s Error: %s exists but is not a directory\n", PROGRAM, dir);
         }
         return -1;
     }
@@ -106,7 +105,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     stat = make_dir(note_stock);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s: %s exists but is not a directory\n", PROGRAM, dir);
+            fprintf(stderr, "%s Error: %s exists but is not a directory\n", PROGRAM, dir);
         }
         return -1;
     }
@@ -137,13 +136,13 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     stat = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s: %s already exists\n", PROGRAM, dir);
+            fprintf(stderr, "%s Error: %s already exists\n", PROGRAM, dir);
             return -1;
         } else if (stat == -2){
-            fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, dir);
+            fprintf(stderr, "%s Error: Failed to open %s\n", PROGRAM, dir);
             return -1;
         }
-        fprintf(stderr, "%s: Undefined Error\n", PROGRAM);
+        fprintf(stderr, "%s Error: Undefined Error\n", PROGRAM);
         return -1;
     }
 

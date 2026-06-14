@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "globals.h"
+#include "names.h"
 #include "edit_list.h"
 
 
@@ -39,7 +40,7 @@ int search_one_file(char* file, char* word){
     errcode = regcomp(&regex, word, REG_EXTENDED | REG_ICASE);
     if (errcode != 0){
         regerror(errcode, &regex, errbuf, sizeof(errbuf));
-        fprintf(stderr, "%s: regcomp failed\n", PROGRAM);
+        fprintf(stderr, "%s Error: regcomp failed\n", PROGRAM);
         fclose(fp);
         return -1;
     }
@@ -133,6 +134,11 @@ int search(char* list, char* word, int flag_num, char** flag_list){
     int   i;
     int   j;
 
+    if (1 - path_exist(list)){
+        fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        return -1;
+    }
+
     if (flag_num > 0){
         notename_list = malloc((size_t)flag_num * sizeof(*notename_list));
         if (notename_list == NULL){
@@ -161,7 +167,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
         } else if (result == 2){
             continue;
         } else if (result < 0){
-            fprintf(stderr, "%s: Invalid line is found in list file\nlist file is broken in line %d\n", PROGRAM, i);
+            fprintf(stderr, "%s Error: Invalid line is found in list file\nlist file is broken in line %d\n", PROGRAM, i);
             free(notename_list);
             fclose(fp);
             return -1;
@@ -185,7 +191,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
     if (flag_num > 0){
         for (j = 0; j <  flag_num; j = j + 1){
             if (notename_list[j][0] == '\0'){
-                fprintf(stderr, "%s: Note '%s' was not found\n", PROGRAM, flag_list[j]);
+                fprintf(stderr, "%s Error: Note '%s' was not found\n", PROGRAM, flag_list[j]);
                 free(notename_list);
                 fclose(fp);
                 return -1;

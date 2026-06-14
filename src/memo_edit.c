@@ -5,8 +5,9 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#include "edit_list.h"
 #include "globals.h"
+#include "names.h"
+#include "edit_list.h"
 
 void get_command(char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char file[][FILE_APATH_LEN], char** command){
     int i;
@@ -50,6 +51,11 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
     int i;
     int stat;
 
+    if (1 - path_exist(list)){
+        fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        return -1;
+    }
+
     pid = fork();
     if (pid == 0){
         if (chdir(dir) != 0){
@@ -63,7 +69,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             printf("Checked existence of %s\n", files[i]);
             #endif
             if (stat == -1){
-                fprintf(stderr, "%s: Invalid keyword. %s does not exist\n", PROGRAM, flags[i]);
+                fprintf(stderr, "%s Error: Invalid keyword. %s does not exist\n", PROGRAM, flags[i]);
                 _exit(1);
             }
         }

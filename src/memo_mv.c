@@ -39,6 +39,11 @@ int mv(const char* list, char* old_flag, char* new_flag){
     char new_file[FILE_APATH_LEN];
     char old_file[FILE_APATH_LEN];
 
+    if (1 - path_exist(list)){
+        fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        return -1;
+    }
+
     // get current file name from list file
     result = get_filename_by_key(list, old_flag, old_file);
     if (result != 0){
@@ -50,10 +55,10 @@ int mv(const char* list, char* old_flag, char* new_flag){
     if (result < 0){
         return -1;
     } else if (result == 1){
-        fprintf(stderr, "%s: %s: No such key.\n", PROGRAM, old_flag);
+        fprintf(stderr, "%s Error: %s: No such key.\n", PROGRAM, old_flag);
         return 1;
     } else if (result == 2){
-        fprintf(stderr, "%s: New Keyword %s already exists.\n", PROGRAM, new_flag);
+        fprintf(stderr, "%s Error: New Keyword %s already exists.\n", PROGRAM, new_flag);
         return 2;
     }
 

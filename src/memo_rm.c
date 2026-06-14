@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "globals.h"
+#include "names.h"
 #include "edit_list.h"
 
 int delete_note(const char* list, char* flag){
@@ -35,9 +36,14 @@ int rm(const char* list, char* flag){
     printf("List file name: %s\n", list);
     #endif
 
+    if (1 - path_exist(list)){
+        fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        return -1;
+    }
+
     result = delete_note(list, flag);
     if (result == -1){
-        fprintf(stderr, "%s: %s: No such key.\n", PROGRAM, flag);
+        fprintf(stderr, "%s Error: %s: No such key.\n", PROGRAM, flag);
         return -1;
     } else if (result == -2){
         return -1;
@@ -47,7 +53,7 @@ int rm(const char* list, char* flag){
     if (result < 0){
         return -1;
     } else if (result == 1){
-        fprintf(stderr, "%s: %s: No such key.\n", PROGRAM, flag);
+        fprintf(stderr, "%s Error: %s: No such key.\n", PROGRAM, flag);
         return 1;
     }
 
