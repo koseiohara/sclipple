@@ -67,7 +67,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char* result){
         // if the flag of the current line is target_flag
         if (strcmp(flag, target_flag) == 0){
             if (col == 0){
-                fclose(fp);
+                // fclose(fp);
                 return 0;
             }
             i = 1;
@@ -81,7 +81,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char* result){
                     #ifdef DEBUG
                     printf("<DEBUG> Extracted Word = %s\n", result);
                     #endif
-                    fclose(fp);
+                    // fclose(fp);
                     return 0;
                 }
                 i = i + 1;
@@ -93,7 +93,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char* result){
         }
     }
     // if target_flag is not found
-    fclose(fp);
+    // fclose(fp);
     return -1;
 }
 
@@ -185,8 +185,11 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     char* datetime;
     char* notename;
     char  new_notename[FILE_APATH_LEN];
+    char  out_flag[FLAG_LEN];
+    char  out_datetime[DATETIME_LEN];
+    char  out_notename[FILE_APATH_LEN];
     char  dummy[128];
-    const char* out_flag;
+    // const char* out_flag;
     int   fd;
     int   changed;
     struct stat st;
@@ -216,7 +219,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
     if (fchmod(fd, st.st_mode) != 0){
         perror(tmpfile);
-        close(fd);
+        fclose(fpw);
         unlink(tmpfile);
         return -1;
     }
@@ -272,16 +275,19 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
             return -1;
         }
 
-        out_flag = flag;
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
             mv_filename(notename, new_flag, sizeof(new_notename), new_notename);
-            strncpy(notename, new_notename, sizeof(new_notename));
-            out_flag = new_flag;
+            snprintf(out_flag    , sizeof(out_flag)    , "%s", new_flag);
+            snprintf(out_notename, sizeof(out_notename), "%s", new_notename);
             changed = 1;
+        } else{
+            snprintf(out_flag    , sizeof(out_flag)    , "%s", flag);
+            snprintf(out_notename, sizeof(out_notename), "%s", notename);
         }
+        snprintf(out_datetime, sizeof(out_datetime), "%s", datetime);
 
-        snprintf(line, sizeof(line), "%s,%s,%s\n", out_flag, datetime, notename);
+        snprintf(line, sizeof(line), "%s,%s,%s\n", out_flag, out_datetime, out_notename);
         if (fputs(line, fpw) == EOF){
             perror(tmpfile);
             fclose(fpr);
