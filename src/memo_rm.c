@@ -51,6 +51,7 @@ int rm(const char* list, char* flag){
         return 1;
     }
 
+    printf("%s: remove %s\n", PROGRAM, flag);
     return 0;
 }
 

@@ -63,7 +63,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             printf("Checked existence of %s\n", files[i]);
             #endif
             if (stat == -1){
-                fprintf(stderr, "Invalid keyword. %s does not exist\n", flags[i]);
+                fprintf(stderr, "%s: Invalid keyword. %s does not exist\n", PROGRAM, flags[i]);
                 _exit(1);
             }
         }
