@@ -13,7 +13,7 @@
 // return -1 when io error or regex error
 // return 0 otherwise
 int search_one_file(char* file, char* word){
-    char  line[SEARCH_LINE_LEN];
+    char  line[LINE_LEN];
     char* lp;
     char  errbuf[256];
     int   errcode;
