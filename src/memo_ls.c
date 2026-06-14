@@ -18,13 +18,25 @@ int get_first_line(const char* notename, const size_t first_line_len, char* firs
 
     fp = fopen(notename, "r");
     if (fp == NULL){
+        #ifdef DEBUG
+        printf("<DEBUG> get_first_line() failed to open file\n");
+        #endif
         perror(notename);
         return -1;
     }
 
+    #ifdef DEBUG
+    printf("<DEBUG> opened %s\n", notename);
+    #endif
 
     while (fgets(first_line, first_line_len, fp) != NULL){
+        #ifdef DEBUG
+        printf("<DEBUG> [LINE]: %s\n", first_line);
+        #endif
         if (is_white_space(first_line)){
+            #ifdef DEBUG
+            printf("<DEBUG> SKIP\n");
+            #endif
             continue;
         }
 
@@ -40,6 +52,11 @@ int get_first_line(const char* notename, const size_t first_line_len, char* firs
         fclose(fp);
         return 0;
     }
+
+    #ifdef DEBUG
+    printf("<DEBUG> %s is completely empty!\n", notename);
+    #endif
+
     first_line[0] = '\0';
     fclose(fp);
     return 1;
@@ -52,11 +69,17 @@ int ls(const char* list, int flag_num, char** flag_list){
     char  datetime[DATETIME_LEN];
     char  notename[FILE_APATH_LEN];
     char  first_line[LS_LINE_LEN];
-    // char  (*lines)[FLAG_LEN+12+DATETIME_LEN+3+LS_LINE_LEN+3] = malloc((size_t)flag_num * sizeof(*lines));     // <flag>\n  created: <datetime>\n  <first_line>\n\n\0
-    char  (*lines)[FLAG_LEN+12+DATETIME_LEN+3+LS_LINE_LEN+3] = NULL;
+    char  (*lines)[FLAG_LEN+13+DATETIME_LEN+3+LS_LINE_LEN+3] = NULL;        // <flag>:\n  created: <datetime>\n  <first_line>\n\n\0
     int   result;
     int   i;
     int   j;
+
+    #ifdef DEBUG
+    printf("<DEBUG> Number of Flags: %d\n", flag_num);
+    for (i = 0; i < flag_num; i = i + 1){
+        printf("<DEBUG> Flag %d: %s\n", i, flag_list[i]);
+    }
+    #endif
 
     if (flag_num < 0){
         fprintf(stderr, "Invalid number of flags: %d\n", flag_num);
@@ -102,6 +125,10 @@ int ls(const char* list, int flag_num, char** flag_list){
             return -1;
         }
 
+        #ifdef DEBUG
+        printf("<DEBUG> read: FLAG = %s, DATETIME = %s, NOTENAME = %s\n", flag, datetime, notename);
+        #endif
+
         if (flag_num > 0){
             for (j = 0; j < flag_num; j = j + 1){
                 if (strcmp(flag_list[j], flag) == 0){
@@ -110,9 +137,8 @@ int ls(const char* list, int flag_num, char** flag_list){
                         fclose(fp);
                         return -1;
                     }
-                    snprintf(lines[j], sizeof(lines[j]), "%s\n  created: %s\n  %s\n\n", flag, datetime, first_line);
+                    snprintf(lines[j], sizeof(lines[j]), "%s:\n  created: %s\n  %s\n\n", flag, datetime, first_line);
                 }
-                j = j + 1;
             }
         } else{
             if (get_first_line(notename, sizeof(first_line), first_line) < 0){
@@ -120,14 +146,19 @@ int ls(const char* list, int flag_num, char** flag_list){
                 fclose(fp);
                 return -1;
             }
-            printf("%s\n  created: %s\n  %s\n\n", flag, datetime, first_line);
+            printf("%s:\n  created: %s\n  %s\n\n", flag, datetime, first_line);
         }
     }
 
     if (flag_num > 0){
         for (i = 0; i < flag_num; i = i + 1){
+            #ifdef DEBUG
+            printf("Note %d: %s\n", i, flag_list[i]);
+            #endif
             if (lines[i][0] == '\0'){
-                fprintf(stderr, "%s: Note '%s' was not found", PROGRAM, flag_list[i]);
+                fprintf(stderr, "%s: Note '%s' was not found\n", PROGRAM, flag_list[i]);
+                free(lines);
+                fclose(fp);
                 return -2;
             }
         }

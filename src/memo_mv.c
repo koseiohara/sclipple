@@ -59,6 +59,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
 
     // get new file name
     mv_filename(old_file, new_flag, sizeof(new_file), new_file);
+    printf("%s: RENAME %s -> %s\n", PROGRAM, old_flag, new_flag);
 
     #ifdef DEBUG
     printf("<DEBUG> Rename %s to %s\n", old_file, new_file);

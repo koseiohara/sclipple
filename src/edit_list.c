@@ -15,14 +15,14 @@
 #define DELIM ","
 
 
-// return 0 if line is null or white space
-// return 1 if line is not a white space
+// return 1 if line is null or white space
+// return 0 if line is not a white space
 int is_white_space(const char* line){
     int i;
 
     i = 0;
     while(line[i] != '\0'){
-        if (isspace(line[i]) != 0){
+        if (isspace(line[i]) == 0){
             return 0;
         }
         i = i + 1;
@@ -71,7 +71,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char* result){
         // replace '\n' to '\0'
         line[strcspn(line, "\n")] = '\0';
 
-        if (is_white_space(line) == 0){
+        if (is_white_space(line) == 1){
             continue;
         }
 
@@ -270,7 +270,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         line[strcspn(line, "\n")] = '\0';
 
         // skip empty line
-        if (is_white_space(line) == 0){
+        if (is_white_space(line) == 1){
             continue;
         }
 
@@ -408,7 +408,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         line[strcspn(line, "\n")] = '\0';
 
         // skip empty line
-        if (is_white_space(line) == 0){
+        if (is_white_space(line) == 1){
             continue;
         }
 
@@ -499,6 +499,8 @@ int get_content_line(FILE* fp, size_t flag_len, char* flag, size_t datetime_len,
     if (is_white_space(line)){
         return 2;
     }
+
+    line[strcspn(line, "\n")] = '\0';
 
     in_flag     = strtok(line, DELIM);
     in_datetime = strtok(NULL, DELIM);
