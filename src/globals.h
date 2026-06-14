@@ -12,6 +12,8 @@
 #define FILE_APATH_LEN  (SUBDIR_LEN+1+FILE_LEN)                 // Length of $HOME/$DIR/$SUBDIR/*.txt
 #define LS_LINE_LEN     100                                     // Length of the 1st line shown when ls run
 // #define LINE_LEN        32768                                   // Maximum length of line for search
+#define RC_KEY_LEN       32
+#define RC_VALUE_LEN    128
 
 #define PROGRAM  "sclipple"
 #define DIR      ".sclipple"
