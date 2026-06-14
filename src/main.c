@@ -15,6 +15,7 @@
 #include "memo_rm.h"
 #include "memo_mv.h"
 #include "memo_ls.h"
+#include "memo_search.h"
 
 int main(int argc, char** argv){
     char editor[] = "nvim -p";
@@ -105,7 +106,16 @@ int main(int argc, char** argv){
         if (stat < 0){
             return 1;
         }
-    } else if (strcmp(argv[1], "grep") == 0){
+    } else if (strcmp(argv[1], "search") == 0){
+        if (argc  == 2){
+            show_help();
+            return 0;
+        } else{
+            stat = search(list, argv[2], argc-3, &argv[3]);
+            if (stat < 0){
+                return 1;
+            }
+        }
     } else if (strcmp(argv[1], "show") == 0){
     } else {
         separate_words(editor, &nwords, &editor_commands);
