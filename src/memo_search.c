@@ -15,11 +15,15 @@
 int search_one_file(char* file, char* word){
     char  line[SEARCH_LINE_LEN];
     char* lp;
+    char  errbuf[256];
+    int   errcode;
     int   start;
     int   end;
     int   atty;
+    int   say_linenumber;
     int   say_name;
     int   matched;
+    int   ln;
     FILE* fp;
     regex_t    regex;
     regmatch_t match[1];
@@ -30,7 +34,9 @@ int search_one_file(char* file, char* word){
         return -1;
     }
 
-    if (regcomp(&regex, word, REG_EXTENDED | REG_ICASE) != 0){
+    errcode = regcomp(&regex, word, REG_EXTENDED | REG_ICASE);
+    if (errcode != 0){
+        regerror(errcode, &regex, errbuf, sizeof(errbuf));
         fprintf(stderr, "%s: regcomp failed\n", PROGRAM);
         fclose(fp);
         return -1;
@@ -40,8 +46,11 @@ int search_one_file(char* file, char* word){
 
     rewind(fp);
     say_name = false;
+    ln = 0;
     while (fgets(line, sizeof(line), fp) != NULL){
-        matched  = false;
+        matched = false;
+        say_linenumber = false;
+        ln = ln + 1;
 
         // replace '\n' with '\0'
         line[strcspn(line, "\n")] = '\0';
@@ -57,6 +66,11 @@ int search_one_file(char* file, char* word){
                     printf("%s\n", file);
                 }
                 say_name = true;
+            }
+
+            if (1 - say_linenumber){
+                printf("%d:", ln);
+                say_linenumber = true;
             }
 
             start = match[0].rm_so;
@@ -143,7 +157,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
         if (flag_num > 0){
             for (j = 0; j <  flag_num; j = j + 1){
                 if (strcmp(flag, flag_list[j]) == 0){
-                    strcpy(notename_list[j], notename);
+                    snprintf(notename_list[j], FILE_APATH_LEN, "%s", notename);
                 }
             }
         } else{
