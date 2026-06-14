@@ -124,6 +124,7 @@ void delete_bracket(char** s, int n, const char* lbracket, const char* rbracket)
 
 
 // return -1 when io error
+// return 0 otherwise
 int read_rc(const char* rc, const int n, const char** key, char** value){
     FILE*  fp;
     char*  line;

@@ -4,6 +4,7 @@
 #include <strings.h>
 #include <string.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #include "globals.h"
 #include "help.h"
@@ -20,7 +21,8 @@
 #include "memo_show.h"
 
 int main(int argc, char** argv){
-    char editor[] = "nvim -p";
+    const char* rc_keys[] = {"editor", "extention"};
+    char*       rc_vals[] = {EDITOR  , EXT};
     char** editor_commands;
     char*  home;
     char   dir[DIR_LEN];
@@ -28,11 +30,14 @@ int main(int argc, char** argv){
     char   rc[RC_LEN];
     char   list[LIST_APATH_LEN];
     char   ext[EXT_LEN];
+    char   editor[EDITOR_LEN];
     int    nwords;
-    int    stat;
+    int    result;
     int    i;
     time_t now;
     struct tm* lt;
+    struct stat st;
+
 
     if (get_env("HOME", &home) == -1){
         return 1;
@@ -41,11 +46,19 @@ int main(int argc, char** argv){
     printf("$HOME = %s\n", home);
     #endif
 
+    snprintf(rc, sizeof(rc), "%s/%s", home, RCNAME);
+    if (stat(rc, &st) == 0){
+        if (read_rc(rc, sizeof(rc_keys)/sizeof(rc_keys[0]), rc_keys, rc_vals) < 0){
+            fprintf(stderr, "%s: Failed to read %s\n", PROGRAM, rc);
+            return 1;
+        }
+    }
+
     snprintf(dir   , sizeof(dir)   , "%s/%s", home, DIR);
     snprintf(subdir, sizeof(subdir), "%s/%s", dir , SUBDIR);
-    snprintf(rc    , sizeof(rc)    , "%s/%s", home, RCNAME);
     snprintf(list  , sizeof(list)  , "%s/%s", dir , LISTNAME);
-    strcpy(ext, EXT);
+    snprintf(editor, sizeof(editor), "%s"   , rc_vals[0]);
+    snprintf(ext   , sizeof(ext)   , "%s"   , rc_vals[1]);
     #ifdef DEBUG
     printf("dir   = %s\n", dir);
     printf("subdir= %s\n", subdir);
@@ -72,8 +85,8 @@ int main(int argc, char** argv){
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
-                stat = add(list, dir, subdir, argv[i], ext, lt);
-                if (stat == -1){
+                result = add(list, dir, subdir, argv[i], ext, lt);
+                if (result == -1){
                     fprintf(stderr, "%s: Failed to make new note: %s. %s exist.\n", PROGRAM, argv[i], argv[i]);
                 }
             }
@@ -85,8 +98,8 @@ int main(int argc, char** argv){
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
-                stat = rm(list, argv[i]);
-                if (stat < 0){
+                result = rm(list, argv[i]);
+                if (result < 0){
                     return 1;
                 }
             }
@@ -97,15 +110,15 @@ int main(int argc, char** argv){
             show_help();
             return 0;
         } else{
-            stat = mv(list, argv[2], argv[3]);
-            if (stat < 0){
+            result = mv(list, argv[2], argv[3]);
+            if (result < 0){
                 return 1;
             }
         }
 
     } else if (strcmp(argv[1], "ls") == 0){
-        stat = ls(list, argc-2, &argv[2]);
-        if (stat < 0){
+        result = ls(list, argc-2, &argv[2]);
+        if (result < 0){
             return 1;
         }
     } else if (strcmp(argv[1], "search") == 0){
@@ -113,20 +126,20 @@ int main(int argc, char** argv){
             show_help();
             return 0;
         } else{
-            stat = search(list, argv[2], argc-3, &argv[3]);
-            if (stat < 0){
+            result = search(list, argv[2], argc-3, &argv[3]);
+            if (result < 0){
                 return 1;
             }
         }
     } else if (strcmp(argv[1], "show") == 0){
-        stat = show(list, argc-2, &argv[2]);
-        if (stat < 0){
+        result = show(list, argc-2, &argv[2]);
+        if (result < 0){
             return 1;
         }
     } else {
         separate_words(editor, &nwords, &editor_commands);
-        stat = memo_edit(list, subdir, editor_commands[0], nwords-1, &editor_commands[1], argc-1, &argv[1]);
-        if (stat == -1){
+        result = memo_edit(list, subdir, editor_commands[0], nwords-1, &editor_commands[1], argc-1, &argv[1]);
+        if (result == -1){
             return 1;
         }
     }
