@@ -67,7 +67,19 @@ int main(int argc, char** argv){
 
 
     if (argc == 1){
-        show_help();
+        show_help_all();
+        return 0;
+    } else if (strcmp(argv[1], "help") == 0 || strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0){
+        if (argc == 2){
+            show_help_all();
+        } else{
+            for (i = 2; i < argc; i = i + 1){
+                show_help_command(argv[i]);
+                if (i + 1 < argc){
+                    printf("\n");
+                }
+            }
+        }
         return 0;
     } else if (strcmp(argv[1], "git") == 0){
         git_run(dir, &argv[1]);
