@@ -24,7 +24,7 @@
 int main(int argc, char** argv){
     Config  config;
     RcEntry entry[N_ENTRY];
-    char** editor_commands;
+    char** editor_commands=NULL;
     char*  home;
     char   dir[DIR_LEN];
     char   subdir[SUBDIR_LEN];
@@ -138,16 +138,20 @@ int main(int argc, char** argv){
         result = separate_words(config.editor, &nwords, &editor_commands);
         if (result == -1){
             fprintf(stderr, "%s Error: Specified editor command is empty\n", PROGRAM);
+            free(editor_commands);
             return 1;
         } else if (result == -2){
+            free(editor_commands);
             return 1;
         }
         result = memo_edit(list, subdir, editor_commands[0], nwords-1, &editor_commands[1], argc-1, &argv[1]);
         if (result == -1){
+            free(editor_commands);
             return 1;
         }
     }
 
+    free(editor_commands);
     return 0;
 }
 

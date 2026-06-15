@@ -162,7 +162,6 @@ int flag_exist_check(const char* list, char* flag){
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
-        fclose(fp);
         return -2;
     }
 
@@ -181,18 +180,17 @@ int flag_exist_check(const char* list, char* flag){
 }
 
 
-int get_datetime_by_key(const char* list, char* flag, char* datetime){
+int get_datetime_by_key(const char* list, char* flag, size_t datetime_len, char* datetime){
     int  stat;
     FILE* fp;
 
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
-        fclose(fp);
         return -2;
     }
 
-    stat = read_list_by_key(fp, flag, 1, sizeof(datetime), datetime);
+    stat = read_list_by_key(fp, flag, 1, datetime_len, datetime);
 
     fclose(fp);
 
@@ -210,7 +208,6 @@ int get_filename_by_key(const char* list, char* flag, size_t filename_len, char*
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
-        fclose(fp);
         return -2;
     }
 

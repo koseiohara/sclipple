@@ -16,7 +16,8 @@
 #include "edit_list.h"
 
 
-// if directory does not exist, run mkdir()
+// if directory does not exist, run mkdir() and return 0
+// if directory already exist, return 1
 // if file, return -1
 // if mkdir failed, return -2
 int make_dir(const char* dir){
@@ -32,7 +33,7 @@ int make_dir(const char* dir){
             #ifdef DEBUG
             printf("%s is a directory\n", dir);
             #endif
-            return 0;
+            return 1;
         } else {
             #ifdef DEBUG
             printf("%s is NOT a directory\n", dir);
@@ -55,6 +56,7 @@ int make_dir(const char* dir){
 
 
 // if file does not exist, open and close the specified file to make it
+// if file does not exist, run open and return 0
 // if already exist, return -1
 // if failed to open, return -2
 int make_file(const char* path, const int cond){
@@ -117,6 +119,8 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
             fprintf(stderr, "%s Error: %s exists but is not a directory\n", PROGRAM, dir);
         }
         return -2;
+    } else if (stat == 0){
+        printf("%s: Running initialization process\n", PROGRAM);
     }
 
     stat = make_dir(note_stock);
@@ -125,6 +129,8 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
             fprintf(stderr, "%s Error: %s exists but is not a directory\n", PROGRAM, dir);
         }
         return -2;
+    } else if (stat == 0){
+        printf("%s: Running initialization process\n", PROGRAM);
     }
 
     get_datetime(clock, '-', sizeof(datetime), datetime);
@@ -141,6 +147,8 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     if (stat == -2){
         // fprintf(stderr, "%s Error: Failed to make list file\n", PROGRAM);
         return -2;
+    } else if (stat == 0){
+        printf("%s: Running initialization process\n", PROGRAM);
     }
 
     stat = flag_exist_check(list, flag);
@@ -168,6 +176,8 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         }
         fprintf(stderr, "%s Error: Undefined Error\n", PROGRAM);
         return -4;
+    } else{
+        printf("%s: Create new note: %s\n", PROGRAM, flag);
     }
 
     get_datetime(clock, '-', sizeof(datetime), datetime);

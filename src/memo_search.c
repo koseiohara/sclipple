@@ -41,6 +41,7 @@ int search_one_file(char* flag, char* file, char* word){
     errcode = regcomp(&regex, word, REG_EXTENDED | REG_ICASE);
     if (errcode != 0){
         regerror(errcode, &regex, errbuf, sizeof(errbuf));
+        regfree(&regex);
         fprintf(stderr, "%s Error: regcomp failed\n", PROGRAM);
         fclose(fp);
         return -1;

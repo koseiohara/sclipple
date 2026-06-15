@@ -15,6 +15,16 @@ int mv(const char* list, char* old_flag, char* new_flag){
     char new_file[FILE_APATH_LEN];
     char old_file[FILE_APATH_LEN];
 
+    result = flag_validation(new_flag);
+    if (result < 0){
+        if (result == -1){
+            fprintf(stderr, "%s Error: Too long keyword: %s. Length should be less than %d\n", PROGRAM, new_flag, FLAG_LEN);
+        } else if (result == -2){
+            fprintf(stderr, "%s Error: Invalid character is included in %s. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, new_flag);
+        }
+        return -3;
+    }
+
     result = path_status(list, &st);
     if (result != 1){
         if (result == 0){
