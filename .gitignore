@@ -3,3 +3,8 @@
 /src/sclipple
 
 /autom4te.cache
+/src/.deps
+/src/Makefile
+/Makefile
+/config.log
+/config.status
