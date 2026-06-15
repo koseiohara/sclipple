@@ -26,7 +26,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
     } 
 
     // get current file name from list file
-    result = get_filename_by_key(list, old_flag, old_file);
+    result = get_filename_by_key(list, old_flag, sizeof(old_file), old_file);
     if (result != 0){
         return -1;
     }

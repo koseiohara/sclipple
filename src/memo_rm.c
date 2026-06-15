@@ -12,7 +12,7 @@ int delete_note(const char* list, char* flag){
     int result;
     char filename[FILE_APATH_LEN];
 
-    result = get_filename_by_key(list, flag, filename);
+    result = get_filename_by_key(list, flag, sizeof(filename), filename);
     if (result != 0){
         return -1;
     }

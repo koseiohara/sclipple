@@ -71,7 +71,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         }
 
         for (i = 0; i < flag_num; i = i + 1){
-            result = get_filename_by_key(list, flags[i], files[i]);
+            result = get_filename_by_key(list, flags[i], sizeof(files[i]), files[i]);
             #ifdef DEBUG
             printf("Checked existence of %s\n", files[i]);
             #endif

@@ -43,6 +43,10 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
 }
 
 
+// return -2 if list file is broken
+// return -1 if col is too large or list element in a line is less than 3
+// return  0 if target line is found
+// return  1 if flag does not exist
 int read_list_by_key(FILE* fp, char* target_flag, const int col, size_t result_len, char* result){
     char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
     char* flag;
@@ -78,6 +82,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, size_t result_l
         snprintf(result, result_len, "%s", flag);
         return 0;
     }
+    return 1;
 }
 
 
@@ -161,15 +166,15 @@ int flag_exist_check(const char* list, char* flag){
         return -2;
     }
 
-    stat = read_list_by_key(fp, flag, 0, dummy);
+    stat = read_list_by_key(fp, flag, 0, sizeof(dummy), dummy);
 
     fclose(fp);
 
-    if (stat == -1){
+    if (stat == 1){
         return 0;
     } else if (stat == 0){
         return -1;
-    } else if (stat == -2){
+    } else if (stat < 0){
         exit(1);
     }
     return -2;
@@ -187,18 +192,18 @@ int get_datetime_by_key(const char* list, char* flag, char* datetime){
         return -2;
     }
 
-    stat = read_list_by_key(fp, flag, 1, datetime);
+    stat = read_list_by_key(fp, flag, 1, sizeof(datetime), datetime);
 
     fclose(fp);
 
-    if (stat < 0){
+    if (stat < 0 || stat == 1){
         return -1;
     }
     return 0;
 }
 
 
-int get_filename_by_key(const char* list, char* flag, char* filename){
+int get_filename_by_key(const char* list, char* flag, size_t filename_len, char* filename){
     int  stat;
     FILE* fp;
 
@@ -209,11 +214,11 @@ int get_filename_by_key(const char* list, char* flag, char* filename){
         return -2;
     }
 
-    stat = read_list_by_key(fp, flag, 2, filename);
+    stat = read_list_by_key(fp, flag, 2, filename_len, filename);
 
     fclose(fp);
 
-    if (stat < 0){
+    if (stat < 0 || stat == 1){
         return -1;
     }
     return 0;
@@ -242,6 +247,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     // const char* out_flag;
     int   fd;
     int   changed;
+    int   result;
     struct stat st;
 
     changed = 0;
@@ -283,10 +289,15 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     }
 
     // check existence of the new flag
-    if (read_list_by_key(fpr, new_flag, 0, dummy) != -1){
+    result = read_list_by_key(fpr, new_flag, 0, sizeof(dummy), dummy);
+    if (result != 1){
         fclose(fpr);
         fclose(fpw);
         unlink(tmpfile);
+        if (result < 0){
+            fprintf(stderr, "%s Error: Invalid list file. list file is broken\n", PROGRAM);
+            exit(1);
+        }
         return 2;
     }
     #ifdef DEBUG

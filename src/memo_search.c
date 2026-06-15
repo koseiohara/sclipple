@@ -14,7 +14,7 @@
 
 // return -1 when io error or regex error
 // return 0 otherwise
-int search_one_file(char* file, char* word){
+int search_one_file(char* flag, char* file, char* word){
     char*  line;
     char*  lp;
     char   errbuf[256];
@@ -67,9 +67,9 @@ int search_one_file(char* file, char* word){
 
             if (1 - say_name){
                 if (atty){
-                    printf("\033[34m%s\033[0m\n", file);
+                    printf("[\033[34m%s\033[0m]\n", flag);
                 } else{
-                    printf("%s\n", file);
+                    printf("[%s]\n", flag);
                 }
                 say_name = true;
             }
@@ -187,7 +187,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 }
             }
         } else{
-            if (search_one_file(notename, word) != 0){
+            if (search_one_file(flag, notename, word) != 0){
                 free(notename_list);
                 fclose(fp);
                 return -1;
@@ -205,7 +205,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
-            if (search_one_file(notename_list[j], word) != 0){
+            if (search_one_file(flag_list[j], notename_list[j], word) != 0){
                 free(notename_list);
                 fclose(fp);
                 return -1;

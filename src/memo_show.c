@@ -11,7 +11,7 @@
 #include "edit_list.h"
 
 
-int show_one_file(char* file){
+int show_one_file(char* flag, char* file){
     FILE*  fp;
     char*  line;
     int    atty;
@@ -29,9 +29,9 @@ int show_one_file(char* file){
     // show file name
     atty = isatty(fileno(stdout));
     if (atty){
-        printf("\033[34m%s\033[0m\n", file);
+        printf("[\033[34m%s\033[0m]\n", flag);
     } else{
-        printf("%s\n", file);
+        printf("[%s]\n", flag);
     }
 
     while (getline(&line, &size, fp) != -1){
@@ -109,7 +109,7 @@ int show(char* list, int flag_num, char** flag_list){
                 }
             }
         } else{
-            if (show_one_file(notename) != 0){
+            if (show_one_file(flag, notename) != 0){
                 free(notename_list);
                 fclose(fp);
                 return -1;
@@ -127,7 +127,7 @@ int show(char* list, int flag_num, char** flag_list){
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
-            if (show_one_file(notename_list[j]) != 0){
+            if (show_one_file(flag_list[j], notename_list[j]) != 0){
                 free(notename_list);
                 fclose(fp);
                 return -1;

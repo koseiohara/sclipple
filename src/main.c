@@ -86,10 +86,8 @@ int main(int argc, char** argv){
         } else{
             for (i = 2; i < argc; i = i + 1){
                 result = add(list, dir, subdir, argv[i], ext, lt);
-                if (result == -1){
-                    fprintf(stderr, "%s: Failed to make new note: %s. %s exist.\n", PROGRAM, argv[i], argv[i]);
-                } else if (result == -2){
-                    fprintf(stderr, "%s IO Error\n", PROGRAM);
+                if (result == -2){
+                    return 1;
                 }
             }
         }

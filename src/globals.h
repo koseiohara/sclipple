@@ -22,7 +22,7 @@
 #define SUBDIR     "notes"
 #define LISTNAME   ".list.csv"
 #define RCNAME     ".sclipplerc"
-#define EDITOR     "vim -p"
+#define EDITOR     "nvim -p"
 #define RC_COMMENT '#'
 
 // #define MAX_NUM_NOTE   2048                     // Maximum number of Notes

@@ -87,12 +87,14 @@ int ls(const char* list, int flag_num, char** flag_list){
     #endif
 
     result = path_status(list, &st);
-    if (result == 1){
-        fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+    if (result != 1){
+        if (result == 0){
+            fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        } else if (result == -1){
+            fprintf(stderr, "%s IO Error: Failed to access list file\n", PROGRAM);
+        }
         return -1;
-    } else if (result == -1){
-        return -1;
-    }
+    } 
 
     if (flag_num < 0){
         fprintf(stderr, "%s Error: Invalid number of flags: %d\n", PROGRAM, flag_num);
