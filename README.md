@@ -6,8 +6,8 @@ Sometimes you want to write something down while working in a terminal.
 Creating a file in the current directory is often the wrong choice. Switching to a dedicated notes directory is also unnecessary work.
 sclipple stores notes in a single location and lets you access them from anywhere using short keys.
 ```sh
-$ sclipple add ssh
-$ sclipple ssh
+$ sclipple add foo
+$ sclipple foo
 ```
 
 A note created in one directory can be reopened later from any other directory.
