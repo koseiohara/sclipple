@@ -48,9 +48,14 @@ int main(int argc, char** argv){
     snprintf(rc, sizeof(rc), "%s/%s", home, RCNAME);
     init(&config, entry);
     if (path_status(rc, &st) == 1){
-        if (read_rc(rc, entry, sizeof(entry) / sizeof(entry[0])) < 0){
-            fprintf(stderr, "%s: Failed to read %s\n", PROGRAM, rc);
-            return 1;
+        result = read_rc(rc, entry, sizeof(entry) / sizeof(entry[0]));
+        if (result < 0){
+            if (result == -1){
+                fprintf(stderr, "%s: Failed to read %s\n", PROGRAM, rc);
+                return 1;
+            } else if (result == -2){
+                return 1;
+            }
         }
     }
 

@@ -34,6 +34,37 @@ int check_flag_length(char* flag){
 
 // return -1 for invalid length
 // return -2 for invalid character
+// return  0 for valid ext
+int ext_validation(const char* ext){
+    unsigned char c;
+    size_t i;
+    size_t len;
+
+    // check length
+    if (ext == NULL){
+        return -1;
+    }
+
+    len = strlen(ext);
+
+    if (len >= EXT_LEN){
+        return -1;
+    }
+
+    for (i = 0; i < len; i = i + 1){
+        c = ext[i];
+        if (isalnum(c) || c == '_' || c == '-' || c == '.'){
+            continue;
+        }
+        return -2;
+    }
+
+    return 0;
+}
+
+
+// return -1 for invalid length
+// return -2 for invalid character
 // return  0 for valid flag
 int flag_validation(const char* flag){
     unsigned char c;

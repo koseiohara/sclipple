@@ -6,6 +6,7 @@
 
 #include "globals.h"
 #include "strutils.h"
+#include "names.h"
 #include "get_rc.h"
 
 
@@ -41,6 +42,7 @@ void init(Config* config, RcEntry* entry){
 }
 
 
+// return -2 when bad input
 // return -1 when io error
 // return 0 otherwise
 int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
@@ -53,6 +55,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
     const char* rbrack = "\"'";
     int    i;
     int    n;
+    int    result;
     size_t size;
 
     fp = fopen(rc, "r");
@@ -79,6 +82,14 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
             if (strcmp(in_key, entry[i].key) == 0){
                 delete_bracket(&in_value, (int)strlen(lbrack), lbrack, rbrack);
                 snprintf(entry[i].value, entry[i].len, "%s", in_value);
+
+                if (strcmp(entry[i].key, "extension") == 0){
+                    result = ext_validation(entry[i].value);
+                    if (result != 0){
+                        fprintf(stderr, "%s: Invalid extension: %s. extension must consist of alphabets, numbers, '.', '-', and '_'\n", rc, entry[i].value);
+                        return -2;
+                    }
+                }
             }
         }
     }
