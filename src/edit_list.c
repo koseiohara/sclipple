@@ -12,7 +12,6 @@
 #include "strutils.h"
 #include "names.h"
 
-#define DATETIME_LEN 20
 #define DELIM ","
 
 
@@ -44,12 +43,51 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
 }
 
 
+int read_list_by_key(FILE* fp, char* target_flag, const int col, size_t result_len, char* result){
+    char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
+    char* flag;
+    int   i;
+
+    while(fgets(line, sizeof(line), fp) != NULL){
+        line[strcspn(line, "\n")] = '\0';
+
+        if (is_white_space(line) == 1){
+            continue;
+        }
+
+        flag = strtok(line, DELIM);
+        if (flag == NULL){
+            fprintf(stderr, "%s Error: Invalid list file. list file is broken\n", PROGRAM);
+            return -2;
+        }
+
+        if (strcmp(flag, target_flag) != 0){
+            continue;
+        }
+
+        if (col == 0){
+            return 0;
+        }
+        for (i = 1; i <= col; i = i + 1){
+            flag = strtok(NULL, DELIM);
+            if (flag == NULL){
+                fprintf(stderr, "%s Error: Invalid col. col exceeds the number of actual columns\n", PROGRAM);
+                return -1;
+            }
+        }
+        snprintf(result, result_len, "%s", flag);
+        return 0;
+    }
+}
+
+
 // col is zero-based
 // if col=0 is specified, result is not overrided
-int read_list_by_key(FILE* fp, char* target_flag, const int col, char* result){
+int read_list_by_key_old(FILE* fp, char* target_flag, const int col, char* result){
     int i;
     char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
     char* flag;
+    char* s;
 
     // read line by line
     while(fgets(line, sizeof(line), fp) != NULL){
@@ -62,6 +100,10 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char* result){
 
         // find the first delimiter
         flag = strtok(line, DELIM);
+        if (flag == NULL){
+            fprintf(stderr, "%s Error: Invalid list file. list file is broken\n", PROGRAM);
+            return -2;
+        }
 
         #ifdef DEBUG
         printf("<DEBUG> Flag = %s\n", flag);
@@ -73,9 +115,14 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char* result){
                 return 0;
             }
             i = 1;
-            while (flag != NULL){
+            while (true){
                 // find target column...
-                strcpy(result, strtok(NULL, DELIM));
+                s = strtok(NULL, DELIM);
+                if (s == NULL){
+                    fprintf(stderr, "%s Error: Invalid list file. list file is broken\n", PROGRAM);
+                    return -2;
+                }
+                strcpy(result, s);
                 #ifdef DEBUG
                 printf("<DEBUG> Col = %d, Word = %s\n", i, result);
                 #endif
@@ -174,7 +221,8 @@ int get_filename_by_key(const char* list, char* flag, char* filename){
 
 
 // IO error, return -1
-// if failed to copy tmporary file to list, return -2
+// if failed to copy temporary file to list, return -2
+// list broken error, return -3
 // if flag is not found, return 1
 // if new flag is exist, return 2
 // otherwise, return 0
@@ -279,7 +327,9 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
-            mv_filename(notename, new_flag, sizeof(new_notename), new_notename);
+            if (mv_filename(notename, new_flag, sizeof(new_notename), new_notename) < 0){
+                return -3;
+            }
             snprintf(out_flag    , sizeof(out_flag)    , "%s", new_flag);
             snprintf(out_notename, sizeof(out_notename), "%s", new_notename);
             changed = 1;

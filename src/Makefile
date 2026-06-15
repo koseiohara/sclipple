@@ -17,7 +17,7 @@ OBJS = help.o 		 \
 	   main.o
 
 CC = gcc
-CFLAGS = -O2 -Wall
+CFLAGS = -O2 -Wall -Wextra -D_POSIX_C_SOURCE=200809L
 
 %.o : %.c
 	$(CC) -c $< $(CFLAGS)

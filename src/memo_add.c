@@ -18,10 +18,13 @@
 
 // if directory does not exist, run mkdir()
 // if file, return -1
+// if mkdir failed, return -2
 int make_dir(const char* dir){
     struct stat st;
+    int result;
 
-    if (stat(dir, &st) == 0){
+    result = path_status(dir, &st);
+    if (result == 1){
         #ifdef DEBUG
         printf("%s already exist\n", dir);
         #endif
@@ -36,15 +39,17 @@ int make_dir(const char* dir){
             #endif
             return -1;
         }
-    } else {
+    } else if (result == 0){
         #ifdef DEBUG
         printf("mkdir %s\n", dir);
         #endif
-        if (mkdir(dir, 0731) == -1){
+        if (mkdir(dir, 0755) == -1){
             perror(dir);
             return -2;
         }
         return 0;
+    } else{
+        return -1;
     }
 }
 
@@ -53,9 +58,12 @@ int make_dir(const char* dir){
 // if already exist, return -1
 // if failed to open, return -2
 int make_file(const char* path, const int cond){
+    struct stat st;
+    int result;
     int fd;
 
-    if (1 - path_exist(path)){
+    result = path_status(path, &st);
+    if (result == 0){
         fd = open(path, cond, 0644);
         if (fd == -1){
             perror(path);
@@ -71,6 +79,8 @@ int make_file(const char* path, const int cond){
 
 // if successfully added, return 0
 // if flag is exist, return -1
+// if IO error, return -2
+// if flag includes invalid character or is too long, return -3
 // otherwise, stop process
 int add(const char* list, const char* dir, const char* note_stock, char* flag, char* ext, struct tm* clock){
     char file[FILE_LEN];
@@ -88,9 +98,14 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     printf("<DEBUG> Length of file: %lu\n", strlen(file));
     #endif
 
-    if (check_flag_length(flag) < 0){
-        fprintf(stderr, "%s Error: Too long keyword: %s. Length should be less than %d\n", PROGRAM, flag, FLAG_LEN);
-        return -1;
+    stat = flag_validation(flag);
+    if (stat < 0){
+        if (stat == -1){
+            fprintf(stderr, "%s Error: Too long keyword: %s. Length should be less than %d\n", PROGRAM, flag, FLAG_LEN);
+        } else if (stat == -2){
+            fprintf(stderr, "%s Error: Invalid character is included in %s. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, flag);
+        }
+        return -3;
     }
 
     stat = make_dir(dir);
@@ -98,7 +113,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         if (stat == -1){
             fprintf(stderr, "%s Error: %s exists but is not a directory\n", PROGRAM, dir);
         }
-        return -1;
+        return -2;
     }
 
     stat = make_dir(note_stock);
@@ -106,7 +121,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         if (stat == -1){
             fprintf(stderr, "%s Error: %s exists but is not a directory\n", PROGRAM, dir);
         }
-        return -1;
+        return -2;
     }
 
     get_datetime(clock, '-', sizeof(datetime), datetime);
@@ -121,13 +136,19 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
 
     stat = make_file(list, O_CREAT | O_WRONLY);
     if (stat == -2){
-        fprintf(stderr, "%s Error: Failed to make list file\n", PROGRAM);
+        // fprintf(stderr, "%s Error: Failed to make list file\n", PROGRAM);
         return -2;
     }
 
     stat = flag_exist_check(list, flag);
     if (stat < 0){
-        return stat;
+        if (stat == -1){
+            fprintf(stderr, "%s: %s already exist\n", PROGRAM, flag);
+            return -1;
+        } else if (stat == -2){
+            return -2;
+        }
+        return -4;
     }
     #ifdef DEBUG
     printf("%s: Passed Flag Existence Check\n", flag);
@@ -139,11 +160,11 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
             fprintf(stderr, "%s Error: %s already exists\n", PROGRAM, path);
             return -1;
         } else if (stat == -2){
-            fprintf(stderr, "%s IO Error: Failed to open %s\n", PROGRAM, path);
+            // fprintf(stderr, "%s IO Error: Failed to open %s\n", PROGRAM, path);
             return -2;
         }
         fprintf(stderr, "%s Error: Undefined Error\n", PROGRAM);
-        return -3;
+        return -4;
     }
 
     get_datetime(clock, '-', sizeof(datetime), datetime);

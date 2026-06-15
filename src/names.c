@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <time.h>
+#include <errno.h>
 #include <sys/stat.h>
 
 #include "globals.h"
@@ -30,17 +32,36 @@ int check_flag_length(char* flag){
 }
 
 
-int flag_validation(char* flag){
-    char* p;
+// return -1 for invalid length
+// return -2 for invalid character
+// return  0 for valid flag
+int flag_validation(const char* flag){
+    unsigned char c;
+    size_t i;
+    size_t len;
 
-    p = strchr(flag, '/');
-    if (p != NULL){
+    // check length
+    if (flag == NULL){
         return -1;
     }
 
-    p = strchr(flag, '$');
-    if (p != NULL){
+    len = strlen(flag);
+
+    if (len >= FLAG_LEN){
         return -1;
+    }
+
+    // check banned character
+    if (strcmp(flag, ".") == 0 || strcmp(flag, "..") == 0) {
+        return -2;
+    }
+
+    for (i = 0; i < len; i = i + 1){
+        c = flag[i];
+        if (isalnum(c) || c == '_' || c == '-'){
+            continue;
+        }
+        return -2;
     }
 
     return 0;
@@ -109,15 +130,20 @@ int mv_filename(char* old_file, const char* new_flag, size_t output_len, char* o
 }
 
 
-int path_exist(const char* file){
-    struct stat st;
-    if (stat(file, &st) == 0){
-        // file exists
-        return true;
-    } else{
-        // file does not exist
-        return false;
+// return 1 if path exist
+// return 0 if path does not exist
+// return -1 if error other than ENOENT
+int path_status(const char* path, struct stat* st){
+    if (stat(path, st) == 0){
+        return 1;
     }
+
+    if (errno == ENOENT){
+        return 0;
+    }
+
+    perror(path);
+    return -1;
 }
 
 
