@@ -123,48 +123,4 @@ void delete_bracket(char** s, int n, const char* lbracket, const char* rbracket)
 }
 
 
-// return -1 when io error
-// return 0 otherwise
-int read_rc(const char* rc, const int n, const char** key, char** value){
-    FILE*  fp;
-    char*  line;
-    char*  decomm;
-    char*  in_key;
-    char*  in_value;
-    const char* lbrack = "\"'";
-    const char* rbrack = "\"'";
-    int    i;
-    size_t size;
-
-    fp = fopen(rc, "r");
-    if (fp == NULL){
-        perror(rc);
-        return -1;
-    }
-
-    line = NULL;
-    size = 0;
-    while(getline(&line, &size, fp) != -1){
-        // delete comment
-        decomm = strchr(line, RC_COMMENT);
-        if (decomm != NULL){
-            *decomm = '\0';
-        }
-
-        if (line_to_dict(line, &in_key, &in_value) < 0){
-            continue;
-        }
-
-        for (i = 0; i < n; i = i + 1){
-            if (strcmp(in_key, key[i]) == 0){
-                delete_bracket(&in_value, (int)strlen(lbrack), lbrack, rbrack);
-                snprintf(value[i], RC_VALUE_LEN, "%s", in_value);
-            }
-        }
-    }
-    fclose(fp);
-    free(line);
-    return 0;
-}
-
 

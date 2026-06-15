@@ -12,6 +12,7 @@
 #include "git_run.h"
 #include "names.h"
 #include "strutils.h"
+#include "get_rc.h"
 #include "memo_add.h"
 #include "memo_edit.h"
 #include "memo_rm.h"
@@ -21,16 +22,14 @@
 #include "memo_show.h"
 
 int main(int argc, char** argv){
-    const char* rc_keys[] = {"editor", "extension"};
-    char*       rc_vals[] = {EDITOR  , EXT};
+    Config  config;
+    RcEntry entry[N_ENTRY];
     char** editor_commands;
     char*  home;
     char   dir[DIR_LEN];
     char   subdir[SUBDIR_LEN];
     char   rc[RC_LEN];
     char   list[LIST_APATH_LEN];
-    char   ext[EXT_LEN];
-    char   editor[EDITOR_LEN];
     int    nwords;
     int    result;
     int    i;
@@ -47,8 +46,9 @@ int main(int argc, char** argv){
     #endif
 
     snprintf(rc, sizeof(rc), "%s/%s", home, RCNAME);
-    if (stat(rc, &st) == 0){
-        if (read_rc(rc, sizeof(rc_keys)/sizeof(rc_keys[0]), rc_keys, rc_vals) < 0){
+    init(&config, entry);
+    if (path_status(rc, &st) == 1){
+        if (read_rc(rc, entry, sizeof(entry) / sizeof(entry[0])) < 0){
             fprintf(stderr, "%s: Failed to read %s\n", PROGRAM, rc);
             return 1;
         }
@@ -57,14 +57,12 @@ int main(int argc, char** argv){
     snprintf(dir   , sizeof(dir)   , "%s/%s", home, DIR);
     snprintf(subdir, sizeof(subdir), "%s/%s", dir , SUBDIR);
     snprintf(list  , sizeof(list)  , "%s/%s", dir , LISTNAME);
-    snprintf(editor, sizeof(editor), "%s"   , rc_vals[0]);
-    snprintf(ext   , sizeof(ext)   , "%s"   , rc_vals[1]);
     #ifdef DEBUG
     printf("dir   = %s\n", dir);
     printf("subdir= %s\n", subdir);
     printf("rc    = %s\n", rc);
     printf("list  = %s\n", list);
-    printf("ext   = %s\n", ext);
+    printf("ext   = %s\n", config.ext);
     #endif
 
 
@@ -85,7 +83,7 @@ int main(int argc, char** argv){
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
-                result = add(list, dir, subdir, argv[i], ext, lt);
+                result = add(list, dir, subdir, argv[i], config.ext, lt);
                 if (result == -2){
                     return 1;
                 }
@@ -137,7 +135,7 @@ int main(int argc, char** argv){
             return 1;
         }
     } else {
-        result = separate_words(editor, &nwords, &editor_commands);
+        result = separate_words(config.editor, &nwords, &editor_commands);
         if (result == -1){
             fprintf(stderr, "%s Error: Specified editor command is empty\n", PROGRAM);
             return 1;
