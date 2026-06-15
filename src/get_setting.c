@@ -5,13 +5,13 @@
 #include "globals.h"
 #include "strutils.h"
 
-int separate_words(char* editor, int* n, char*** output){
+int separate_words(char* s, int* n, char*** output){
     int i;
     int j;
     int prev_space;
     int curr_space;
 
-    if (is_white_space(editor)){
+    if (is_white_space(s)){
         return -1;
     }
 
@@ -22,10 +22,10 @@ int separate_words(char* editor, int* n, char*** output){
     #ifdef DEBUG
     printf("Word Counter\n");
     #endif
-    while(editor[i] != '\0'){
-        if (editor[i] != ' '){
+    while(s[i] != '\0'){
+        if (s[i] != ' '){
             #ifdef DEBUG
-            printf("%c is not a space", editor[i]);
+            printf("%c is not a space", s[i]);
             #endif
             curr_space = false;
             if (prev_space){
@@ -57,16 +57,16 @@ int separate_words(char* editor, int* n, char*** output){
     #ifdef DEBUG
     printf("Word Division\n");
     #endif
-    while(editor[i] != '\0'){
-        if (editor[i] != ' '){
+    while(s[i] != '\0'){
+        if (s[i] != ' '){
             #ifdef DEBUG
-            printf("%c is not a space", editor[i]);
+            printf("%c is not a space", s[i]);
             #endif
             curr_space = false;
             if (prev_space){
                 #ifdef DEBUG
                 #endif
-                (*output)[j] = &editor[i];
+                (*output)[j] = &s[i];
                 #ifdef DEBUG
                 printf(" ... new word defined: %s\n", (*output)[j]);
                 #endif
@@ -76,7 +76,7 @@ int separate_words(char* editor, int* n, char*** output){
             printf("\n");
             #endif
         } else {
-            editor[i] = '\0';
+            s[i] = '\0';
             curr_space = true;
         }
         prev_space = curr_space;
