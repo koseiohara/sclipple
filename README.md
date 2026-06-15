@@ -15,7 +15,9 @@ A note created in one directory can be reopened later from any other directory.
 ## Installation
 
 ```sh
-# build and install
+./configure
+make
+make install
 ```
 
 
