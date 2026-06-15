@@ -91,7 +91,7 @@ int main(int argc, char** argv){
 
     if (strcmp(argv[1], "add") == 0){
         if (argc == 2){
-            show_help_command(argv[1]);
+            show_help_add();
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
@@ -104,7 +104,7 @@ int main(int argc, char** argv){
 
     } else if (strcmp(argv[1], "rm") == 0){
         if (argc == 2){
-            show_help_command(argv[1]);
+            show_help_rm();
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
@@ -117,7 +117,7 @@ int main(int argc, char** argv){
 
     } else if (strcmp(argv[1], "mv") == 0){
         if (argc != 4){
-            show_help_command(argv[1]);
+            show_help_mv();
             return 0;
         } else{
             result = mv(list, argv[2], argv[3]);
@@ -133,7 +133,7 @@ int main(int argc, char** argv){
         }
     } else if (strcmp(argv[1], "search") == 0){
         if (argc == 2){
-            show_help_command(argv[1]);
+            show_help_search();
             return 0;
         } else{
             result = search(list, argv[2], argc-3, &argv[3]);

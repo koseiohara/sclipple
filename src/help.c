@@ -29,8 +29,8 @@ void show_help_add(void){
     printf("    - The created filename has the form KEY--YYYY-MM-DD-hh-mm-ss.EXT.\n");
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s add foo\n", PROGRAM);
-    printf("    %s add bar baz\n", PROGRAM);
+    printf("    %s add <KEY>\n", PROGRAM);
+    printf("    %s add <KEY1> <KEY2>\n", PROGRAM);
 }
 
 void show_help_rm(void){
@@ -43,8 +43,8 @@ void show_help_rm(void){
     printf("    KEY entry is removed from the index.\n");
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s rm foo\n", PROGRAM);
-    printf("    %s rm bar baz\n", PROGRAM);
+    printf("    %s rm <KEY>\n", PROGRAM);
+    printf("    %s rm <KEY1> <KEY2>\n", PROGRAM);
 }
 
 void show_help_mv(void){
@@ -62,7 +62,7 @@ void show_help_mv(void){
     printf("    - NEW_KEY must not already exist.\n");
     printf("\n");
     printf("  Example:\n");
-    printf("    %s mv tmp permanent_note\n", PROGRAM);
+    printf("    %s mv <OLD_KEY> <NEW_KEY>\n", PROGRAM);
 }
 
 void show_help_ls(void){
@@ -80,7 +80,7 @@ void show_help_ls(void){
     printf("\n");
     printf("  Examples:\n");
     printf("    %s ls\n", PROGRAM);
-    printf("    %s ls idea todo\n", PROGRAM);
+    printf("    %s ls <KEY1> <KEY2>\n", PROGRAM);
 }
 
 void show_help_search(void){
@@ -99,8 +99,8 @@ void show_help_search(void){
     printf("    numbers, and matches are colorized.\n");
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s search wave\n", PROGRAM);
-    printf("    %s search 'Sunny|Day' rainy\n", PROGRAM);
+    printf("    %s search <PATTERN>\n", PROGRAM);
+    printf("    %s search '<PATTERN1>|<PATTERN2>' <KEY>\n", PROGRAM);
 }
 
 void show_help_show(void){
@@ -119,7 +119,7 @@ void show_help_show(void){
     printf("\n");
     printf("  Examples:\n");
     printf("    %s show\n", PROGRAM);
-    printf("    %s show idea todo\n", PROGRAM);
+    printf("    %s show <KEY1> <KEY2>\n", PROGRAM);
 }
 
 void show_help_edit(void){
@@ -137,8 +137,8 @@ void show_help_edit(void){
     printf("    'editor' setting in $HOME/%s.\n", RCNAME);
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s idea\n", PROGRAM);
-    printf("    %s idea todo\n", PROGRAM);
+    printf("    %s <KEY>\n", PROGRAM);
+    printf("    %s <KEY1> <KEY2>\n", PROGRAM);
 }
 
 void show_help_git(void){
@@ -253,5 +253,3 @@ void show_help_command(const char* command){
 void show_help(void){
     show_help_all();
 }
-
-
