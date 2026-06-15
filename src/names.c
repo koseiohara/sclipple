@@ -64,6 +64,42 @@ int flag_validation(const char* flag){
         return -2;
     }
 
+    if (strcmp(flag, "git") == 0){
+        return -3;
+    }
+
+    if (strcmp(flag, "help") == 0){
+        return -3;
+    }
+
+    if (strcmp(flag, "add") == 0){
+        return -3;
+    }
+
+    if (strcmp(flag, "rm") == 0){
+        return -3;
+    }
+
+    if (strcmp(flag, "mv") == 0){
+        return -3;
+    }
+
+    if (strcmp(flag, "ls") == 0){
+        return -3;
+    }
+
+    if (strcmp(flag, "search") == 0){
+        return -3;
+    }
+
+    if (strcmp(flag, "show") == 0){
+        return -3;
+    }
+
+    if (strcmp(flag, "show") == 0){
+        return -3;
+    }
+
     return 0;
 }
 
