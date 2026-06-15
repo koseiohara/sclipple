@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+#include "globals.h"
 
 int git_run(const char* dir, char* const* git_cmmd){
     pid_t pid;
@@ -11,7 +12,8 @@ int git_run(const char* dir, char* const* git_cmmd){
 
     if (pid == 0){
         if (chdir(dir) != 0){
-            perror("git error");
+            // perror("git error");
+            fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
             _exit(1);
         }
 

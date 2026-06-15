@@ -8,32 +8,6 @@
 #include "edit_list.h"
 
 
-int rename_note(const char* list, char* old_flag, char* new_flag){
-    int result;
-    char new_file[FILE_APATH_LEN];
-    char old_file[FILE_APATH_LEN];
-
-    result = get_filename_by_key(list, old_flag, old_file);
-    if (result != 0){
-        return -1;
-    }
-
-    mv_filename(old_file, new_flag, sizeof(new_file), new_file);
-
-    #ifdef DEBUG
-    printf("<DEBUG> Rename %s to %s\n", old_file, new_file);
-    // return 0;
-    #endif
-
-    if (rename(old_file, new_file) == 0){
-        return 0;
-    }
-
-    perror(new_file);
-    return -2;
-}
-
-
 int mv(const char* list, char* old_flag, char* new_flag){
     int result;
     char new_file[FILE_APATH_LEN];
@@ -63,7 +37,9 @@ int mv(const char* list, char* old_flag, char* new_flag){
     }
 
     // get new file name
-    mv_filename(old_file, new_flag, sizeof(new_file), new_file);
+    if (mv_filename(old_file, new_flag, sizeof(new_file), new_file) < 0){
+        fprintf(stderr, "%s Error: list file is broken\n", PROGRAM);
+    }
     printf("%s: RENAME %s -> %s\n", PROGRAM, old_flag, new_flag);
 
     #ifdef DEBUG

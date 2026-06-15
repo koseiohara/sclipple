@@ -74,6 +74,10 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             }
         }
         command = malloc((1+editor_options_num+flag_num+1) * sizeof(char*));   // $(editor) $(editor_option) $(file) NULL
+        if (command == NULL){
+            perror("malloc");
+            _exit(1);
+        }
         get_command(editor, editor_options_num, editor_options, flag_num, files, command);
 
         execvp(editor, command);

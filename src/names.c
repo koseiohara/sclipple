@@ -23,9 +23,26 @@ int get_env(const char* env, char** output){
 
 
 int check_flag_length(char* flag){
-    if (strlen(flag) > FLAG_LEN){
+    if (strlen(flag) > FLAG_LEN-1){
         return -1;
     }
+    return 0;
+}
+
+
+int flag_validation(char* flag){
+    char* p;
+
+    p = strchr(flag, '/');
+    if (p != NULL){
+        return -1;
+    }
+
+    p = strchr(flag, '$');
+    if (p != NULL){
+        return -1;
+    }
+
     return 0;
 }
 
@@ -35,7 +52,7 @@ void get_filename(const char* flag, char* datetime, char* ext, size_t output_len
 }
 
 
-void mv_filename(char* old_file, const char* new_flag, size_t output_len, char* output){
+int mv_filename(char* old_file, const char* new_flag, size_t output_len, char* output){
     char  tmp_old_file[FILE_APATH_LEN];
     char* cp;
     char* prefix;
@@ -71,6 +88,7 @@ void mv_filename(char* old_file, const char* new_flag, size_t output_len, char* 
     printf("<DEBUG> mv_filename: prefix is %s\n", prefix);
     #endif
 
+    last = NULL;
     while ((cp = strstr(cp, "--")) != NULL){
         last = cp;
         cp = cp + 2;
@@ -82,7 +100,12 @@ void mv_filename(char* old_file, const char* new_flag, size_t output_len, char* 
     printf("<DEBUG> File name after '--': %s\n", last);
     #endif
 
-    snprintf(output, output_len, "%s%s%s", prefix, new_flag, last);
+    if (last != NULL){
+        snprintf(output, output_len, "%s%s%s", prefix, new_flag, last);
+        return 0;
+    } else{
+        return -1;
+    }
 }
 
 

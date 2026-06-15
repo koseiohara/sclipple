@@ -21,7 +21,7 @@
 #include "memo_show.h"
 
 int main(int argc, char** argv){
-    const char* rc_keys[] = {"editor", "extention"};
+    const char* rc_keys[] = {"editor", "extension"};
     char*       rc_vals[] = {EDITOR  , EXT};
     char** editor_commands;
     char*  home;
@@ -88,6 +88,8 @@ int main(int argc, char** argv){
                 result = add(list, dir, subdir, argv[i], ext, lt);
                 if (result == -1){
                     fprintf(stderr, "%s: Failed to make new note: %s. %s exist.\n", PROGRAM, argv[i], argv[i]);
+                } else if (result == -2){
+                    fprintf(stderr, "%s IO Error\n", PROGRAM);
                 }
             }
         }
@@ -137,7 +139,13 @@ int main(int argc, char** argv){
             return 1;
         }
     } else {
-        separate_words(editor, &nwords, &editor_commands);
+        result = separate_words(editor, &nwords, &editor_commands);
+        if (result == -1){
+            fprintf(stderr, "%s Error: Specified editor command is empty\n", PROGRAM);
+            return 1;
+        } else if (result == -2){
+            return 1;
+        }
         result = memo_edit(list, subdir, editor_commands[0], nwords-1, &editor_commands[1], argc-1, &argv[1]);
         if (result == -1){
             return 1;

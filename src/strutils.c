@@ -53,11 +53,11 @@ int is_white_space(const char* line){
     i = 0;
     while(line[i] != '\0'){
         if (isspace((unsigned char)line[i]) == 0){
-            return 0;
+            return false;
         }
         i = i + 1;
     }
-    return 1;
+    return true;
 }
 
 

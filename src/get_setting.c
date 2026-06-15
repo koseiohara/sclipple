@@ -1,17 +1,20 @@
 
-#ifdef DEBUG
 #include <stdio.h>
-#endif
 #include <stdlib.h>
 
 #include "globals.h"
+#include "strutils.h"
 
-void separate_words(char* editor, int* n, char*** output){
+int separate_words(char* editor, int* n, char*** output){
     int i;
     int j;
     int prev_space;
     int curr_space;
-    
+
+    if (is_white_space(editor)){
+        return -1;
+    }
+
     i = 0;
     *n = 0;
     prev_space = true;
@@ -42,6 +45,10 @@ void separate_words(char* editor, int* n, char*** output){
     }
 
     *output = malloc((*n) * sizeof(char*));
+    if (*output == NULL){
+        perror("malloc");
+        return -2;
+    }
 
     i = 0;
     j = 0;
@@ -82,6 +89,8 @@ void separate_words(char* editor, int* n, char*** output){
         printf("%s\n", (*output)[i]);
     }
     #endif
+
+    return 0;
 }
 
 

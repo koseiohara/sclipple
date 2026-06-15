@@ -14,7 +14,7 @@
 // return -1 when io error
 // return 1 if file is empty or white
 // return 0 otherwise
-int get_first_line(const char* notename, const size_t first_line_len, char* first_line){
+int get_first_line(const char* notename, const int first_line_len, char* first_line){
     FILE* fp;
     char* enter;
 
@@ -47,6 +47,7 @@ int get_first_line(const char* notename, const size_t first_line_len, char* firs
             first_line[first_line_len-4] = '.';
             first_line[first_line_len-3] = '.';
             first_line[first_line_len-2] = '.';
+            first_line[first_line_len-1] = '\0';
         } else{
             *enter = '\0';
         }
@@ -137,7 +138,7 @@ int ls(const char* list, int flag_num, char** flag_list){
         if (flag_num > 0){
             for (j = 0; j < flag_num; j = j + 1){
                 if (strcmp(flag_list[j], flag) == 0){
-                    if (get_first_line(notename, sizeof(first_line), first_line) < 0){
+                    if (get_first_line(notename, LS_LINE_LEN, first_line) < 0){
                         free(lines);
                         fclose(fp);
                         return -1;
@@ -146,7 +147,7 @@ int ls(const char* list, int flag_num, char** flag_list){
                 }
             }
         } else{
-            if (get_first_line(notename, sizeof(first_line), first_line) < 0){
+            if (get_first_line(notename, LS_LINE_LEN, first_line) < 0){
                 free(lines);
                 fclose(fp);
                 return -1;
