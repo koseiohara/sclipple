@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "globals.h"
 #include "names.h"
@@ -44,7 +45,10 @@ int show_one_file(char* file){
 }
 
 
+// return -1 if IO error
+// return 0 if successed
 int show(char* list, int flag_num, char** flag_list){
+    struct stat st;
     FILE* fp;
     char  flag[FLAG_LEN];
     char  datetime[DATETIME_LEN];
@@ -54,10 +58,15 @@ int show(char* list, int flag_num, char** flag_list){
     int   i;
     int   j;
 
-    if (1 - path_exist(list)){
-        fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+    result = path_status(list, &st);
+    if (result != 1){
+        if (result == 0){
+            fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        } else if (result == -1){
+            fprintf(stderr, "%s IO Error: Failed to access list file\n", PROGRAM);
+        }
         return -1;
-    }
+    } 
 
     if (flag_num > 0){
         notename_list = malloc((size_t)flag_num * sizeof(*notename_list));

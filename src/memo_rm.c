@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "globals.h"
 #include "names.h"
@@ -30,16 +31,22 @@ int delete_note(const char* list, char* flag){
 
 
 int rm(const char* list, char* flag){
+    struct stat st;
     int  result;
 
     #ifdef DEBUG
     printf("List file name: %s\n", list);
     #endif
 
-    if (1 - path_exist(list)){
-        fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+    result = path_status(list, &st);
+    if (result != 1){
+        if (result == 0){
+            fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        } else if (result == -1){
+            fprintf(stderr, "%s IO Error: Failed to access list file\n", PROGRAM);
+        }
         return -1;
-    }
+    } 
 
     result = delete_note(list, flag);
     if (result == -1){

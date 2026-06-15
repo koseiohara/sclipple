@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 #include "globals.h"
 #include "names.h"
@@ -45,16 +46,22 @@ void get_command(char* editor, const int editor_options_num, char* const* editor
 
 
 int memo_edit(const char* list, const char* dir, char* editor, const int editor_options_num, char* const* editor_options, const int flag_num, char** flags){
+    struct stat st;
     pid_t pid;
     char** command;
     char   files[flag_num][FILE_APATH_LEN];
     int i;
-    int stat;
+    int result;
 
-    if (1 - path_exist(list)){
-        fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+    result = path_status(list, &st);
+    if (result != 1){
+        if (result == 0){
+            fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        } else if (result == -1){
+            fprintf(stderr, "%s IO Error: Failed to access list file\n", PROGRAM);
+        }
         return -1;
-    }
+    } 
 
     pid = fork();
     if (pid == 0){
@@ -64,11 +71,11 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         }
 
         for (i = 0; i < flag_num; i = i + 1){
-            stat = get_filename_by_key(list, flags[i], files[i]);
+            result = get_filename_by_key(list, flags[i], files[i]);
             #ifdef DEBUG
             printf("Checked existence of %s\n", files[i]);
             #endif
-            if (stat == -1){
+            if (result == -1){
                 fprintf(stderr, "%s Error: Invalid keyword. %s does not exist\n", PROGRAM, flags[i]);
                 _exit(1);
             }

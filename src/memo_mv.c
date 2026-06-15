@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "globals.h"
 #include "names.h"
@@ -9,14 +10,20 @@
 
 
 int mv(const char* list, char* old_flag, char* new_flag){
+    struct stat st;
     int result;
     char new_file[FILE_APATH_LEN];
     char old_file[FILE_APATH_LEN];
 
-    if (1 - path_exist(list)){
-        fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+    result = path_status(list, &st);
+    if (result != 1){
+        if (result == 0){
+            fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        } else if (result == -1){
+            fprintf(stderr, "%s IO Error: Failed to access list file\n", PROGRAM);
+        }
         return -1;
-    }
+    } 
 
     // get current file name from list file
     result = get_filename_by_key(list, old_flag, old_file);

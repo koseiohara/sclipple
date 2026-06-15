@@ -71,8 +71,11 @@ int make_file(const char* path, const int cond){
         }
         close(fd);
         return 0;
-    } else {
+    } else if (result == 1){
         return -1;
+    } else{
+        fprintf(stderr, "%s IO Error: Failed to open %s\n", PROGRAM, path);
+        return -2;
     }
 }
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "globals.h"
 #include "names.h"
@@ -67,6 +68,7 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
 
 
 int ls(const char* list, int flag_num, char** flag_list){
+    struct stat st;
     FILE* fp;
     char  flag[FLAG_LEN];
     char  datetime[DATETIME_LEN];
@@ -84,8 +86,11 @@ int ls(const char* list, int flag_num, char** flag_list){
     }
     #endif
 
-    if (1 - path_exist(list)){
+    result = path_status(list, &st);
+    if (result == 1){
         fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+        return -1;
+    } else if (result == -1){
         return -1;
     }
 
