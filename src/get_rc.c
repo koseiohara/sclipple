@@ -86,7 +86,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                 if (strcmp(entry[i].key, "extension") == 0){
                     result = ext_validation(entry[i].value);
                     if (result != 0){
-                        fprintf(stderr, "%s: Invalid extension: %s. extension must consist of alphabets, numbers, '.', '-', and '_'\n", rc, entry[i].value);
+                        fprintf(stderr, "%s Invalid extension: %s.\nExtension must consist of alphabets, numbers, '.', '-', and '_'\n", rc, entry[i].value);
                         return -2;
                     }
                 }
