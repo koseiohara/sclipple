@@ -86,72 +86,6 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, size_t result_l
 }
 
 
-// col is zero-based
-// if col=0 is specified, result is not overrided
-int read_list_by_key_old(FILE* fp, char* target_flag, const int col, char* result){
-    int i;
-    char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
-    char* flag;
-    char* s;
-
-    // read line by line
-    while(fgets(line, sizeof(line), fp) != NULL){
-        // replace '\n' to '\0'
-        line[strcspn(line, "\n")] = '\0';
-
-        if (is_white_space(line) == 1){
-            continue;
-        }
-
-        // find the first delimiter
-        flag = strtok(line, DELIM);
-        if (flag == NULL){
-            fprintf(stderr, "%s Error: Invalid list file. list file is broken\n", PROGRAM);
-            return -2;
-        }
-
-        #ifdef DEBUG
-        printf("<DEBUG> Flag = %s\n", flag);
-        #endif
-        // if the flag of the current line is target_flag
-        if (strcmp(flag, target_flag) == 0){
-            if (col == 0){
-                // fclose(fp);
-                return 0;
-            }
-            i = 1;
-            while (true){
-                // find target column...
-                s = strtok(NULL, DELIM);
-                if (s == NULL){
-                    fprintf(stderr, "%s Error: Invalid list file. list file is broken\n", PROGRAM);
-                    return -2;
-                }
-                strcpy(result, s);
-                #ifdef DEBUG
-                printf("<DEBUG> Col = %d, Word = %s\n", i, result);
-                #endif
-                if (i == col){
-                    #ifdef DEBUG
-                    printf("<DEBUG> Extracted Word = %s\n", result);
-                    #endif
-                    // fclose(fp);
-                    return 0;
-                }
-                i = i + 1;
-            }
-            // if col exceeds the actual number of columns
-            fprintf(stderr, "%s: %s: Specified column is too large: %d", PROGRAM, flag, 0);
-            fclose(fp);
-            exit(1);
-        }
-    }
-    // if target_flag is not found
-    // fclose(fp);
-    return -1;
-}
-
-
 // return 0 if flag does not exist
 // return -1 if flag exist
 int flag_exist_check(const char* list, char* flag){
@@ -400,6 +334,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     FILE* fpr;
     FILE* fpw;
     char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
+    char  out_line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
     char  tmpfile[LIST_APATH_LEN+8];
     char* flag;
     char* datetime;
@@ -479,8 +414,8 @@ int rm_key_in_list(const char* list, const char* target_flag){
             continue;
         }
 
-        snprintf(line, sizeof(line), "%s,%s,%s\n", flag, datetime, notename);
-        if (fputs(line, fpw) == EOF){
+        snprintf(out_line, sizeof(out_line), "%s,%s,%s\n", flag, datetime, notename);
+        if (fputs(out_line, fpw) == EOF){
             perror(tmpfile);
             fclose(fpr);
             fclose(fpw);
