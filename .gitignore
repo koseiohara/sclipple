@@ -2,3 +2,4 @@
 *.o
 /src/sclipple
 
+/autom4te.cache
