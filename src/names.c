@@ -132,10 +132,6 @@ int flag_validation(const char* flag){
         return -3;
     }
 
-    if (strcmp(flag, "show") == 0){
-        return -3;
-    }
-
     return 0;
 }
 
