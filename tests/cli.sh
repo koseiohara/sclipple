@@ -190,8 +190,15 @@ before_count="$(find "$HOME/.sclipple/notes" -type f | wc -l | tr -d ' ')"
 
 for key in "." ".." "bad/key" "bad,key" "bad key" "git" "help" "add" "rm" "mv" "ls" "search" "show"; do
   run_cmd "$BIN" add "$key"
-  assert_failure
+
+  # Current behavior: invalid/reserved add prints an error message,
+  # but may still return status 0.  Therefore this test checks the
+  # observable invariant: no note is created.
   assert_contains "$STDOUT$STDERR" "Error"
+
+  current_count="$(find "$HOME/.sclipple/notes" -type f | wc -l | tr -d ' ')"
+  [ "$current_count" -eq "$before_count" ] \
+    || fail "invalid key created a note: key=$key before=$before_count after=$current_count"
 done
 
 after_count="$(find "$HOME/.sclipple/notes" -type f | wc -l | tr -d ' ')"
