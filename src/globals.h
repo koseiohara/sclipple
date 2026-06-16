@@ -1,7 +1,7 @@
 
 #define FLAG_LEN         60                                     // Length of Keywords
 #define DATETIME_LEN     20                                     // Length of datetime part of filename
-#define EXT_LEN          8                                      // Length of Extention
+#define EXT_LEN          32                                     // Length of Extention
 #define FILE_LEN        (FLAG_LEN+2+DATETIME_LEN+1+EXT_LEN)     // Length of *.$EXT
 #define LIST_LEN         16                                     // Length of $LISTNAME
 #define HOME_LEN        512                                     // Length of $HOME/

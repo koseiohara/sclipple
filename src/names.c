@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 
 #include "globals.h"
+#include "strutils.h"
 #include "datetime.h"
 
 int get_env(const char* env, char** output){
@@ -78,7 +79,11 @@ int flag_validation(const char* flag){
 
     len = strlen(flag);
 
-    if (len >= FLAG_LEN){
+    if (len >= FLAG_LEN || len == 0){
+        return -1;
+    }
+
+    if (is_white_space(flag)){
         return -1;
     }
 

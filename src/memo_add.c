@@ -106,9 +106,11 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     stat = flag_validation(flag);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s Error: Too long keyword: %s. Length should be less than %d\n", PROGRAM, flag, FLAG_LEN);
+            fprintf(stderr, "%s Error: Keyword is too long or empty: %s. Length should be less than %d\n", PROGRAM, flag, FLAG_LEN);
         } else if (stat == -2){
             fprintf(stderr, "%s Error: Invalid character is included in %s. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, flag);
+        } else if (stat == -3){
+            fprintf(stderr, "%s Error: %s is a reserved word.\n", PROGRAM, flag);
         }
         return -3;
     }

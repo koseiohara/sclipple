@@ -8,36 +8,17 @@
 #include "names.h"
 #include "edit_list.h"
 
-int delete_note(const char* list, char* flag){
-    int result;
-    char filename[FILE_APATH_LEN];
-
-    result = get_filename_by_key(list, flag, sizeof(filename), filename);
-    if (result != 0){
-        return -1;
-    }
-
-    #ifdef DEBUG
-    printf("<DEBUG> Delete %s\n", filename);
-    #endif
-
-    if (unlink(filename) == 0){
-        return 0;
-    }
-
-    perror(flag);
-    return -2;
-}
-
 
 int rm(const char* list, char* flag){
     struct stat st;
     int  result;
+    char filename[FILE_APATH_LEN];
 
     #ifdef DEBUG
     printf("List file name: %s\n", list);
     #endif
 
+    // chack whether list file is exist
     result = path_status(list, &st);
     if (result != 1){
         if (result == 0){
@@ -48,14 +29,14 @@ int rm(const char* list, char* flag){
         return -1;
     } 
 
-    result = delete_note(list, flag);
-    if (result == -1){
+    // get the target filename from list file
+    result = get_filename_by_key(list, flag, sizeof(filename), filename);
+    if (result != 0){
         fprintf(stderr, "%s Error: %s: No such key.\n", PROGRAM, flag);
-        return -1;
-    } else if (result == -2){
         return -1;
     }
 
+    // delete the target flag line from the list file
     result = rm_key_in_list(list, flag);
     if (result < 0){
         return -1;
@@ -64,8 +45,13 @@ int rm(const char* list, char* flag){
         return 1;
     }
 
-    printf("%s: remove %s\n", PROGRAM, flag);
-    return 0;
+    if (unlink(filename) == 0){
+        printf("%s: remove %s\n", PROGRAM, flag);
+        return 0;
+    }
+
+    perror(flag);
+    return -2;
 }
 
 
