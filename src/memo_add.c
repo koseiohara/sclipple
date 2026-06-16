@@ -182,7 +182,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         printf("%s: Create new note: %s\n", PROGRAM, flag);
     }
 
-    get_datetime(clock, '-', sizeof(datetime), datetime);
+    get_datetime(clock, '\0', sizeof(datetime), datetime);
     if (write_new_content_to_list(list, flag, datetime, path) == -1){
         return -1;
     }
