@@ -6,16 +6,22 @@ on:
 
 jobs:
   build-configure:
-    runs-on: ubuntu-24.04
+    name: ${{ matrix.os }} / ${{ matrix.cc }} / ${{ matrix.mode }}
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-22.04
+          - ubuntu-24.04
+        cc:
+          - gcc
+          - clang
         mode:
           - normal
           - bootstrap
           - out-of-tree
-          - distcheck
 
     steps:
       - uses: actions/checkout@v5
@@ -23,7 +29,10 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential autoconf automake git
+          sudo apt-get install -y build-essential clang autoconf automake git
+
+      - name: Set compiler
+        run: echo "CC=${{ matrix.cc }}" >> "$GITHUB_ENV"
 
       - name: Normal configure build
         if: matrix.mode == 'normal'
@@ -31,6 +40,8 @@ jobs:
           ./configure
           make -j"$(nproc)"
           bash tests/cli.sh
+          make clean
+          make -j"$(nproc)"
 
       - name: Bootstrap configure build
         if: matrix.mode == 'bootstrap'
@@ -39,6 +50,8 @@ jobs:
           ./configure
           make -j"$(nproc)"
           bash tests/cli.sh
+          make clean
+          make -j"$(nproc)"
 
       - name: Out-of-tree build
         if: matrix.mode == 'out-of-tree'
@@ -48,12 +61,23 @@ jobs:
           ../configure
           make -j"$(nproc)"
           bash ../tests/cli.sh ../build/src/sclipple
+          make clean
+          make -j"$(nproc)"
+
+  distcheck:
+    name: distcheck
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake git
 
       - name: Distcheck
-        if: matrix.mode == 'distcheck'
         run: |
           autoreconf -fi
           ./configure
           make distcheck
-
-
