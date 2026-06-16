@@ -63,6 +63,17 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         return -1;
     } 
 
+    for (i = 0; i < flag_num; i = i + 1){
+        result = get_filename_by_key(list, flags[i], sizeof(files[i]), files[i]);
+        #ifdef DEBUG
+        printf("Checked existence of %s\n", files[i]);
+        #endif
+        if (result == -1){
+            fprintf(stderr, "%s Error: Invalid keyword. '%s' does not exist\n", PROGRAM, flags[i]);
+            return -1;
+        }
+    }
+
     pid = fork();
     if (pid == 0){
         if (chdir(dir) != 0){
@@ -70,16 +81,6 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             _exit(1);
         }
 
-        for (i = 0; i < flag_num; i = i + 1){
-            result = get_filename_by_key(list, flags[i], sizeof(files[i]), files[i]);
-            #ifdef DEBUG
-            printf("Checked existence of %s\n", files[i]);
-            #endif
-            if (result == -1){
-                fprintf(stderr, "%s Error: Invalid keyword. '%s' does not exist\n", PROGRAM, flags[i]);
-                _exit(1);
-            }
-        }
         command = malloc((1+editor_options_num+flag_num+1) * sizeof(char*));   // $(editor) $(editor_option) $(file) NULL
         if (command == NULL){
             perror("malloc");
