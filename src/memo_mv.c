@@ -9,6 +9,12 @@
 #include "edit_list.h"
 
 
+// return -3 when invalid new flag
+// return -2 when rename failed
+// return -1 then IO error
+// return  1 when old key does not exist
+// return  2 when new key already exist
+// return  0 when successed
 int mv(const char* list, char* old_flag, char* new_flag){
     struct stat st;
     int result;
@@ -60,6 +66,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
     // get new file name
     if (mv_filename(old_file, new_flag, sizeof(new_file), new_file) < 0){
         fprintf(stderr, "%s Error: list file is broken\n", PROGRAM);
+        return -4;
     }
     printf("%s: RENAME %s -> %s\n", PROGRAM, old_flag, new_flag);
 

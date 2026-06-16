@@ -84,6 +84,10 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
 
                 if (strlen(in_value) >= entry[i].len){
                     fprintf(stderr, "Invalid value in %s: '%s'.%s must be less than %d words\n", rc, entry[i].value, entry[i].key, (int)entry[i].len);
+
+                    fclose(fp);
+                    free(line);
+                    return -2;
                 }
 
                 snprintf(entry[i].value, entry[i].len, "%s", in_value);
