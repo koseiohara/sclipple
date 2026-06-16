@@ -1,5 +1,7 @@
 
 #include <stdlib.h>
+#include <sys/stat.h>
+
 int get_env(const char* env, char** output);
 int ext_validation(const char* ext);
 int flag_validation(const char* flag);
