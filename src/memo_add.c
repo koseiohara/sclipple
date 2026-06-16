@@ -106,11 +106,11 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     stat = flag_validation(flag);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s Error: Keyword is too long or empty: %s. Length should be less than %d\n", PROGRAM, flag, FLAG_LEN);
+            fprintf(stderr, "%s Error: Keyword is too long or empty: '%s'. Length should be less than %d\n", PROGRAM, flag, FLAG_LEN);
         } else if (stat == -2){
-            fprintf(stderr, "%s Error: Invalid character is included in %s. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, flag);
+            fprintf(stderr, "%s Error: Invalid character is included in '%s'. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, flag);
         } else if (stat == -3){
-            fprintf(stderr, "%s Error: %s is a reserved word.\n", PROGRAM, flag);
+            fprintf(stderr, "%s Error: '%s' is a reserved word.\n", PROGRAM, flag);
         }
         return -3;
     }
@@ -156,7 +156,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     stat = flag_exist_check(list, flag);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s: %s already exist\n", PROGRAM, flag);
+            fprintf(stderr, "%s: '%s' already exist\n", PROGRAM, flag);
             return -1;
         } else if (stat == -2){
             return -2;
@@ -179,7 +179,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         fprintf(stderr, "%s Error: Undefined Error\n", PROGRAM);
         return -4;
     } else{
-        printf("%s: Create new note: %s\n", PROGRAM, flag);
+        printf("%s: Create new note: '%s'\n", PROGRAM, flag);
     }
 
     get_datetime(clock, '\0', sizeof(datetime), datetime);

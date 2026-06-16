@@ -83,7 +83,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                 delete_bracket(&in_value, (int)strlen(lbrack), lbrack, rbrack);
 
                 if (strlen(in_value) >= entry[i].len){
-                    fprintf(stderr, "Invalid value in %s: %s.\%s must be less than %d words\n", rc, entry[i].value, entry[i].key, (int)entry[i].len);
+                    fprintf(stderr, "Invalid value in %s: '%s'.%s must be less than %d words\n", rc, entry[i].value, entry[i].key, (int)entry[i].len);
                 }
 
                 snprintf(entry[i].value, entry[i].len, "%s", in_value);
@@ -91,7 +91,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                 if (strcmp(entry[i].key, "extension") == 0){
                     result = ext_validation(entry[i].value);
                     if (result != 0){
-                        fprintf(stderr, "%s Invalid extension: %s.\nExtension must consist of alphabets, numbers, '.', '-', and '_'\n", rc, entry[i].value);
+                        fprintf(stderr, "%s Invalid extension: '%s'.\nExtension must consist of alphabets, numbers, '.', '-', and '_'\n", rc, entry[i].value);
 
                         fclose(fp);
                         free(line);

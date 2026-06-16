@@ -32,7 +32,7 @@ int rm(const char* list, char* flag){
     // get the target filename from list file
     result = get_filename_by_key(list, flag, sizeof(filename), filename);
     if (result != 0){
-        fprintf(stderr, "%s Error: %s: No such key.\n", PROGRAM, flag);
+        fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, flag);
         return -1;
     }
 
@@ -41,12 +41,12 @@ int rm(const char* list, char* flag){
     if (result < 0){
         return -1;
     } else if (result == 1){
-        fprintf(stderr, "%s Error: %s: No such key.\n", PROGRAM, flag);
+        fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, flag);
         return 1;
     }
 
     if (unlink(filename) == 0){
-        printf("%s: remove %s\n", PROGRAM, flag);
+        printf("%s: removed '%s'\n", PROGRAM, flag);
         return 0;
     }
 

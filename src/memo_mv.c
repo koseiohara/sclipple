@@ -19,11 +19,11 @@ int mv(const char* list, char* old_flag, char* new_flag){
     result = flag_validation(new_flag);
     if (result < 0){
         if (result == -1){
-            fprintf(stderr, "%s Error: Keyword is too long or empty: %s. Length should be less than %d\n", PROGRAM, new_flag, FLAG_LEN);
+            fprintf(stderr, "%s Error: Keyword is too long or empty: '%s'. Length should be less than %d\n", PROGRAM, new_flag, FLAG_LEN);
         } else if (result == -2){
-            fprintf(stderr, "%s Error: Invalid character is included in %s. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, new_flag);
+            fprintf(stderr, "%s Error: Invalid character is included in '%s'. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, new_flag);
         } else if (result == -3){
-            fprintf(stderr, "%s Error: %s is a reserved word.\n", PROGRAM, new_flag);
+            fprintf(stderr, "%s Error: '%s' is a reserved word.\n", PROGRAM, new_flag);
         }
         return -3;
     }
@@ -50,10 +50,10 @@ int mv(const char* list, char* old_flag, char* new_flag){
     if (result < 0){
         return -1;
     } else if (result == 1){
-        fprintf(stderr, "%s Error: %s: No such key.\n", PROGRAM, old_flag);
+        fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, old_flag);
         return 1;
     } else if (result == 2){
-        fprintf(stderr, "%s Error: New Keyword %s already exists.\n", PROGRAM, new_flag);
+        fprintf(stderr, "%s Error: New Keyword '%s' already exists.\n", PROGRAM, new_flag);
         return 2;
     }
 
