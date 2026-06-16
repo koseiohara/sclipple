@@ -9,11 +9,12 @@
 #include "edit_list.h"
 
 
+// return -6 when new key already exist
+// return -5 when old key does not exist
+// return -4 when list file broken
 // return -3 when invalid new flag
 // return -2 when rename failed
 // return -1 then IO error
-// return  1 when old key does not exist
-// return  2 when new key already exist
 // return  0 when successed
 int mv(const char* list, char* old_flag, char* new_flag){
     struct stat st;
@@ -57,10 +58,10 @@ int mv(const char* list, char* old_flag, char* new_flag){
         return -1;
     } else if (result == 1){
         fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, old_flag);
-        return 1;
+        return -5;
     } else if (result == 2){
         fprintf(stderr, "%s Error: New Keyword '%s' already exists.\n", PROGRAM, new_flag);
-        return 2;
+        return -6;
     }
 
     // get new file name
