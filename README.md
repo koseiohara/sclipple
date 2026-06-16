@@ -254,7 +254,7 @@ extension = md
 
 ## Storage
 
-By default, all data is stored under:
+All data is stored under:
 
 ```text
 ~/.sclipple/
