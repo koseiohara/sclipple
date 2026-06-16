@@ -1,16 +1,30 @@
 # sclipple
 
-A command-line note manager.
+A small command-line note manager based on keyword-addressed notes.
 
-Sometimes you want to write something down while working in a terminal.
-Creating a file in the current directory is often the wrong choice. Switching to a dedicated notes directory is also unnecessary work.
-sclipple stores notes in a single location and lets you access them from anywhere using short keys.
+When working in a terminal, you often want to write something down quickly without creating files in the current directory.
+
+sclipple stores notes in a dedicated location and lets you access them from anywhere using short keywords.
+
 ```sh
-$ sclipple add foo
-$ sclipple foo
+sclipple add todo
+sclipple todo
 ```
 
-A note created in one directory can be reopened later from any other directory.
+The note can later be opened from any directory.
+
+---
+
+## Features
+
+- Keyword-based note management
+- Notes accessible from any directory
+- Editor-independent workflow
+- Plain text storage
+- Fast full-text search using POSIX extended regular expressions
+- Git integration for version control
+
+---
 
 ## Installation
 
@@ -20,8 +34,9 @@ make
 make install
 ```
 
+---
 
-## Example
+## Quick Start
 
 Create a note:
 
@@ -29,13 +44,19 @@ Create a note:
 sclipple add todo
 ```
 
-Open it:
+Edit the note:
 
 ```sh
 sclipple todo
 ```
 
-List notes:
+Show the note:
+
+```sh
+sclipple show todo
+```
+
+List all notes:
 
 ```sh
 sclipple ls
@@ -45,12 +66,6 @@ Search notes:
 
 ```sh
 sclipple search deadline
-```
-
-Display notes:
-
-```sh
-sclipple show todo
 ```
 
 Rename a note:
@@ -65,7 +80,27 @@ Remove a note:
 sclipple rm tasks
 ```
 
-The location of a note does not depend on the current working directory.
+---
+
+## Concepts
+
+Each note is identified by a unique **KEY**.
+
+Example:
+
+```sh
+sclipple add project
+```
+
+creates a note associated with the key:
+
+```text
+project
+```
+
+The key is later used to edit, display, search, rename, or remove the note.
+
+---
 
 ## Commands
 
@@ -77,6 +112,8 @@ sclipple add <KEY> [<KEY> ...]
 
 Create one or more notes.
 
+---
+
 ### Edit notes
 
 ```sh
@@ -84,6 +121,8 @@ sclipple <KEY> [<KEY> ...]
 ```
 
 Open notes in the configured editor.
+
+---
 
 ### List notes
 
@@ -93,13 +132,25 @@ sclipple ls [<KEY> ...]
 
 List notes.
 
+For each note, the output includes:
+
+- KEY
+- creation timestamp
+- first non-empty line
+
+---
+
 ### Show notes
 
 ```sh
-sclipple show <KEY> [<KEY> ...]
+sclipple show [<KEY> ...]
 ```
 
 Print note contents.
+
+Without arguments, all notes are displayed.
+
+---
 
 ### Search notes
 
@@ -107,7 +158,25 @@ Print note contents.
 sclipple search <PATTERN> [<KEY> ...]
 ```
 
-Search notes using POSIX extended regular expressions.
+Search note contents using POSIX extended regular expressions.
+
+Features:
+
+- case-insensitive search
+- optional note filtering by KEY
+- colored output on terminals
+
+Examples:
+
+```sh
+sclipple search deadline
+
+sclipple search 'todo|urgent'
+
+sclipple search 'error.*log' project
+```
+
+---
 
 ### Rename notes
 
@@ -117,6 +186,8 @@ sclipple mv <OLD_KEY> <NEW_KEY>
 
 Rename a note.
 
+---
+
 ### Remove notes
 
 ```sh
@@ -125,17 +196,29 @@ sclipple rm <KEY> [<KEY> ...]
 
 Remove notes.
 
+---
+
 ### Git integration
 
+Run Git commands inside the sclipple data directory.
+
 ```sh
-sclipple git <ARGS...>
+sclipple git status
+
+sclipple git init
+
+sclipple git add .
+
+sclipple git commit -m "update notes"
 ```
 
-Execute Git commands in the sclipple data directory.
+This makes it easy to keep notes under version control.
+
+---
 
 ## Configuration
 
-sclipple reads configuration from:
+sclipple reads:
 
 ```text
 ~/.sclipplerc
@@ -148,17 +231,30 @@ editor = vim -p
 extension = txt
 ```
 
-### editor
+### Supported options
 
-Editor command used to open notes.
+| Option | Description | Default |
+|----------|-------------|----------|
+| editor | Editor command used when opening notes | `vim -p` |
+| extension | Extension used for newly created notes | `txt` |
 
-### extension
+Notes:
 
-Default extension used when creating notes.
+- Lines beginning with `#` are treated as comments.
+- Single and double quotes around values are removed.
+
+Example:
+
+```ini
+editor = "nvim -p"
+extension = md
+```
+
+---
 
 ## Storage
 
-By default, sclipple stores data under:
+By default, all data is stored under:
 
 ```text
 ~/.sclipple/
@@ -174,14 +270,42 @@ Typical layout:
 
 Notes are stored as ordinary text files.
 
-## Design
+Generated filenames have the form:
 
-sclipple is intended for notes that do not belong in the current working directory but should still be easy to access from the command line.
+```text
+KEY--YYYY-MM-DD-hh-mm-ss.EXT
+```
 
-The primary goals are:
+Example:
+
+```text
+todo--2025-07-01-12-34-56.txt
+```
+
+---
+
+## KEY Rules
+
+A KEY:
+
+- must be unique
+- must not be `.` or `..`
+- may contain:
+  - letters
+  - digits
+  - `_`
+  - `-`
+
+---
+
+## Design Goals
+
+sclipple is intended for notes that do not belong in the current working directory but should remain instantly accessible from the command line.
+
+Goals:
 
 - simple storage
 - fast access
 - editor independence
 - command-line workflow
-
+- version-control friendliness
