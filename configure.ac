@@ -3,6 +3,7 @@ AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_AUX_DIR([build-aux])
 
 AM_INIT_AUTOMAKE([foreign])
+AM_MAINTAINER_MODE([disable])
 
 AC_PROG_CC
 
