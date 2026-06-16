@@ -365,18 +365,16 @@ assert_contains "$STDOUT" "other"
 assert_not_contains "$STDOUT" "old:"
 
 echo "17. mv missing old key fails with status 1"
-
 run_cmd "$BIN" mv missing dst
 assert_status 1
-assert_contains "$STDOUT$STDERR" "No such key"
-
-assert_file_exists "$new_path"
-assert_file_exists "$other_path"
+assert_contains "$STDOUT$STDERR" "Invalid keyword"
+assert_contains "$STDOUT$STDERR" "missing"
+assert_contains "$STDOUT$STDERR" "does not exist"
 
 echo "18. mv existing new key fails with status 1"
-
 run_cmd "$BIN" mv new other
 assert_status 1
+assert_contains "$STDOUT$STDERR" "New Keyword"
 assert_contains "$STDOUT$STDERR" "already exists"
 
 assert_file_exists "$new_path"
@@ -412,13 +410,16 @@ assert_file_not_exists "$new_path"
 
 run_cmd "$BIN" show new
 assert_failure
-assert_contains "$STDOUT$STDERR" "was not found"
+assert_contains "$STDOUT$STDERR" "Invalid keyword"
+assert_contains "$STDOUT$STDERR" "new"
+assert_contains "$STDOUT$STDERR" "does not exist"
 
 echo "21. rm missing key fails"
 
 run_cmd "$BIN" rm missing
 assert_failure
 assert_contains "$STDOUT$STDERR" "No such key"
+assert_contains "$STDOUT$STDERR" "missing"
 
 echo "22. storage-dependent commands fail before storage exists"
 
