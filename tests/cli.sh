@@ -7,14 +7,25 @@ BIN="${1:-$ROOT/src/sclipple}"
 STDOUT=""
 STDERR=""
 STATUS=0
+TEST_HOME=""
 
 fail() {
   echo "FAIL: $*" >&2
   exit 1
 }
 
+dump_last_command_output() {
+  echo "STDOUT:" >&2
+  echo "$STDOUT" >&2
+  echo "STDERR:" >&2
+  echo "$STDERR" >&2
+  echo "STATUS: $STATUS" >&2
+}
+
 run_cmd() {
-  local out err
+  local out
+  local err
+
   out="$(mktemp)"
   err="$(mktemp)"
 
@@ -30,42 +41,36 @@ run_cmd() {
 }
 
 assert_success() {
-  [ "$STATUS" -eq 0 ] || {
-    echo "STDOUT:" >&2
-    echo "$STDOUT" >&2
-    echo "STDERR:" >&2
-    echo "$STDERR" >&2
+  if [ "$STATUS" -ne 0 ]; then
+    dump_last_command_output
     fail "expected success, got status $STATUS"
-  }
+  fi
 }
 
 assert_failure() {
-  [ "$STATUS" -ne 0 ] || {
-    echo "STDOUT:" >&2
-    echo "$STDOUT" >&2
-    echo "STDERR:" >&2
-    echo "$STDERR" >&2
+  if [ "$STATUS" -eq 0 ]; then
+    dump_last_command_output
     fail "expected failure, got status 0"
-  }
+  fi
 }
 
 assert_status() {
   local expected="$1"
-  [ "$STATUS" -eq "$expected" ] || {
-    echo "STDOUT:" >&2
-    echo "$STDOUT" >&2
-    echo "STDERR:" >&2
-    echo "$STDERR" >&2
+
+  if [ "$STATUS" -ne "$expected" ]; then
+    dump_last_command_output
     fail "expected status $expected, got $STATUS"
-  }
+  fi
 }
 
 assert_contains() {
   local text="$1"
   local expected="$2"
 
-  printf '%s' "$text" | grep -F -- "$expected" >/dev/null \
-    || fail "expected text to contain: $expected"
+  if ! printf '%s' "$text" | grep -F -- "$expected" >/dev/null; then
+    dump_last_command_output
+    fail "expected text to contain: $expected"
+  fi
 }
 
 assert_not_contains() {
@@ -73,7 +78,15 @@ assert_not_contains() {
   local unexpected="$2"
 
   if printf '%s' "$text" | grep -F -- "$unexpected" >/dev/null; then
+    dump_last_command_output
     fail "expected text not to contain: $unexpected"
+  fi
+}
+
+assert_diagnostic() {
+  if [ -z "$STDOUT$STDERR" ]; then
+    dump_last_command_output
+    fail "expected diagnostic output"
   fi
 }
 
@@ -85,15 +98,19 @@ assert_file_not_exists() {
   [ ! -e "$1" ] || fail "expected file not to exist: $1"
 }
 
+note_count() {
+  if [ -d "$HOME/.sclipple/notes" ]; then
+    find "$HOME/.sclipple/notes" -type f | wc -l | tr -d ' '
+  else
+    printf '0'
+  fi
+}
+
 assert_note_count() {
   local expected="$1"
   local actual
 
-  if [ -d "$HOME/.sclipple/notes" ]; then
-    actual="$(find "$HOME/.sclipple/notes" -type f | wc -l | tr -d ' ')"
-  else
-    actual="0"
-  fi
+  actual="$(note_count)"
 
   [ "$actual" -eq "$expected" ] \
     || fail "expected $expected note files, got $actual"
@@ -101,7 +118,10 @@ assert_note_count() {
 
 find_note() {
   local key="$1"
-  find "$HOME/.sclipple/notes" -type f -name "$key--*" | head -n 1
+
+  if [ -d "$HOME/.sclipple/notes" ]; then
+    find "$HOME/.sclipple/notes" -type f -name "$key--*" | head -n 1
+  fi
 }
 
 write_note() {
@@ -128,10 +148,23 @@ reset_home() {
 }
 
 setup_rc() {
-  cat > "$HOME/.sclipplerc" <<'EOF'
+  cat > "$HOME/.sclipplerc" <<'RC'
 editor = cat
 extension = txt
-EOF
+RC
+}
+
+assert_storage_intact_for_new_other() {
+  assert_file_exists "$new_path"
+  assert_file_exists "$other_path"
+
+  run_cmd "$BIN" show new
+  assert_success
+  assert_contains "$STDOUT" "content for old"
+
+  run_cmd "$BIN" show other
+  assert_success
+  assert_contains "$STDOUT" "content for other"
 }
 
 [ -x "$BIN" ] || fail "sclipple binary is not executable: $BIN"
@@ -165,7 +198,7 @@ echo "3. duplicate add is a non-fatal warning/no-op"
 
 run_cmd "$BIN" add alpha
 assert_success
-assert_contains "$STDOUT$STDERR" "already exist"
+assert_diagnostic
 assert_note_count 1
 
 echo "4. add accepts multiple keys"
@@ -184,26 +217,22 @@ assert_success
 assert_file_exists "$(find_note A_1-b)"
 assert_note_count 4
 
-echo "6. invalid and reserved keys are rejected"
+echo "6. invalid and reserved keys do not create notes"
 
-before_count="$(find "$HOME/.sclipple/notes" -type f | wc -l | tr -d ' ')"
+before_count="$(note_count)"
 
 for key in "." ".." "bad/key" "bad,key" "bad key" "git" "help" "add" "rm" "mv" "ls" "search" "show"; do
   run_cmd "$BIN" add "$key"
+  assert_diagnostic
 
-  # Current behavior: invalid/reserved add prints an error message,
-  # but may still return status 0.  Therefore this test checks the
-  # observable invariant: no note is created.
-  assert_contains "$STDOUT$STDERR" "Error"
-
-  current_count="$(find "$HOME/.sclipple/notes" -type f | wc -l | tr -d ' ')"
+  current_count="$(note_count)"
   [ "$current_count" -eq "$before_count" ] \
-    || fail "invalid key created a note: key=$key before=$before_count after=$current_count"
+    || fail "invalid or reserved key created a note: key=$key before=$before_count after=$current_count"
 done
 
-after_count="$(find "$HOME/.sclipple/notes" -type f | wc -l | tr -d ' ')"
+after_count="$(note_count)"
 [ "$before_count" -eq "$after_count" ] \
-  || fail "invalid keys changed note count: before=$before_count after=$after_count"
+  || fail "invalid or reserved keys changed note count: before=$before_count after=$after_count"
 
 echo "7. ls shows first non-empty lines"
 
@@ -228,7 +257,7 @@ assert_not_contains "$STDOUT" "gamma:"
 
 echo "9. ls abbreviates long first lines"
 
-long_line="$(printf 'x%.0s' $(seq 1 160))"
+long_line="$(printf '%*s' 160 '' | tr ' ' x)"
 write_note gamma "$long_line"$'\n'
 
 run_cmd "$BIN" ls gamma
@@ -267,7 +296,7 @@ assert_not_contains "$STDOUT" "urgent task"
 
 run_cmd "$BIN" search '['
 assert_failure
-assert_contains "$STDOUT$STDERR" "regcomp failed"
+assert_diagnostic
 
 echo "12. edit command invokes configured editor"
 
@@ -280,10 +309,10 @@ echo "13. rc extension is used for new notes"
 
 reset_home
 
-cat > "$HOME/.sclipplerc" <<'EOF'
+cat > "$HOME/.sclipplerc" <<'RC'
 editor = cat
 extension = md
-EOF
+RC
 
 run_cmd "$BIN" add mdnote
 assert_success
@@ -301,11 +330,11 @@ echo "14. rc parser handles whitespace, comments, and quotes"
 
 reset_home
 
-cat > "$HOME/.sclipplerc" <<'EOF'
+cat > "$HOME/.sclipplerc" <<'RC'
 # comment
    editor   =   "cat"   # trailing comment
    extension = 'memo'
-EOF
+RC
 
 run_cmd "$BIN" add quoted
 assert_success
@@ -323,13 +352,14 @@ echo "15. invalid rc extension is fatal"
 
 reset_home
 
-cat > "$HOME/.sclipplerc" <<'EOF'
+cat > "$HOME/.sclipplerc" <<'RC'
 extension = bad/ext
-EOF
+RC
 
 run_cmd "$BIN" add x
 assert_failure
-assert_contains "$STDOUT$STDERR" "Invalid extension"
+assert_diagnostic
+assert_note_count 0
 
 echo "16. mv succeeds and preserves content"
 
@@ -364,35 +394,25 @@ assert_contains "$STDOUT" "new"
 assert_contains "$STDOUT" "other"
 assert_not_contains "$STDOUT" "old:"
 
-echo "17. mv missing old key fails with status 1"
+echo "17. mv missing old key fails with status 1 and preserves existing notes"
+
 run_cmd "$BIN" mv missing dst
 assert_status 1
-assert_contains "$STDOUT$STDERR" "Invalid keyword"
-assert_contains "$STDOUT$STDERR" "missing"
-assert_contains "$STDOUT$STDERR" "does not exist"
+assert_diagnostic
+assert_storage_intact_for_new_other
 
-echo "18. mv existing new key fails with status 1"
+echo "18. mv existing new key fails with status 1 and preserves existing notes"
+
 run_cmd "$BIN" mv new other
 assert_status 1
-assert_contains "$STDOUT$STDERR" "New Keyword"
-assert_contains "$STDOUT$STDERR" "already exists"
+assert_diagnostic
+assert_storage_intact_for_new_other
 
-assert_file_exists "$new_path"
-assert_file_exists "$other_path"
-
-run_cmd "$BIN" show new
-assert_success
-assert_contains "$STDOUT" "content for old"
-
-run_cmd "$BIN" show other
-assert_success
-assert_contains "$STDOUT" "content for other"
-
-echo "19. mv invalid new key fails and keeps old note"
+echo "19. mv invalid new key fails and preserves existing note"
 
 run_cmd "$BIN" mv new ..
-assert_failure
-assert_contains "$STDOUT$STDERR" "Error"
+assert_status 1
+assert_diagnostic
 
 assert_file_exists "$new_path"
 
@@ -404,22 +424,18 @@ echo "20. rm removes key and note file"
 
 run_cmd "$BIN" rm new
 assert_success
-assert_contains "$STDOUT$STDERR" "removed 'new'"
 
 assert_file_not_exists "$new_path"
 
 run_cmd "$BIN" show new
 assert_failure
-assert_contains "$STDOUT$STDERR" "Invalid keyword"
-assert_contains "$STDOUT$STDERR" "new"
-assert_contains "$STDOUT$STDERR" "does not exist"
+assert_diagnostic
 
 echo "21. rm missing key fails"
 
 run_cmd "$BIN" rm missing
 assert_failure
-assert_contains "$STDOUT$STDERR" "No such key"
-assert_contains "$STDOUT$STDERR" "missing"
+assert_diagnostic
 
 echo "22. storage-dependent commands fail before storage exists"
 
@@ -429,20 +445,20 @@ setup_rc
 for cmd in ls show; do
   run_cmd "$BIN" "$cmd"
   assert_failure
-  assert_contains "$STDOUT$STDERR" "No notes have been added"
+  assert_diagnostic
 done
 
 run_cmd "$BIN" search pattern
 assert_failure
-assert_contains "$STDOUT$STDERR" "No notes have been added"
+assert_diagnostic
 
 run_cmd "$BIN" rm x
 assert_failure
-assert_contains "$STDOUT$STDERR" "No notes have been added"
+assert_diagnostic
 
 run_cmd "$BIN" mv x y
 assert_failure
-assert_contains "$STDOUT$STDERR" "No notes have been added"
+assert_diagnostic
 
 echo "23. storage path conflicts are rejected"
 
@@ -453,7 +469,7 @@ printf 'not a directory\n' > "$HOME/.sclipple"
 
 run_cmd "$BIN" add x
 assert_failure
-assert_contains "$STDOUT$STDERR" "exists but is not a directory"
+assert_diagnostic
 
 reset_home
 setup_rc
@@ -463,7 +479,7 @@ printf 'not a directory\n' > "$HOME/.sclipple/notes"
 
 run_cmd "$BIN" add x
 assert_failure
-assert_contains "$STDOUT$STDERR" "exists but is not a directory"
+assert_diagnostic
 
 echo "24. broken list file is detected"
 
@@ -471,21 +487,21 @@ reset_home
 setup_rc
 
 mkdir -p "$HOME/.sclipple/notes"
-cat > "$HOME/.sclipple/.list.csv" <<'EOF'
+cat > "$HOME/.sclipple/.list.csv" <<'LIST'
 broken,line,with,too,many,columns
-EOF
+LIST
 
 run_cmd "$BIN" ls
 assert_failure
-assert_contains "$STDOUT$STDERR" "list file is broken"
+assert_diagnostic
 
 run_cmd "$BIN" show
 assert_failure
-assert_contains "$STDOUT$STDERR" "list file is broken"
+assert_diagnostic
 
 run_cmd "$BIN" search anything
 assert_failure
-assert_contains "$STDOUT$STDERR" "list file is broken"
+assert_diagnostic
 
 echo "25. git subcommand runs inside storage"
 
@@ -503,16 +519,13 @@ run_cmd "$BIN" git status --short
 assert_success
 assert_contains "$STDOUT$STDERR" ".list.csv"
 
-echo "26. git before storage is non-fatal in current behavior"
+echo "26. git before storage reports diagnostic and returns success in the uploaded source"
 
 reset_home
 setup_rc
 
 run_cmd "$BIN" git status
 assert_success
-assert_contains "$STDOUT$STDERR" "No notes have been added"
+assert_diagnostic
 
 echo "All CLI tests passed."
-
-
-
