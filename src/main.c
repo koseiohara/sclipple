@@ -87,8 +87,12 @@ int main(int argc, char** argv){
         }
         return 0;
     } else if (strcmp(argv[1], "git") == 0){
-        git_run(dir, &argv[1]);
-        return 0;
+        result = git_run(dir, &argv[1]);
+        if (result < 0){
+            return 1;
+        } else{
+            return 0;
+        }
     }
 
     now = time(NULL);

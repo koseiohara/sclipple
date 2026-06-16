@@ -152,7 +152,8 @@ int mv_filename(char* old_file, const char* new_flag, size_t output_len, char* o
     char* last;
     char* fname;
 
-    strcpy(tmp_old_file, old_file);
+    // strcpy(tmp_old_file, old_file);
+    snprintf(tmp_old_file, sizeof(tmp_old_file), "%s", old_file);
     cp    = tmp_old_file;
     fname = tmp_old_file;
 
