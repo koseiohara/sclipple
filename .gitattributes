@@ -1,2 +1,2 @@
-tests/* linguist-generated=true
-.github/** linguist-generated=true
+tests/* linguist-detectable=false
+.github/** linguist-detectable=false
