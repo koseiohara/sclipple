@@ -7,8 +7,8 @@ When working in a terminal, you often want to write something down quickly witho
 sclipple stores notes in a dedicated location and lets you access them from anywhere using short keywords.
 
 ```sh
-sclipple add todo
-sclipple todo
+$ sclipple add todo
+$ sclipple todo
 ```
 
 The note can later be opened from any directory.
@@ -29,9 +29,9 @@ The note can later be opened from any directory.
 ## Installation
 
 ```sh
-./configure
-make
-make install
+$ ./configure
+$ make
+$ make install
 ```
 
 ---
@@ -41,43 +41,43 @@ make install
 Create a note:
 
 ```sh
-sclipple add todo
+$ sclipple add todo
 ```
 
 Edit the note:
 
 ```sh
-sclipple todo
+$ sclipple todo
 ```
 
 Show the note:
 
 ```sh
-sclipple show todo
+$ sclipple show todo
 ```
 
 List all notes:
 
 ```sh
-sclipple ls
+$ sclipple ls
 ```
 
 Search notes:
 
 ```sh
-sclipple search deadline
+$ sclipple search deadline
 ```
 
 Rename a note:
 
 ```sh
-sclipple mv todo tasks
+$ sclipple mv todo tasks
 ```
 
 Remove a note:
 
 ```sh
-sclipple rm tasks
+$ sclipple rm tasks
 ```
 
 ---
@@ -89,7 +89,7 @@ Each note is identified by a unique **KEY**.
 Example:
 
 ```sh
-sclipple add project
+$ sclipple add project
 ```
 
 creates a note associated with the key:
@@ -107,7 +107,7 @@ The key is later used to edit, display, search, rename, or remove the note.
 ### Create notes
 
 ```sh
-sclipple add <KEY> [<KEY> ...]
+$ sclipple add <KEY> [<KEY> ...]
 ```
 
 Create one or more notes.
@@ -117,7 +117,7 @@ Create one or more notes.
 ### Edit notes
 
 ```sh
-sclipple <KEY> [<KEY> ...]
+$ sclipple <KEY> [<KEY> ...]
 ```
 
 Open notes in the configured editor.
@@ -127,7 +127,7 @@ Open notes in the configured editor.
 ### List notes
 
 ```sh
-sclipple ls [<KEY> ...]
+$ sclipple ls [<KEY> ...]
 ```
 
 List notes.
@@ -143,7 +143,7 @@ For each note, the output includes:
 ### Show notes
 
 ```sh
-sclipple show [<KEY> ...]
+$ sclipple show [<KEY> ...]
 ```
 
 Print note contents.
@@ -155,7 +155,7 @@ Without arguments, all notes are displayed.
 ### Search notes
 
 ```sh
-sclipple search <PATTERN> [<KEY> ...]
+$ sclipple search <PATTERN> [<KEY> ...]
 ```
 
 Search note contents using POSIX extended regular expressions.
@@ -169,11 +169,9 @@ Features:
 Examples:
 
 ```sh
-sclipple search deadline
-
-sclipple search 'todo|urgent'
-
-sclipple search 'error.*log' project
+$ sclipple search deadline
+$ sclipple search 'todo|urgent'
+$ sclipple search 'error.*log' project
 ```
 
 ---
@@ -181,7 +179,7 @@ sclipple search 'error.*log' project
 ### Rename notes
 
 ```sh
-sclipple mv <OLD_KEY> <NEW_KEY>
+$ sclipple mv <OLD_KEY> <NEW_KEY>
 ```
 
 Rename a note.
@@ -191,7 +189,7 @@ Rename a note.
 ### Remove notes
 
 ```sh
-sclipple rm <KEY> [<KEY> ...]
+$ sclipple rm <KEY> [<KEY> ...]
 ```
 
 Remove notes.
@@ -203,13 +201,10 @@ Remove notes.
 Run Git commands inside the sclipple data directory.
 
 ```sh
-sclipple git status
-
-sclipple git init
-
-sclipple git add .
-
-sclipple git commit -m "update notes"
+$ sclipple git status
+$ sclipple git init
+$ sclipple git add .
+$ sclipple git commit -m "update notes"
 ```
 
 This makes it easy to keep notes under version control.
@@ -309,3 +304,6 @@ Goals:
 - editor independence
 - command-line workflow
 - version-control friendliness
+
+
+
