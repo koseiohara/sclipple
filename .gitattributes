@@ -1,2 +1,4 @@
 tests/* linguist-detectable=false
+configure linguist-detectable=false
+build-aux/* linguist-detectable=false
 .github/** linguist-detectable=false
