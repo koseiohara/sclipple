@@ -141,15 +141,17 @@ void get_filename(const char* flag, char* datetime, char* ext, size_t output_len
 }
 
 
-int mv_filename(char* old_file, const char* new_flag, size_t output_len, char* output){
-    char  tmp_old_file[FILE_APATH_LEN];
+int mv_filename(char* old_file, const char* new_flag, char* output){
+    char* tmp_old_file;
     char* cp;
     char* prefix;
     char* last;
     char* fname;
+    int   len;
 
     // strcpy(tmp_old_file, old_file);
-    snprintf(tmp_old_file, sizeof(tmp_old_file), "%s", old_file);
+    // snprintf(tmp_old_file, sizeof(tmp_old_file), "%s", old_file);
+    tmp_old_file = strdup(old_file);
     cp    = tmp_old_file;
     fname = tmp_old_file;
 
@@ -190,8 +192,13 @@ int mv_filename(char* old_file, const char* new_flag, size_t output_len, char* o
     printf("<DEBUG> File name after '--': %s\n", last);
     #endif
 
+    len = strlen(prefix) + 1;       // +1 for the last \0
+    len = len + strlen(new_flag);
+    len = len + strlen(last);
+    output = malloc(len * sizeof(char));
+
     if (last != NULL){
-        snprintf(output, output_len, "%s%s%s", prefix, new_flag, last);
+        snprintf(output, len, "%s%s%s", prefix, new_flag, last);
         return 0;
     } else{
         return -1;

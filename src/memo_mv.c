@@ -19,8 +19,11 @@
 int mv(const char* list, char* old_flag, char* new_flag){
     struct stat st;
     int result;
-    char new_file[FILE_APATH_LEN];
-    char old_file[FILE_APATH_LEN];
+    char* new_file;
+    char* old_file;
+
+    new_file = NULL;
+    old_file = NULL;
 
     // check new keyword
     result = flag_validation(new_flag);
@@ -66,8 +69,9 @@ int mv(const char* list, char* old_flag, char* new_flag){
     }
 
     // get new file name
-    if (mv_filename(old_file, new_flag, sizeof(new_file), new_file) < 0){
+    if (mv_filename(old_file, new_flag, new_file) < 0){
         fprintf(stderr, "%s Error: list file is broken\n", PROGRAM);
+        free(new_file);
         return -4;
     }
     printf("%s: RENAME %s -> %s\n", PROGRAM, old_flag, new_flag);
@@ -79,10 +83,14 @@ int mv(const char* list, char* old_flag, char* new_flag){
 
     // rename file
     if (rename(old_file, new_file) == 0){
+        free(old_file);
+        free(new_file);
         return 0;
     }
 
     perror(new_file);
+    free(old_file);
+    free(new_file);
     return -2;
 }
 
