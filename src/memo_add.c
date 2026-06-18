@@ -9,7 +9,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
-
 #include "globals.h"
 #include "datetime.h"
 #include "names.h"
@@ -88,9 +87,9 @@ int make_file(const char* path, const int cond){
 // if flag includes invalid character or is too long, return -3
 // otherwise, stop process
 int add(const char* list, const char* dir, const char* note_stock, char* flag, char* ext, struct tm* clock){
-    char* file;
-    char* path;
-    char* datetime;
+    char* file     = NULL;
+    char* path     = NULL;
+    char* datetime = NULL;
     int   stat;
     int   len;
 

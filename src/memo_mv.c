@@ -19,11 +19,8 @@
 int mv(const char* list, char* old_flag, char* new_flag){
     struct stat st;
     int result;
-    char* new_file;
-    char* old_file;
-
-    new_file = NULL;
-    old_file = NULL;
+    char* new_file = NULL;
+    char* old_file = NULL;
 
     // check new keyword
     result = flag_validation(new_flag);
@@ -50,21 +47,25 @@ int mv(const char* list, char* old_flag, char* new_flag){
     } 
 
     // get current file name from list file
-    result = get_filename_by_key(list, old_flag, sizeof(old_file), old_file);
+    result = get_filename_by_key(list, old_flag, old_file);
     if (result != 0){
         fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, old_flag);
+        free(old_file);
         return -5;
     }
 
     // rewrite list file
     result = mv_key_in_list(list, old_flag, new_flag);
     if (result < 0){
+        free(old_file);
         return -1;
     } else if (result == 1){
         fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, old_flag);
+        free(old_file);
         return -5;
     } else if (result == 2){
         fprintf(stderr, "%s Error: New Keyword '%s' already exists.\n", PROGRAM, new_flag);
+        free(old_file);
         return -6;
     }
 
@@ -72,6 +73,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
     if (mv_filename(old_file, new_flag, new_file) < 0){
         fprintf(stderr, "%s Error: list file is broken\n", PROGRAM);
         free(new_file);
+        free(old_file);
         return -4;
     }
     printf("%s: RENAME %s -> %s\n", PROGRAM, old_flag, new_flag);

@@ -49,7 +49,7 @@ void init(Config* config, RcEntry* entry){
 // return 0 otherwise
 int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
     FILE*  fp;
-    char*  line;
+    char*  line = NULL;
     char*  decomm;
     char*  in_key;
     char*  in_value;
@@ -66,7 +66,6 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
         return -1;
     }
 
-    line = NULL;
     size = 0;
     n    = (int)n_entry;
     while(getline(&line, &size, fp) != -1){

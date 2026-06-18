@@ -11,8 +11,8 @@
 
 int rm(const char* list, char* flag){
     struct stat st;
-    int  result;
-    char filename[FILE_APATH_LEN];
+    int   result;
+    char* filename = NULL;
 
     #ifdef DEBUG
     printf("List file name: %s\n", list);
@@ -30,27 +30,32 @@ int rm(const char* list, char* flag){
     } 
 
     // get the target filename from list file
-    result = get_filename_by_key(list, flag, sizeof(filename), filename);
+    result = get_filename_by_key(list, flag, filename);
     if (result != 0){
         fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, flag);
+        free(filename);
         return -1;
     }
 
     // delete the target flag line from the list file
     result = rm_key_in_list(list, flag);
     if (result < 0){
+        free(filename);
         return -1;
     } else if (result == 1){
         fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, flag);
+        free(filename);
         return 1;
     }
 
     if (unlink(filename) == 0){
         printf("%s: removed '%s'\n", PROGRAM, flag);
+        free(filename);
         return 0;
     }
 
     perror(flag);
+    free(filename);
     return -2;
 }
 

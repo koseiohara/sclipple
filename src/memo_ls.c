@@ -69,15 +69,16 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
 
 int ls(const char* list, int flag_num, char** flag_list){
     struct stat st;
-    FILE* fp;
-    char  flag[FLAG_LEN];
-    char  datetime[DATETIME_LEN];
-    char  notename[FILE_APATH_LEN];
-    char  first_line[LS_LINE_LEN];
-    char  (*lines)[FLAG_LEN+13+DATETIME_LEN+3+LS_LINE_LEN+3] = NULL;        // <flag>:\n  created: <datetime>\n  <first_line>\n\n\0
-    int   result;
-    int   i;
-    int   j;
+    FILE*  fp;
+    char*  flag     = NULL;
+    char*  datetime = NULL;
+    char*  notename = NULL;
+    char** lines    = NULL;        // <flag>:\n  created: <datetime>\n  <first_line>\n\n\0
+    char   first_line[LS_LINE_LEN];
+    int    result;
+    int    i;
+    int    j;
+    int    len;
 
     #ifdef DEBUG
     printf("<DEBUG> Number of Flags: %d\n", flag_num);
@@ -100,13 +101,14 @@ int ls(const char* list, int flag_num, char** flag_list){
         fprintf(stderr, "%s Error: Invalid number of flags: %d\n", PROGRAM, flag_num);
         return -1;
     } else if (flag_num > 0){
-        lines = malloc((size_t)flag_num * sizeof(*lines));
+        lines = malloc((size_t)flag_num * sizeof(char*));
         if (lines == NULL){
             perror("malloc");
             return -1;
         }
 
         for (j = 0; j < flag_num; j = j + 1){
+            lines[j] = malloc(sizeof(char));
             lines[j][0] = '\0';
         }
     }
@@ -114,6 +116,9 @@ int ls(const char* list, int flag_num, char** flag_list){
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
+        for (j = 0; j < flag_num; j = j + 1){
+            free(lines[j]);
+        }
         free(lines);
         return -1;
     }
@@ -126,15 +131,21 @@ int ls(const char* list, int flag_num, char** flag_list){
         // return 1 if input failed
         // return 2 if line is white space
         // return -1 if list file is broken: does not have thee elements
-        result = get_content_line(fp, sizeof(flag), flag, sizeof(datetime), datetime, sizeof(notename), notename);
+        result = get_content_line(fp, &flag, &datetime, &notename);
         if (result == 1){
             break;
         } else if (result == 2){
             continue;
         } else if (result == -1){
             fprintf(stderr, "%s Error: Invalid line is found in list file\nlist file is broken in line %d\n", PROGRAM, i);
+            for (j = 0; j < flag_num; j = j + 1){
+                free(lines[j]);
+            }
             free(lines);
             fclose(fp);
+            free(flag);
+            free(datetime);
+            free(notename);
             return -1;
         }
 
@@ -146,22 +157,40 @@ int ls(const char* list, int flag_num, char** flag_list){
             for (j = 0; j < flag_num; j = j + 1){
                 if (strcmp(flag_list[j], flag) == 0){
                     if (get_first_line(notename, LS_LINE_LEN, first_line) < 0){
+                        for (j = 0; j < flag_num; j = j + 1){
+                            free(lines[j]);
+                        }
                         free(lines);
                         fclose(fp);
+                        free(flag);
+                        free(datetime);
+                        free(notename);
                         return -1;
                     }
-                    snprintf(lines[j], sizeof(lines[j]), "%s:\n  created: %s\n  %s\n\n", flag, datetime, first_line);
+                    len = 28;           // 5 \n, 8 spaces, 3 corons, \0, created, file, and 4 variables
+                    len = len + strlen(flag);
+                    len = len + strlen(datetime);
+                    len = len + strlen(first_line);
+                    lines[j] = realloc(lines, len*sizeof(char));
+                    snprintf(lines[j], sizeof(lines[j]), "%s:\n  created: %s\n  file: %s\n  %s\n\n", flag, datetime, notename, first_line);
                 }
             }
         } else{
             if (get_first_line(notename, LS_LINE_LEN, first_line) < 0){
                 free(lines);
                 fclose(fp);
+                free(flag);
+                free(datetime);
+                free(notename);
                 return -1;
             }
-            printf("%s:\n  created: %s\n  %s\n\n", flag, datetime, first_line);
+            printf("%s:\n  created: %s\n  file: %s\n  %s\n\n", flag, datetime, notename, first_line);
         }
     }
+
+    free(flag);
+    free(datetime);
+    free(notename);
 
     if (flag_num > 0){
         for (i = 0; i < flag_num; i = i + 1){
@@ -170,6 +199,9 @@ int ls(const char* list, int flag_num, char** flag_list){
             #endif
             if (lines[i][0] == '\0'){
                 fprintf(stderr, "%s Error: Note '%s' was not found\n", PROGRAM, flag_list[i]);
+                for (j = 0; j < flag_num; j = j + 1){
+                    free(lines[j]);
+                }
                 free(lines);
                 fclose(fp);
                 return -2;
@@ -179,6 +211,10 @@ int ls(const char* list, int flag_num, char** flag_list){
         for (i = 0; i < flag_num; i = i + 1){
             printf("%s", lines[i]);
         }
+    }
+
+    for (j = 0; j < flag_num; j = j + 1){
+        free(lines[j]);
     }
     free(lines);
 

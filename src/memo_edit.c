@@ -10,7 +10,7 @@
 #include "names.h"
 #include "edit_list.h"
 
-void get_command(char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char file[][FILE_APATH_LEN], char** command){
+void get_command(char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char* file[], char** command){
     int i;
     int base_idx;
 
@@ -48,9 +48,10 @@ void get_command(char* editor, const int editor_options_num, char* const* editor
 int memo_edit(const char* list, const char* dir, char* editor, const int editor_options_num, char* const* editor_options, const int flag_num, char** flags){
     struct stat st;
     pid_t pid;
-    char** command;
-    char   files[flag_num][FILE_APATH_LEN];
+    char** command = NULL;
+    char*  files[flag_num];
     int i;
+    int j;
     int result;
 
     result = path_status(list, &st);
@@ -63,13 +64,21 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         return -1;
     } 
 
+    for (j = 0; j < flag_num; j = j + 1){
+        files[j] = NULL;
+    }
+
     for (i = 0; i < flag_num; i = i + 1){
-        result = get_filename_by_key(list, flags[i], sizeof(files[i]), files[i]);
+        result = get_filename_by_key(list, flags[i], files[i]);
         #ifdef DEBUG
         printf("Checked existence of %s\n", files[i]);
         #endif
         if (result == -1){
             fprintf(stderr, "%s Error: Invalid keyword. '%s' does not exist\n", PROGRAM, flags[i]);
+
+            for (j = 0; j < flag_num; j = j + 1){
+                free(flags[j]);
+            }
             return -1;
         }
     }
@@ -78,25 +87,42 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
     if (pid == 0){
         if (chdir(dir) != 0){
             perror(editor);
+            for (j = 0; j < flag_num; j = j + 1){
+                free(flags[j]);
+            }
             _exit(1);
         }
 
         command = malloc((1+editor_options_num+flag_num+1) * sizeof(char*));   // $(editor) $(editor_option) $(file) NULL
         if (command == NULL){
             perror("malloc");
+            for (j = 0; j < flag_num; j = j + 1){
+                free(flags[j]);
+            }
             _exit(1);
         }
         get_command(editor, editor_options_num, editor_options, flag_num, files, command);
 
         execvp(editor, command);
         perror(editor);
+        for (j = 0; j < flag_num; j = j + 1){
+            free(flags[j]);
+        }
         _exit(1);
     } else if (pid < 0){
         perror("fork");
+        for (j = 0; j < flag_num; j = j + 1){
+            free(flags[j]);
+        }
         return -1;
     }
 
     wait(NULL);
+
+    for (j = 0; j < flag_num; j = j + 1){
+        free(flags[j]);
+    }
+
     return 0;
 }
 

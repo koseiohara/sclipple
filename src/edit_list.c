@@ -69,10 +69,10 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
 // return -1 if col is too large or list element in a line is less than 3
 // return  0 if target line is found
 // return  1 if flag does not exist
-int read_list_by_key(FILE* fp, char* target_flag, const int col, size_t result_len, char* result){
+int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
     // char   line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
-    char*  line;
-    char*  flag;
+    char*  line = NULL;
+    char*  flag = NULL;
     int    i;
     size_t size;
 
@@ -103,7 +103,8 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, size_t result_l
                 return -1;
             }
         }
-        snprintf(result, result_len, "%s", flag);
+        // snprintf(result, result_len, "%s", flag);
+        *result = strdup(flag);
         return 0;
     }
     return 1;
@@ -113,8 +114,8 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, size_t result_l
 // return 0 if flag does not exist
 // return -1 if flag exist
 int flag_exist_check(const char* list, char* flag){
-    char dummy[128];
-    int  stat;
+    char* dummy = NULL;
+    int   stat;
     FILE* fp;
 
     fp = fopen(list, "r");
@@ -123,7 +124,8 @@ int flag_exist_check(const char* list, char* flag){
         return -2;
     }
 
-    stat = read_list_by_key(fp, flag, 0, sizeof(dummy), dummy);
+    stat = read_list_by_key(fp, flag, 0, &dummy);
+    free(dummy);
 
     fclose(fp);
 
@@ -138,7 +140,7 @@ int flag_exist_check(const char* list, char* flag){
 }
 
 
-int get_datetime_by_key(const char* list, char* flag, size_t datetime_len, char* datetime){
+int get_datetime_by_key(const char* list, char* flag, char* datetime){
     int  stat;
     FILE* fp;
 
@@ -148,7 +150,7 @@ int get_datetime_by_key(const char* list, char* flag, size_t datetime_len, char*
         return -2;
     }
 
-    stat = read_list_by_key(fp, flag, 1, datetime_len, datetime);
+    stat = read_list_by_key(fp, flag, 1, &datetime);
 
     fclose(fp);
 
@@ -159,7 +161,7 @@ int get_datetime_by_key(const char* list, char* flag, size_t datetime_len, char*
 }
 
 
-int get_filename_by_key(const char* list, char* flag, size_t filename_len, char* filename){
+int get_filename_by_key(const char* list, char* flag, char* filename){
     int  stat;
     FILE* fp;
 
@@ -169,7 +171,7 @@ int get_filename_by_key(const char* list, char* flag, size_t filename_len, char*
         return -2;
     }
 
-    stat = read_list_by_key(fp, flag, 2, filename_len, filename);
+    stat = read_list_by_key(fp, flag, 2, &filename);
 
     fclose(fp);
 
@@ -190,17 +192,17 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     FILE* fpr;
     FILE* fpw;
     // char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
-    char* line;
+    char* line = NULL;
     // char  tmpfile[LIST_APATH_LEN+8];
-    char* tmpfile;
-    char* flag;
-    char* datetime;
-    char* notename;
+    char* tmpfile  = NULL;
+    char* flag     = NULL;
+    char* datetime = NULL;
+    char* notename = NULL;
     // char* new_notename;
-    char* out_flag;
-    char* out_datetime;
-    char* out_notename;
-    char  dummy[128];
+    char* out_flag     = NULL;
+    char* out_datetime = NULL;
+    char* out_notename = NULL;
+    char* dummy;
     // const char* out_flag;
     int   fd;
     int   changed;
@@ -254,7 +256,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     }
 
     // check existence of the new flag
-    result = read_list_by_key(fpr, new_flag, 0, sizeof(dummy), dummy);
+    result = read_list_by_key(fpr, new_flag, 0, &dummy);
     if (result != 1){
         fclose(fpr);
         fclose(fpw);
@@ -400,12 +402,11 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 int rm_key_in_list(const char* list, const char* target_flag){
     FILE* fpr;
     FILE* fpw;
-    char* line;
-    char* out_line;
-    char* tmpfile;
-    char* flag;
-    char* datetime;
-    char* notename;
+    char* line     = NULL;
+    char* tmpfile  = NULL;
+    char* flag     = NULL;
+    char* datetime = NULL;
+    char* notename = NULL;
     int   fd;
     int   removed;
     int   len;
@@ -550,12 +551,12 @@ int rm_key_in_list(const char* list, const char* target_flag){
 // return 1 if input failed
 // return 2 if line is white space
 // return -1 if list file is broken: does not have thee elements
-int get_content_line(FILE* fp, size_t flag_len, char* flag, size_t datetime_len, char* datetime, size_t notename_len, char* notename){
+int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
     char*  line;
-    char*  in_flag;
-    char*  in_datetime;
-    char*  in_notename;
-    char*  dummy;
+    char*  in_flag     = NULL;
+    char*  in_datetime = NULL;
+    char*  in_notename = NULL;
+    char*  dummy = NULL;
     size_t size;
 
     if (getline(&line, &size, fp) != -1){
@@ -579,9 +580,12 @@ int get_content_line(FILE* fp, size_t flag_len, char* flag, size_t datetime_len,
         return -1;
     }
 
-    snprintf(flag    , flag_len    , "%s", in_flag    );
-    snprintf(datetime, datetime_len, "%s", in_datetime);
-    snprintf(notename, notename_len, "%s", in_notename);
+    // snprintf(flag    , flag_len    , "%s", in_flag    );
+    // snprintf(datetime, datetime_len, "%s", in_datetime);
+    // snprintf(notename, notename_len, "%s", in_notename);
+    *flag     = strdup(in_flag);
+    *datetime = strdup(in_datetime);
+    *notename = strdup(in_notename);
 
     free(line);
 
