@@ -48,9 +48,9 @@ int ext_validation(const char* ext){
 
     len = strlen(ext);
 
-    if (len >= EXT_LEN){
-        return -1;
-    }
+    // if (len >= EXT_LEN){
+    //     return -1;
+    // }
 
     for (i = 0; i < len; i = i + 1){
         c = ext[i];
@@ -79,9 +79,9 @@ int flag_validation(const char* flag){
 
     len = strlen(flag);
 
-    if (len >= FLAG_LEN || len == 0){
-        return -1;
-    }
+    // if (len >= FLAG_LEN || len == 0){
+    //     return -1;
+    // }
 
     if (is_white_space(flag)){
         return -1;
