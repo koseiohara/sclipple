@@ -96,6 +96,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         command = malloc((1+editor_options_num+flag_num+1) * sizeof(char*));   // $(editor) $(editor_option) $(file) NULL
         if (command == NULL){
             perror("malloc");
+            free(command);
             for (j = 0; j < flag_num; j = j + 1){
                 free(files[j]);
             }
@@ -105,6 +106,8 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
 
         execvp(editor, command);
         perror(editor);
+
+        free(command);
         for (j = 0; j < flag_num; j = j + 1){
             free(files[j]);
         }
