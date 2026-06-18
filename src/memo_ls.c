@@ -167,12 +167,13 @@ int ls(const char* list, int flag_num, char** flag_list){
                         free(notename);
                         return -1;
                     }
-                    len = 28;           // 5 \n, 8 spaces, 3 corons, \0, created, file, and 4 variables
+                    len = 36;           // 5 \n, 8 spaces, 3 corons, \0, created, file, and 4 variables
                     len = len + strlen(flag);
                     len = len + strlen(datetime);
+                    len = len + strlen(notename);
                     len = len + strlen(first_line);
                     lines[j] = realloc(lines[j], len*sizeof(char));
-                    snprintf(lines[j], len, "%s:\n  created: %s\n  file: %s\n  %s\n\n", flag, datetime, notename, first_line);
+                    snprintf(lines[j], len, "%s:\n  created: %s\n  file   : %s\n  %s\n\n", flag, datetime, notename, first_line);
                 }
             }
         } else{
@@ -184,7 +185,7 @@ int ls(const char* list, int flag_num, char** flag_list){
                 free(notename);
                 return -1;
             }
-            printf("%s:\n  created: %s\n  file: %s\n  %s\n\n", flag, datetime, notename, first_line);
+            printf("%s:\n  created: %s\n  file   : %s\n  %s\n\n", flag, datetime, notename, first_line);
         }
 
         free(flag);
