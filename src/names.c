@@ -136,21 +136,21 @@ int flag_validation(const char* flag){
 }
 
 
-void get_filename(const char* flag, char* datetime, char* ext, char* output){
+void get_filename(const char* flag, char* datetime, char* ext, char** output){
     int len;
 
     len = 4;    // for hyphen, dot, and \0
     len = len + strlen(flag);
     len = len + strlen(datetime);
     len = len + strlen(ext);
-    output = malloc(len * sizeof(char));
+    *output = malloc(len * sizeof(char));
 
-    snprintf(output, len, "%s--%s.%s", flag, datetime, ext);
+    snprintf(*output, len, "%s--%s.%s", flag, datetime, ext);
 }
 
 
-int mv_filename(char* old_file, const char* new_flag, char* output){
-    char* tmp_old_file;
+int mv_filename(char* old_file, const char* new_flag, char** output){
+    char* tmp_old_file = NULL;
     char* cp;
     char* prefix;
     char* last;
@@ -203,12 +203,14 @@ int mv_filename(char* old_file, const char* new_flag, char* output){
     len = strlen(prefix) + 1;       // +1 for the last \0
     len = len + strlen(new_flag);
     len = len + strlen(last);
-    output = malloc(len * sizeof(char));
+    *output = malloc(len * sizeof(char));
 
     if (last != NULL){
-        snprintf(output, len, "%s%s%s", prefix, new_flag, last);
+        snprintf(*output, len, "%s%s%s", prefix, new_flag, last);
+        free(tmp_old_file);
         return 0;
     } else{
+        free(tmp_old_file);
         return -1;
     }
 }

@@ -15,7 +15,7 @@
 // return -1 when io error or regex error
 // return 0 otherwise
 int search_one_file(char* flag, char* file, char* word){
-    char*  line;
+    char*  line = NULL;
     char*  lp;
     char   errbuf[256];
     int    errcode;
@@ -27,7 +27,7 @@ int search_one_file(char* flag, char* file, char* word){
     int    matched;
     int    ln;
     FILE*  fp;
-    size_t size;
+    size_t size = 0;
     regex_t    regex;
     regmatch_t match[1];
 
@@ -180,11 +180,14 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             continue;
         } else if (result < 0){
             fprintf(stderr, "%s Error: Invalid line is found in list file\nlist file is broken in line %d\n", PROGRAM, i);
+            fclose(fp);
             for (j = 0; j < flag_num; j = j + 1){
                 free(notename_list[j]);
             }
             free(notename_list);
-            fclose(fp);
+            free(flag);
+            free(datetime);
+            free(notename);
             return -1;
         }
 
@@ -197,33 +200,52 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             }
         } else{
             if (search_one_file(flag, notename, word) != 0){
-                free(notename_list);
                 fclose(fp);
+                for (j = 0; j < flag_num; j = j + 1){
+                    free(notename_list[j]);
+                }
+                free(notename_list);
+                free(flag);
+                free(datetime);
+                free(notename);
                 return -1;
             }
         }
+        free(flag);
+        free(datetime);
+        free(notename);
+
+        flag     = NULL;
+        datetime = NULL;
+        notename = NULL;
     }
 
     if (flag_num > 0){
         for (j = 0; j <  flag_num; j = j + 1){
             if (notename_list[j][0] == '\0'){
                 fprintf(stderr, "%s Error: Note '%s' was not found\n", PROGRAM, flag_list[j]);
-                free(notename_list);
                 fclose(fp);
+                for (j = 0; j < flag_num; j = j + 1){
+                    free(notename_list[j]);
+                }
+                free(notename_list);
                 return -1;
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
             if (search_one_file(flag_list[j], notename_list[j], word) != 0){
-                free(notename_list);
                 fclose(fp);
+                for (j = 0; j < flag_num; j = j + 1){
+                    free(notename_list[j]);
+                }
+                free(notename_list);
                 return -1;
             }
         }
     }
     fclose(fp);
     for (j = 0; j < flag_num; j = j + 1){
-        free(notename_list);
+        free(notename_list[j]);
     }
     free(notename_list);
     return 0;

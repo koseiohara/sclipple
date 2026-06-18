@@ -69,7 +69,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
     }
 
     for (i = 0; i < flag_num; i = i + 1){
-        result = get_filename_by_key(list, flags[i], files[i]);
+        result = get_filename_by_key(list, flags[i], &files[i]);
         #ifdef DEBUG
         printf("Checked existence of %s\n", files[i]);
         #endif
@@ -77,7 +77,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             fprintf(stderr, "%s Error: Invalid keyword. '%s' does not exist\n", PROGRAM, flags[i]);
 
             for (j = 0; j < flag_num; j = j + 1){
-                free(flags[j]);
+                free(files[j]);
             }
             return -1;
         }
@@ -88,7 +88,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         if (chdir(dir) != 0){
             perror(editor);
             for (j = 0; j < flag_num; j = j + 1){
-                free(flags[j]);
+                free(files[j]);
             }
             _exit(1);
         }
@@ -97,7 +97,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         if (command == NULL){
             perror("malloc");
             for (j = 0; j < flag_num; j = j + 1){
-                free(flags[j]);
+                free(files[j]);
             }
             _exit(1);
         }
@@ -106,13 +106,13 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         execvp(editor, command);
         perror(editor);
         for (j = 0; j < flag_num; j = j + 1){
-            free(flags[j]);
+            free(files[j]);
         }
         _exit(1);
     } else if (pid < 0){
         perror("fork");
         for (j = 0; j < flag_num; j = j + 1){
-            free(flags[j]);
+            free(files[j]);
         }
         return -1;
     }
@@ -120,7 +120,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
     wait(NULL);
 
     for (j = 0; j < flag_num; j = j + 1){
-        free(flags[j]);
+        free(files[j]);
     }
 
     return 0;

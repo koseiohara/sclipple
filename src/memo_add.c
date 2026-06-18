@@ -93,10 +93,6 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     int   stat;
     int   len;
 
-    file     = NULL;
-    path     = NULL;
-    datetime = NULL;
-
     #ifdef DEBUG
     printf("<DEBUG> list      : %s\n", list);
     printf("<DEBUG> dir       : %s\n", dir);
@@ -139,14 +135,14 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         printf("%s: Running initialization process\n", PROGRAM);
     }
 
-    get_datetime(clock, '-', sizeof(datetime), datetime);
-    get_filename(flag, datetime, ext, file);
+    get_datetime(clock, '-', &datetime);
+    get_filename(flag, datetime, ext, &file);
 
     len = 2;        // for slash and \0
     len = len + strlen(note_stock);
     len = len + strlen(file);
     path = malloc(len * sizeof(char));
-    snprintf(path, sizeof(path), "%s/%s", note_stock, file);
+    snprintf(path, len, "%s/%s", note_stock, file);
     #ifdef DEBUG
     printf("File name     : %s\n", file);
     printf("Note file name: %s\n", path);
@@ -212,7 +208,10 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         printf("%s: Create new note: '%s'\n", PROGRAM, flag);
     }
 
-    get_datetime(clock, '\0', sizeof(datetime), datetime);
+    free(datetime);
+    datetime = NULL;
+
+    get_datetime(clock, '\0', &datetime);
     if (write_new_content_to_list(list, flag, datetime, path) == -1){
         free(datetime);
         free(path);

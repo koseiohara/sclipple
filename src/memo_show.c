@@ -13,9 +13,9 @@
 
 int show_one_file(char* flag, char* file){
     FILE*  fp;
-    char*  line;
+    char*  line = NULL;
     int    atty;
-    size_t size;
+    size_t size = 0;
 
     fp = fopen(file, "r");
     if (fp == NULL){
@@ -76,9 +76,14 @@ int show(char* list, int flag_num, char** flag_list){
         }
 
         for (j = 0; j < flag_num; j = j + 1){
-            notename_list[j] = malloc(sizeof(char));
+            notename_list[j] = malloc(1);
             if (notename_list[j] == NULL){
                 perror("malloc");
+
+                for (i = 0; i < j; i = i + 1){
+                    free(notename_list[i]);
+                }
+                free(notename_list);
                 return -1;
             }
 
@@ -137,10 +142,14 @@ int show(char* list, int flag_num, char** flag_list){
                 return -1;
             }
         }
-    }
+        free(flag);
+        free(datetime);
+        free(notename);
 
-    free(flag);
-    free(datetime);
+        flag     = NULL;
+        datetime = NULL;
+        notename = NULL;
+    }
 
     if (flag_num > 0){
         for (j = 0; j <  flag_num; j = j + 1){

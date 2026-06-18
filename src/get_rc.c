@@ -27,13 +27,19 @@ void init_config(Config* config){
 }
 
 
+void free_config(Config* config){
+    free(config->editor);
+    free(config->ext);
+}
+
+
 void init_entry(Config* config, RcEntry* entry){
     entry[0].key   = "editor";
-    entry[0].value = config->editor;
+    entry[0].value = &config->editor;
     entry[0].len   = strlen(config->editor);
 
     entry[1].key   = "extension";
-    entry[1].value = config->ext;
+    entry[1].value = &config->ext;
     entry[1].len   = strlen(config->ext);
 }
 
@@ -92,12 +98,14 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
 //                 }
 
 //                 snprintf(entry[i].value, entry[i].len, "%s", in_value);
-                entry[i].value = strdup(in_value);
+                free(*(entry[i].value));
+                *(entry[i].value) = NULL;
+                *(entry[i].value) = strdup(in_value);
 
                 if (strcmp(entry[i].key, "extension") == 0){
-                    result = ext_validation(entry[i].value);
+                    result = ext_validation(*(entry[i].value));
                     if (result != 0){
-                        fprintf(stderr, "%s Invalid extension: '%s'.\nExtension must consist of alphabets, numbers, '.', '-', and '_'\n", rc, entry[i].value);
+                        fprintf(stderr, "%s Invalid extension: '%s'.\nExtension must consist of alphabets, numbers, '.', '-', and '_'\n", rc, *(entry[i].value));
 
                         fclose(fp);
                         free(line);

@@ -31,4 +31,5 @@
 #define false 0
 
 #define IO_ERROR -1
+#define MALLOC_ERROR -2
 

@@ -30,7 +30,7 @@ int rm(const char* list, char* flag){
     } 
 
     // get the target filename from list file
-    result = get_filename_by_key(list, flag, filename);
+    result = get_filename_by_key(list, flag, &filename);
     if (result != 0){
         fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, flag);
         free(filename);

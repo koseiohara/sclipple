@@ -52,8 +52,10 @@ int main(int argc, char** argv){
         if (result < 0){
             if (result == -1){
                 fprintf(stderr, "%s: Failed to read %s\n", PROGRAM, rc);
+                free_config(&config);
                 return 1;
             } else if (result == -2){
+                free_config(&config);
                 return 1;
             }
         }
@@ -73,6 +75,7 @@ int main(int argc, char** argv){
 
     if (argc == 1){
         show_help_all();
+        free_config(&config);
         return 0;
     } else if (strcmp(argv[1], "help") == 0 || strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0){
         if (argc == 2){
@@ -85,12 +88,15 @@ int main(int argc, char** argv){
                 }
             }
         }
+        free_config(&config);
         return 0;
     } else if (strcmp(argv[1], "git") == 0){
         result = git_run(dir, &argv[1]);
         if (result < 0){
+            free_config(&config);
             return 1;
         } else{
+            free_config(&config);
             return 0;
         }
     }
@@ -101,11 +107,13 @@ int main(int argc, char** argv){
     if (strcmp(argv[1], "add") == 0){
         if (argc == 2){
             show_help_add();
+            free_config(&config);
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
                 result = add(list, dir, subdir, argv[i], config.ext, lt);
                 if (result == -2){
+                    free_config(&config);
                     return 1;
                 }
             }
@@ -114,11 +122,13 @@ int main(int argc, char** argv){
     } else if (strcmp(argv[1], "rm") == 0){
         if (argc == 2){
             show_help_rm();
+            free_config(&config);
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
                 result = rm(list, argv[i]);
                 if (result < 0){
+                    free_config(&config);
                     return 1;
                 }
             }
@@ -127,10 +137,12 @@ int main(int argc, char** argv){
     } else if (strcmp(argv[1], "mv") == 0){
         if (argc != 4){
             show_help_mv();
+            free_config(&config);
             return 0;
         } else{
             result = mv(list, argv[2], argv[3]);
             if (result < 0){
+                free_config(&config);
                 return 1;
             }
         }
@@ -138,21 +150,25 @@ int main(int argc, char** argv){
     } else if (strcmp(argv[1], "ls") == 0){
         result = ls(list, argc-2, &argv[2]);
         if (result < 0){
+            free_config(&config);
             return 1;
         }
     } else if (strcmp(argv[1], "search") == 0){
         if (argc == 2){
             show_help_search();
+            free_config(&config);
             return 0;
         } else{
             result = search(list, argv[2], argc-3, &argv[3]);
             if (result < 0){
+                free_config(&config);
                 return 1;
             }
         }
     } else if (strcmp(argv[1], "show") == 0){
         result = show(list, argc-2, &argv[2]);
         if (result < 0){
+            free_config(&config);
             return 1;
         }
     } else {
@@ -160,19 +176,23 @@ int main(int argc, char** argv){
         if (result == -1){
             fprintf(stderr, "%s Error: Specified editor command is empty\n", PROGRAM);
             free(editor_commands);
+            free_config(&config);
             return 1;
         } else if (result == -2){
             free(editor_commands);
+            free_config(&config);
             return 1;
         }
         result = memo_edit(list, subdir, editor_commands[0], nwords-1, &editor_commands[1], argc-1, &argv[1]);
         if (result == -1){
             free(editor_commands);
+            free_config(&config);
             return 1;
         }
     }
 
     free(editor_commands);
+    free_config(&config);
     return 0;
 }
 

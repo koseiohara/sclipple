@@ -11,7 +11,7 @@ typedef struct{
 
 typedef struct{
     const char* key;
-    char*  value;
+    char**  value;
     size_t len;
 } RcEntry;
 
@@ -19,6 +19,7 @@ typedef struct{
 
 
 void init(Config* config, RcEntry* entry);
+void free_config(Config* config);
 int read_rc(const char* rc, RcEntry* entry, const size_t n_entry);
 
 

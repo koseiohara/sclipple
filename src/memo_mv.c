@@ -47,7 +47,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
     } 
 
     // get current file name from list file
-    result = get_filename_by_key(list, old_flag, old_file);
+    result = get_filename_by_key(list, old_flag, &old_file);
     if (result != 0){
         fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, old_flag);
         free(old_file);
@@ -70,7 +70,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
     }
 
     // get new file name
-    if (mv_filename(old_file, new_flag, new_file) < 0){
+    if (mv_filename(old_file, new_flag, &new_file) < 0){
         fprintf(stderr, "%s Error: list file is broken\n", PROGRAM);
         free(new_file);
         free(old_file);
