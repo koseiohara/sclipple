@@ -136,8 +136,16 @@ int flag_validation(const char* flag){
 }
 
 
-void get_filename(const char* flag, char* datetime, char* ext, size_t output_len, char* output){
-    snprintf(output, output_len, "%s--%s.%s", flag, datetime, ext);
+void get_filename(const char* flag, char* datetime, char* ext, char* output){
+    int len;
+
+    len = 4;    // for hyphen, dot, and \0
+    len = len + strlen(flag);
+    len = len + strlen(datetime);
+    len = len + strlen(ext);
+    output = malloc(len * sizeof(char));
+
+    snprintf(output, len, "%s--%s.%s", flag, datetime, ext);
 }
 
 

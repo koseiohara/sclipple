@@ -4,8 +4,8 @@
 #include "globals.h"
 
 typedef struct{
-    char editor[EDITOR_LEN];
-    char ext[EXT_LEN];
+    char* editor;
+    char* ext;
 } Config;
 
 

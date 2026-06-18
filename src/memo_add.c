@@ -88,10 +88,15 @@ int make_file(const char* path, const int cond){
 // if flag includes invalid character or is too long, return -3
 // otherwise, stop process
 int add(const char* list, const char* dir, const char* note_stock, char* flag, char* ext, struct tm* clock){
-    char file[FILE_LEN];
-    char path[FILE_APATH_LEN];
-    char datetime[DATETIME_LEN];
-    int  stat;
+    char* file;
+    char* path;
+    char* datetime;
+    int   stat;
+    int   len;
+
+    file     = NULL;
+    path     = NULL;
+    datetime = NULL;
 
     #ifdef DEBUG
     printf("<DEBUG> list      : %s\n", list);
@@ -136,7 +141,12 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     }
 
     get_datetime(clock, '-', sizeof(datetime), datetime);
-    get_filename(flag, datetime, ext, sizeof(file), file);
+    get_filename(flag, datetime, ext, file);
+
+    len = 2;        // for slash and \0
+    len = len + strlen(note_stock);
+    len = len + strlen(file);
+    path = malloc(len * sizeof(char));
     snprintf(path, sizeof(path), "%s/%s", note_stock, file);
     #ifdef DEBUG
     printf("File name     : %s\n", file);
@@ -148,6 +158,9 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     stat = make_file(list, O_CREAT | O_WRONLY);
     if (stat == -2){
         // fprintf(stderr, "%s Error: Failed to make list file\n", PROGRAM);
+        free(datetime);
+        free(file);
+        free(path);
         return -2;
     } else if (stat == 0){
         printf("%s: Running initialization process\n", PROGRAM);
@@ -157,10 +170,19 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     if (stat < 0){
         if (stat == -1){
             fprintf(stderr, "%s: '%s' already exist\n", PROGRAM, flag);
+            free(datetime);
+            free(file);
+            free(path);
             return -1;
         } else if (stat == -2){
+            free(datetime);
+            free(file);
+            free(path);
             return -2;
         }
+        free(datetime);
+        free(file);
+        free(path);
         return -4;
     }
     #ifdef DEBUG
@@ -171,12 +193,21 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     if (stat < 0){
         if (stat == -1){
             fprintf(stderr, "%s Error: %s already exists\n", PROGRAM, path);
+            free(datetime);
+            free(file);
+            free(path);
             return -1;
         } else if (stat == -2){
             // fprintf(stderr, "%s IO Error: Failed to open %s\n", PROGRAM, path);
+            free(datetime);
+            free(file);
+            free(path);
             return -2;
         }
         fprintf(stderr, "%s Error: Undefined Error\n", PROGRAM);
+        free(datetime);
+        free(file);
+        free(path);
         return -4;
     } else{
         printf("%s: Create new note: '%s'\n", PROGRAM, flag);
@@ -184,8 +215,15 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
 
     get_datetime(clock, '\0', sizeof(datetime), datetime);
     if (write_new_content_to_list(list, flag, datetime, path) == -1){
+        free(datetime);
+        free(path);
+        free(file);
         return -1;
     }
+
+    free(datetime);
+    free(path);
+    free(file);
 
     return 0;
 }
