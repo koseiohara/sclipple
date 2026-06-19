@@ -99,14 +99,13 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     printf("<DEBUG> note_stock: %s\n", note_stock);
     printf("<DEBUG> flag      : %s\n", flag);
     printf("<DEBUG> ext       : %s\n", ext);
-    printf("<DEBUG> FILE_LEN      : %d\n", FILE_LEN);
     printf("<DEBUG> Length of file: %lu\n", strlen(file));
     #endif
 
     stat = flag_validation(flag);
     if (stat < 0){
         if (stat == -1){
-            fprintf(stderr, "%s Error: Keyword is too long or empty: '%s'. Length should be less than %d\n", PROGRAM, flag, FLAG_LEN);
+            fprintf(stderr, "%s Error: Keyword is empty\n", PROGRAM);
         } else if (stat == -2){
             fprintf(stderr, "%s Error: Invalid character is included in '%s'. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, flag);
         } else if (stat == -3){

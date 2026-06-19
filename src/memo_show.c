@@ -125,7 +125,6 @@ int show(char* list, int flag_num, char** flag_list){
         if (flag_num > 0){
             for (j = 0; j <  flag_num; j = j + 1){
                 if (strcmp(flag, flag_list[j]) == 0){
-                    // snprintf(notename_list[j], FILE_APATH_LEN, "%s", notename);
                     free(notename_list[j]);
                     notename_list[j] = strdup(notename);
                 }

@@ -26,7 +26,7 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
         return IO_ERROR;
     }
 
-    if (fprintf(fp, "%s,%s,%s\n", flag, datetime, file) < 0){
+    if (fprintf(fp, "%s%s%s%s%s\n", flag, DELIM, datetime, DELIM, file) < 0){
         perror(list);
         fclose(fp);
         return IO_ERROR;
@@ -307,7 +307,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
         // snprintf(line, sizeof(line), "%s,%s,%s\n", out_flag, out_datetime, out_notename);
         // if (fputs(line, fpw) == EOF){
-        if (fprintf(fpw, "%s,%s,%s\n", out_flag, out_datetime, out_notename) < 0){
+        if (fprintf(fpw, "%s%s%s%s%s\n", out_flag, DELIM, out_datetime, DELIM, out_notename) < 0){
             perror(tmpfile);
             fclose(fpr);
             fclose(fpw);
@@ -474,7 +474,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         }
 
         // snprintf(out_line, sizeof(out_line), "%s,%s,%s\n", flag, datetime, notename);
-        if (fprintf(fpw, "%s,%s,%s\n", flag, datetime, notename) < 0){
+        if (fprintf(fpw, "%s%s%s%s%s\n", flag, DELIM, datetime, DELIM, notename) < 0){
             perror(tmpfile);
             fclose(fpr);
             fclose(fpw);
