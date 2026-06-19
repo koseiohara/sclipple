@@ -18,7 +18,6 @@ void show_help_add(void){
     printf("    initializes them automatically.\n");
     printf("\n");
     printf("  KEY rules:\n");
-    printf("    - KEY must be shorter than %d characters.\n", FLAG_LEN);
     printf("    - KEY may contain ASCII letters, digits, '_' and '-'.\n");
     printf("    - '.' and '..' are not valid KEY values.\n");
     printf("    - KEY must not already exist.\n");

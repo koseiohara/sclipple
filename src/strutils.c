@@ -45,6 +45,24 @@ char* trim(char* s){
 }
 
 
+int cat(char** out, char* a, char* b, char* delim){
+    int len;
+
+    *out = NULL;
+
+    len = strlen(a) + strlen(b) + strlen(delim) + 1;        // the last +1 is for \0
+    *out = malloc(len);
+
+    if (*out == NULL){
+        perror("cat");
+        return MALLOC_ERROR;
+    }
+
+    snprintf(*out, len, "%s%s%s", a, delim, b);
+    return 0;
+}
+
+
 // return 1 if line is null or white space
 // return 0 if line is not a white space
 int is_white_space(const char* line){

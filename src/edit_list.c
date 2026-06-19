@@ -17,34 +17,6 @@
 
 // if failed to open list file or failed to write info to list, return -1
 // otherwise, return 0
-// int write_new_content_to_list(const char* list, const char* flag, const char* datetime, const char* file){
-//     int fd;
-//     // char list_path[DIR_LEN+FILE_LEN+1];
-//     char content[FLAG_LEN+1+DATETIME_LEN+1+FILE_APATH_LEN+16];
-
-//     fd = open(list, O_WRONLY | O_APPEND);
-//     if (fd == -1){
-//         perror(list);
-//         return -1;
-//     }
-//     snprintf(content, sizeof(content), "%s,%s,%s\n", flag, datetime, file);
-
-//     #ifdef DEBUG
-//     printf("%s\n", content);
-//     #endif
-//     if (write(fd, content, strlen(content)) == -1){
-//         perror(list);
-//         close(fd);
-//         return -1;
-//     }
-
-//     close(fd);
-//     return 0;
-// }
-
-
-// if failed to open list file or failed to write info to list, return -1
-// otherwise, return 0
 int write_new_content_to_list(const char* list, const char* flag, const char* datetime, const char* file){
     FILE* fp;
 
@@ -70,7 +42,6 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
 // return  0 if target line is found
 // return  1 if flag does not exist
 int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
-    // char   line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
     char*  line = NULL;
     char*  flag = NULL;
     int    i;
@@ -196,9 +167,7 @@ int get_filename_by_key(const char* list, char* flag, char** filename){
 int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     FILE* fpr;
     FILE* fpw;
-    // char  line[FLAG_LEN+DATETIME_LEN+FILE_APATH_LEN+8];
     char* line = NULL;
-    // char  tmpfile[LIST_APATH_LEN+8];
     char* tmpfile  = NULL;
     char* flag     = NULL;
     char* datetime = NULL;

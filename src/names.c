@@ -25,14 +25,6 @@ int get_env(const char* env, char** output){
 }
 
 
-int check_flag_length(char* flag){
-    if (strlen(flag) > FLAG_LEN-1){
-        return -1;
-    }
-    return 0;
-}
-
-
 // return -1 for invalid length
 // return -2 for invalid character
 // return  0 for valid ext
@@ -47,10 +39,6 @@ int ext_validation(const char* ext){
     }
 
     len = strlen(ext);
-
-    // if (len >= EXT_LEN){
-    //     return -1;
-    // }
 
     for (i = 0; i < len; i = i + 1){
         c = ext[i];
@@ -78,10 +66,6 @@ int flag_validation(const char* flag){
     }
 
     len = strlen(flag);
-
-    // if (len >= FLAG_LEN || len == 0){
-    //     return -1;
-    // }
 
     if (is_white_space(flag)){
         return -1;
