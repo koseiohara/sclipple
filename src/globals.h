@@ -16,4 +16,6 @@
 #define IO_ERROR -1
 #define MALLOC_ERROR -2
 #define LIST_FORMAT_ERROR -3
+#define INPUT_ERROR -4
+#define KEY_NOT_FOUND 1
 

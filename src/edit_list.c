@@ -37,10 +37,10 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
 }
 
 
-// return -2 if list file is broken
-// return -1 if col is too large or list element in a line is less than 3
-// return  0 if target line is found
-// return  1 if flag does not exist
+// return LIST_FORMAT_ERROR if a line does not include comma
+// return INPUT_ERROR if col is too large
+// return KEY_NOT_FOUND if target_flag does not exist
+// return 0 otherwise
 int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
     char*  line = NULL;
     char*  flag = NULL;
@@ -58,7 +58,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
         if (flag == NULL){
             fprintf(stderr, "%s Error: Invalid list file. list file is broken\n", PROGRAM);
             free(line);
-            return -2;
+            return LIST_FORMAT_ERROR;
         }
 
         if (strcmp(flag, target_flag) != 0){
@@ -74,7 +74,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
             if (flag == NULL){
                 fprintf(stderr, "%s Error: Invalid col. col exceeds the number of actual columns\n", PROGRAM);
                 free(line);
-                return -1;
+                return INPUT_ERROR;
             }
         }
         // snprintf(result, result_len, "%s", flag);
@@ -83,12 +83,12 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
         return 0;
     }
     free(line);
-    return 1;
+    return KEY_NOT_FOUND;
 }
 
 
-// return 0 if flag does not exist
-// return -1 if flag exist
+// return false if flag does not exist
+// return true if flag exist
 int flag_exist_check(const char* list, char* flag){
     char* dummy = NULL;
     int   stat;
@@ -105,10 +105,10 @@ int flag_exist_check(const char* list, char* flag){
 
     fclose(fp);
 
-    if (stat == 1){
-        return 0;
+    if (stat == KEY_NOT_FOUND){
+        return false;
     } else if (stat == 0){
-        return -1;
+        return true;
     } else if (stat < 0){
         exit(1);
     }
@@ -116,6 +116,8 @@ int flag_exist_check(const char* list, char* flag){
 }
 
 
+// return 0 if successed
+// return -1 if list file is broken, bug, or key is not found
 int get_datetime_by_key(const char* list, char* flag, char** datetime){
     int  stat;
     FILE* fp;
@@ -130,13 +132,15 @@ int get_datetime_by_key(const char* list, char* flag, char** datetime){
 
     fclose(fp);
 
-    if (stat < 0 || stat == 1){
+    if (stat < 0 || stat == KEY_NOT_FOUND){
         return -1;
     }
     return 0;
 }
 
 
+// return 0 if successed
+// return -1 if list file is broken, bug, or key is not found
 int get_filename_by_key(const char* list, char* flag, char** filename){
     int  stat;
     FILE* fp;
@@ -151,7 +155,7 @@ int get_filename_by_key(const char* list, char* flag, char** filename){
 
     fclose(fp);
 
-    if (stat < 0 || stat == 1){
+    if (stat < 0 || stat == KEY_NOT_FOUND){
         return -1;
     }
     return 0;
@@ -230,8 +234,12 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     }
 
     // check existence of the new flag
+// return LIST_FORMAT_ERROR if a line does not include comma
+// return INPUT_ERROR if col is too large
+// return KEY_NOT_FOUND if target_flag does not exist
+// return 0 otherwise
     result = read_list_by_key(fpr, new_flag, 0, &dummy);
-    if (result != 1){
+    if (result != KEY_NOT_FOUND){
         fclose(fpr);
         fclose(fpw);
         unlink(tmpfile);
