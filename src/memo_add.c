@@ -15,16 +15,21 @@
 #include "edit_list.h"
 
 
-// if directory does not exist, run mkdir() and return 0
-// if directory already exist, return 1
-// if file, return -1
-// if mkdir failed, return -2
+#define IS_NOT_DIRECTORY_ERROR -1
+#define MKDIR_ERROR -2
+#define IS_DIRECTORY 1
+
+// if directory does not exist, run mkdir()
+// return IS_DIRECTORY if dir already exist and is a directory
+// return IS_NOT_DIRECTORY_ERROR if dir already exist and is not a directory
+// return MKDIR_ERROR if mkdir() failed
+// return ACCESS_FAILED_ERROR if failed to access dir
 int make_dir(const char* dir){
     struct stat st;
     int result;
 
     result = path_status(dir, &st);
-    if (result == 1){
+    if (result == PATH_EXIST){
         #ifdef DEBUG
         printf("%s already exist\n", dir);
         #endif
@@ -32,66 +37,68 @@ int make_dir(const char* dir){
             #ifdef DEBUG
             printf("%s is a directory\n", dir);
             #endif
-            return 1;
+            return IS_DIRECTORY;
         } else {
             #ifdef DEBUG
             printf("%s is NOT a directory\n", dir);
             #endif
-            return -1;
+            return IS_NOT_DIRECTORY_ERROR;
         }
-    } else if (result == 0){
+    } else if (result == PATH_NOT_EXIST){
         #ifdef DEBUG
         printf("mkdir %s\n", dir);
         #endif
         if (mkdir(dir, 0755) == -1){
             perror(dir);
-            return -2;
+            return MKDIR_ERROR;
         }
         return 0;
     } else{
-        return -1;
+        return ACCESS_FAILED_ERROR;
     }
 }
 
 
 // if file does not exist, open and close the specified file to make it
-// if file does not exist, run open and return 0
-// if already exist, return -1
-// if failed to open, return -2
+// return IO_ERROR if failed to open
+// return PATH_EXIST if path already exist
+// return ACCESS_FAILED_ERROR if failed to access path
+// return 0 and make a file if file does not exist
 int make_file(const char* path, const int cond){
     struct stat st;
     int result;
     int fd;
 
     result = path_status(path, &st);
-    if (result == 0){
+    if (result == PATH_NOT_EXIST){
         fd = open(path, cond, 0644);
         if (fd == -1){
             perror(path);
-            return -2;
+            return IO_ERROR;
         }
         close(fd);
         return 0;
-    } else if (result == 1){
-        return -1;
+    } else if (result == PATH_EXIST){
+        return PATH_EXIST;
     } else{
         fprintf(stderr, "%s IO Error: Failed to open %s\n", PROGRAM, path);
-        return -2;
+        return ACCESS_FAILED_ERROR;
     }
 }
 
 
-// if successfully added, return 0
-// if flag is exist, return -1
-// if IO error, return -2
-// if flag includes invalid character or is too long, return -3
-// otherwise, stop process
+// return INVALID_KEY_ERROR if flag is invalid
+// return IO_ERROR if make directory and make file failed
+// return MALLOC_ERROR if malloc failed
+// return KEY_DUPLICATE if keyword already exist
+// return PATH_EXIST if note file already exist
+// return 0 otherwise
 int add(const char* list, const char* dir, const char* note_stock, char* flag, char* ext, struct tm* clock){
     char* file     = NULL;
     char* path     = NULL;
     char* datetime = NULL;
     int   result;
-    int   len;
+    // int   len;
 
     #ifdef DEBUG
     printf("<DEBUG> list      : %s\n", list);
@@ -104,49 +111,48 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
 
     result = flag_validation(flag);
     if (result < 0){
-        if (result == -1){
+        if (result == INPUT_ERROR){
             fprintf(stderr, "%s Error: Keyword is empty\n", PROGRAM);
-        } else if (result == -2){
+        } else if (result == CHARACTER_NOT_ALLOWED_ERROR){
             fprintf(stderr, "%s Error: Invalid character is included in '%s'. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, flag);
-        } else if (result == -3){
+        } else if (result == RESERVED_WORD_ERROR){
             fprintf(stderr, "%s Error: '%s' is a reserved word.\n", PROGRAM, flag);
         }
-        return -3;
+        return INVALID_KEY_ERROR;
     }
 
     result = make_dir(dir);
     if (result < 0){
-        if (result == -1){
-            fprintf(stderr, "%s Error: %s exists but is not a directory\n", PROGRAM, dir);
+        if (result == IS_NOT_DIRECTORY_ERROR){
+            fprintf(stderr, "%s Error: '%s' exists but is not a directory\n", PROGRAM, dir);
+        } else if (result == MKDIR_ERROR){
+            fprintf(stderr, "%s Error: Failed to make directory '%s'\n", PROGRAM, dir);
         }
-        return -2;
-    } else if (result == 0){
-        printf("%s: Running initialization process\n", PROGRAM);
+        return IO_ERROR;
     }
 
     result = make_dir(note_stock);
     if (result < 0){
-        if (result == -1){
-            fprintf(stderr, "%s Error: %s exists but is not a directory\n", PROGRAM, dir);
+        if (result == IS_NOT_DIRECTORY_ERROR){
+            fprintf(stderr, "%s Error: '%s' exists but is not a directory\n", PROGRAM, dir);
+        } else if (result == MKDIR_ERROR){
+            fprintf(stderr, "%s Error: Failed to make directory '%s'\n", PROGRAM, dir);
         }
-        return -2;
-    } else if (result == 0){
-        printf("%s: Running initialization process\n", PROGRAM);
+        return IO_ERROR;
     }
 
     result = get_datetime(clock, '-', &datetime);
     if (result == MALLOC_ERROR){
         return MALLOC_ERROR;
     }
-    get_filename(flag, datetime, ext, &file);
-
-    // len = 2;        // for slash and \0
-    // len = len + strlen(note_stock);
-    // len = len + strlen(file);
-    // path = malloc(len * sizeof(char));
-    // snprintf(path, len, "%s/%s", note_stock, file);
-    result = asprintf(&path, "%s/%s", note_stock, file);
+    result = get_filename(flag, datetime, ext, &file);
     if (result == MALLOC_ERROR){
+        return MALLOC_ERROR;
+    }
+
+    result = asprintf(&path, "%s/%s", note_stock, file);
+    if (result < 0){
+        perror("asprintf");
         return MALLOC_ERROR;
     }
     #ifdef DEBUG
@@ -157,34 +163,32 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     #endif
 
     result = make_file(list, O_CREAT | O_WRONLY);
-    if (result == -2){
+    if (result == IO_ERROR || result == ACCESS_FAILED_ERROR){
         // fprintf(stderr, "%s Error: Failed to make list file\n", PROGRAM);
         free(datetime);
         free(file);
         free(path);
-        return -2;
-    } else if (result == 0){
-        printf("%s: Running initialization process\n", PROGRAM);
+        return IO_ERROR;
     }
 
     result = flag_exist_check(list, flag);
-    if (result < 0){
-        if (result == -1){
-            fprintf(stderr, "%s: '%s' already exist\n", PROGRAM, flag);
-            free(datetime);
-            free(file);
-            free(path);
-            return -1;
-        } else if (result == -2){
-            free(datetime);
-            free(file);
-            free(path);
-            return -2;
-        }
+    if (result == true){
+        fprintf(stderr, "%s: Keyword '%s' already exists\n", PROGRAM, flag);
         free(datetime);
         free(file);
         free(path);
-        return -4;
+        return KEY_DUPLICATE;
+    } else if (result < 0){
+        free(datetime);
+        free(file);
+        free(path);
+        if (result == LIST_FORMAT_ERROR){
+            fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+            return LIST_FORMAT_ERROR;
+        } else{
+            fprintf(stderr, "%s: Unknown Error\n", PROGRAM);
+            return UNKNOWN_ERROR;
+        }
     }
     #ifdef DEBUG
     printf("%s: Passed Flag Existence Check\n", flag);
@@ -192,24 +196,23 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
 
     result = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
     if (result < 0){
-        if (result == -1){
-            fprintf(stderr, "%s Error: %s already exists\n", PROGRAM, path);
-            free(datetime);
-            free(file);
-            free(path);
-            return -1;
-        } else if (result == -2){
-            // fprintf(stderr, "%s IO Error: Failed to open %s\n", PROGRAM, path);
-            free(datetime);
-            free(file);
-            free(path);
-            return -2;
+        if (result == IO_ERROR){
+            fprintf(stderr, "%s Error: Failed to open %s\n", PROGRAM, path);
+        } else if (result == ACCESS_FAILED_ERROR){
+            fprintf(stderr, "%s Error: Failed to access to %s\n", PROGRAM, path);
+        } else{
+            fprintf(stderr, "%s: Undefined Error\n", PROGRAM);
         }
-        fprintf(stderr, "%s Error: Undefined Error\n", PROGRAM);
         free(datetime);
         free(file);
         free(path);
-        return -4;
+        return IO_ERROR;
+    } else if (result == PATH_EXIST){
+        fprintf(stderr, "%s Error: %s already exists\n", PROGRAM, path);
+        free(datetime);
+        free(file);
+        free(path);
+        return PATH_EXIST;
     } else{
         printf("%s: Create new note: '%s'\n", PROGRAM, flag);
     }
@@ -225,7 +228,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         free(datetime);
         free(path);
         free(file);
-        return -1;
+        return IO_ERROR;
     }
 
     free(datetime);

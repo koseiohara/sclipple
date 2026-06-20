@@ -10,6 +10,7 @@
 #include "names.h"
 #include "edit_list.h"
 
+
 void get_command(char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char* file[], char** command){
     int i;
     int base_idx;
@@ -45,9 +46,15 @@ void get_command(char* editor, const int editor_options_num, char* const* editor
 }
 
 
+// return IO_ERROR if failed to open list file
+// return LIST_FORMAT_ERROR if list file is broken
+// return KEY_NOT_FOUND if keyword is not found in the list file
+// return PROCESS_ERROR if failed to make a child process
+// return 0 otherwise
 int memo_edit(const char* list, const char* dir, char* editor, const int editor_options_num, char* const* editor_options, const int flag_num, char** flags){
     struct stat st;
     pid_t pid;
+    FILE* fp;
     char** command = NULL;
     char*  files[flag_num];
     int i;
@@ -55,33 +62,46 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
     int result;
 
     result = path_status(list, &st);
-    if (result != 1){
-        if (result == 0){
+    if (result != PATH_EXIST){
+        if (result == PATH_NOT_EXIST){
             fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
-        } else if (result == -1){
-            fprintf(stderr, "%s IO Error: Failed to access list file\n", PROGRAM);
+        } else if (result == ACCESS_FAILED_ERROR){
+            fprintf(stderr, "%s Error: Failed to access list file\n", PROGRAM);
         }
-        return -1;
+        return IO_ERROR;
     } 
 
     for (j = 0; j < flag_num; j = j + 1){
         files[j] = NULL;
     }
 
+    fp = fopen(list, "r");
+    if (fp == NULL){
+        perror(list);
+        return IO_ERROR;
+    }
     for (i = 0; i < flag_num; i = i + 1){
-        result = get_filename_by_key(list, flags[i], &files[i]);
-        #ifdef DEBUG
-        printf("Checked existence of %s\n", files[i]);
-        #endif
-        if (result == -1){
-            fprintf(stderr, "%s Error: Invalid keyword. '%s' does not exist\n", PROGRAM, flags[i]);
-
+        result = read_list_by_key(fp, flags[i], 2, &files[i]);
+        if (result < 0){
+            fprintf(stderr, "%s Error: list file is broken\n", PROGRAM);
             for (j = 0; j < flag_num; j = j + 1){
                 free(files[j]);
             }
-            return -1;
+            fclose(fp);
+            return LIST_FORMAT_ERROR;
+        } else if (result == KEY_NOT_FOUND){
+            fprintf(stderr, "%s Error: %s does not exist\nRun '%s add %s'\n", PROGRAM, flags[i], PROGRAM, flags[i]);
+            for (j = 0; j < flag_num; j = j + 1){
+                free(files[j]);
+            }
+            fclose(fp);
+            return KEY_NOT_FOUND;
         }
+        #ifdef DEBUG
+        printf("Checked existence of %s\n", files[i]);
+        #endif
     }
+    fclose(fp);
 
     pid = fork();
     if (pid == 0){
@@ -96,7 +116,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         command = malloc((1+editor_options_num+flag_num+1) * sizeof(char*));   // $(editor) $(editor_option) $(file) NULL
         if (command == NULL){
             perror("malloc");
-            free(command);
+            // free(command);
             for (j = 0; j < flag_num; j = j + 1){
                 free(files[j]);
             }
@@ -105,6 +125,8 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         get_command(editor, editor_options_num, editor_options, flag_num, files, command);
 
         execvp(editor, command);
+
+        // if execvp() successed, the following processes never be executed
         perror(editor);
 
         free(command);
@@ -117,7 +139,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         for (j = 0; j < flag_num; j = j + 1){
             free(files[j]);
         }
-        return -1;
+        return PROCESS_ERROR;
     }
 
     wait(NULL);

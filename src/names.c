@@ -55,8 +55,9 @@ int ext_validation(const char* ext){
 }
 
 
-// return INPUT_ERROR for invalid character included or input empty
-// return RESERVED_ERROR if input word is a reserved word
+// return INPUT_ERROR if input is empty or not allocated
+// return CHARACTER_NOT_ALLOWED_ERROR if flag include invalid character
+// return RESERVED_WORD_ERROR if input word is a reserved word
 // return  0 for valid flag
 int flag_validation(const char* flag){
     unsigned char c;
@@ -76,7 +77,7 @@ int flag_validation(const char* flag){
 
     // check banned character
     if (strcmp(flag, ".") == 0 || strcmp(flag, "..") == 0) {
-        return INPUT_ERROR;
+        return CHARACTER_NOT_ALLOWED_ERROR;
     }
 
     for (i = 0; i < len; i = i + 1){
@@ -84,7 +85,7 @@ int flag_validation(const char* flag){
         if (isalnum(c) || c == '_' || c == '-'){
             continue;
         }
-        return INPUT_ERROR;
+        return CHARACTER_NOT_ALLOWED_ERROR;
     }
 
     if (strcmp(flag, "git") == 0){
@@ -129,7 +130,8 @@ int get_filename(const char* flag, char* datetime, char* ext, char** output){
     int result;
 
     result = asprintf(output,  "%s--%s.%s", flag, datetime, ext);
-    if (result == -1){
+    if (result < 0){
+        perror("asprintf");
         return MALLOC_ERROR;
     }
     return 0;
@@ -193,7 +195,8 @@ int mv_filename(char* old_file, const char* new_flag, char** output){
     if (last != NULL){
         result = asprintf(output, "%s%s%s", prefix, new_flag, last);
         free(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
-        if (result == -1){
+        if (result < 0){
+            perror("asprintf");
             return MALLOC_ERROR;
         } else{
             return 0;

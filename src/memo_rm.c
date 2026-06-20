@@ -9,6 +9,13 @@
 #include "edit_list.h"
 
 
+// return IO_ERROR if failed to open list file
+// return LIST_FORMAT_ERROR if list file is broken
+// return MALLOC_ERROR if strdup failed
+// return KEY_NOT_FOUND if flag does not exist
+// return UNKNOWN_ERROR if program include bugs
+// return UNLINK_ERROR if unlink failed
+// return 0 otherwise
 int rm(const char* list, char* flag){
     struct stat st;
     int   result;
@@ -20,32 +27,62 @@ int rm(const char* list, char* flag){
 
     // chack whether list file is exist
     result = path_status(list, &st);
-    if (result != 1){
-        if (result == 0){
-            fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
-        } else if (result == -1){
-            fprintf(stderr, "%s IO Error: Failed to access list file\n", PROGRAM);
+    if (result != PATH_EXIST){
+        if (result == PATH_NOT_EXIST){
+            fprintf(stderr, "%s: No notes have been added\n", PROGRAM);
+        } else if (result == ACCESS_FAILED_ERROR){
+            fprintf(stderr, "%s: Failed to access %s\n", PROGRAM, list);
         }
-        return -1;
+        return IO_ERROR;
     } 
 
     // get the target filename from list file
     result = get_filename_by_key(list, flag, &filename);
-    if (result != 0){
-        fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, flag);
+    if (result < 0){
+        if (result == IO_ERROR){
+            fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, list);
+            free(filename);
+            return IO_ERROR;
+        } else if (result == LIST_FORMAT_ERROR || result == INPUT_ERROR){
+            fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+            free(filename);
+            return LIST_FORMAT_ERROR;
+        } else if (result == MALLOC_ERROR){
+            free(filename);
+            return MALLOC_ERROR;
+        }
+        fprintf(stderr, "%s: Unknown error\n", PROGRAM);
         free(filename);
-        return -1;
+        return UNKNOWN_ERROR;
+    } else if (result == KEY_NOT_FOUND){
+        fprintf(stderr, "%s: No such key: '%s'\n", PROGRAM, flag);
+        free(filename);
+        return KEY_NOT_FOUND;
     }
 
     // delete the target flag line from the list file
     result = rm_key_in_list(list, flag);
     if (result < 0){
+        if (result == IO_ERROR){
+            fprintf(stderr, "%s: Failed to update list file\n", PROGRAM);
+            free(filename);
+            return IO_ERROR;
+        } else if (result == MALLOC_ERROR){
+            free(filename);
+            return MALLOC_ERROR;
+        } else if (result == LIST_FORMAT_ERROR){
+            fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+            free(filename);
+            return LIST_FORMAT_ERROR;
+        } else{
+            fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+            free(filename);
+            return UNKNOWN_ERROR;
+        }
+    } else if (result == KEY_NOT_FOUND){
+        fprintf(stderr, "%s: No such key: '%s'\n", PROGRAM, flag);
         free(filename);
-        return -1;
-    } else if (result == 1){
-        fprintf(stderr, "%s Error: '%s': No such key.\n", PROGRAM, flag);
-        free(filename);
-        return 1;
+        return KEY_NOT_FOUND;
     }
 
     if (unlink(filename) == 0){
@@ -56,7 +93,7 @@ int rm(const char* list, char* flag){
 
     perror(flag);
     free(filename);
-    return -2;
+    return UNLINK_ERROR;
 }
 
 

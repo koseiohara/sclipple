@@ -41,6 +41,7 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
 // return LIST_FORMAT_ERROR if a line does not include comma
 // return INPUT_ERROR if col is too large
 // return KEY_NOT_FOUND if target_flag does not exist
+// return MALLOC_ERROR if strdup failed
 // return 0 otherwise
 int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
     char*  line = NULL;
@@ -80,6 +81,10 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
         }
         // snprintf(result, result_len, "%s", flag);
         *result = strdup(flag);
+        if (*result == NULL){
+            perror("strdup");
+            return MALLOC_ERROR;
+        }
         free(line);
         return 0;
     }
@@ -175,7 +180,7 @@ int get_filename_by_key(const char* list, char* flag, char** filename){
 // return KEY_DUPLICATE if key already exist
 // return LIST_FORMAT_ERROR if list file is broken
 // return KEY_NOT_FOUND if old_flag does not exist
-// return FILE_FORMAT_ERROR if file name is not valid
+// return FILE_FORMAT_ERROR if file name is not include "--"
 // return RENAME_ERROR if failed to rename tmpfile to list file
 // return 0, otherwise
 int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
@@ -207,7 +212,8 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
 
     result = asprintf(&tmpfile, "%s.XXXXXX", list);
-    if (result == -1){
+    if (result < 0){
+        perror("asprintf");
         return MALLOC_ERROR;
     }
 
@@ -420,7 +426,8 @@ int rm_key_in_list(const char* list, const char* target_flag){
     }
 
     result = asprintf(&tmpfile, "%s.XXXXXX", list);
-    if (result == -1){
+    if (result < 0){
+        perror("asprintf");
         return MALLOC_ERROR;
     }
 
@@ -547,7 +554,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
 }
 
 
-// return IO_ERROR if IO_faied
+// return END_OF_FILE if getline failed
 // return LIST_WHITE_SPACE if line is empty
 // return LIST_FORMAT_ERROR if list file is broken
 // return 0 otherwise
@@ -561,7 +568,7 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
 
     if (getline(&line, &size, fp) == -1){
         free(line);
-        return IO_ERROR;
+        return END_OF_FILE;
     }
 
     if (is_white_space(line) == true){

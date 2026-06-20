@@ -38,7 +38,8 @@ int get_datetime(struct tm* clock, char delim, char** datetime){
     printf("<DEBUG> DATETIME = %s\n", datetime);
     #endif
 
-    if (result == -1){
+    if (result < 0){
+        perror("asprintf");
         return MALLOC_ERROR;
     } else{
         return 0;
