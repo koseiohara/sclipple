@@ -11,6 +11,8 @@
 #include "edit_list.h"
 
 
+// return IO_ERROR if failed to open note
+// return 0 otherwise
 int show_one_file(char* flag, char* file){
     FILE*  fp;
     char*  line = NULL;
@@ -20,7 +22,7 @@ int show_one_file(char* flag, char* file){
     fp = fopen(file, "r");
     if (fp == NULL){
         perror(file);
-        return -1;
+        return IO_ERROR;
     }
 
     size = 0;
@@ -45,8 +47,12 @@ int show_one_file(char* flag, char* file){
 }
 
 
-// return -1 if IO error
-// return 0 if successed
+// retutn IO_ERROR if failed to open list file or note
+// return MALLOC_ERROR if malloc failed
+// return LIST_FORMAT_ERROR if list file is broken
+// return UNKNOWN_ERROR if program has a bug
+// return KEY_NOT_FOUND if one or more flags do not exist
+// return 0 otherwise
 int show(char* list, int flag_num, char** flag_list){
     struct stat st;
     FILE*  fp;
@@ -59,20 +65,20 @@ int show(char* list, int flag_num, char** flag_list){
     int    j;
 
     result = path_status(list, &st);
-    if (result != 1){
-        if (result == 0){
-            fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
-        } else if (result == -1){
-            fprintf(stderr, "%s IO Error: Failed to access list file\n", PROGRAM);
+    if (result != PATH_EXIST){
+        if (result == PATH_NOT_EXIST){
+            fprintf(stderr, "%s: No notes have been added\n", PROGRAM);
+        } else if (result == ACCESS_FAILED_ERROR){
+            fprintf(stderr, "%s: Failed to access %s\n", PROGRAM, list);
         }
-        return -1;
+        return IO_ERROR;
     } 
 
     if (flag_num > 0){
         notename_list = malloc((size_t)flag_num * sizeof(char*));
         if (notename_list == NULL){
             perror("malloc");
-            return -1;
+            return MALLOC_ERROR;
         }
 
         for (j = 0; j < flag_num; j = j + 1){
@@ -84,7 +90,7 @@ int show(char* list, int flag_num, char** flag_list){
                     free(notename_list[i]);
                 }
                 free(notename_list);
-                return -1;
+                return MALLOC_ERROR;
             }
 
             notename_list[j][0] = '\0';
@@ -98,19 +104,18 @@ int show(char* list, int flag_num, char** flag_list){
             free(notename_list[j]);
         }
         free(notename_list);
-        return -1;
+        return IO_ERROR;
     }
 
     i = 0;
     while (1){
         i = i + 1;
         result = get_content_line(fp, &flag, &datetime, &notename);
-        if (result == 1){
+        if (result == END_OF_FILE){
             break;
-        } else if (result == 2){
+        } else if (result == LIST_WHITE_SPACE){
             continue;
         } else if (result < 0){
-            fprintf(stderr, "%s Error: Invalid line is found in list file\nlist file is broken in line %d\n", PROGRAM, i);
             fclose(fp);
             for (j = 0; j < flag_num; j = j + 1){
                 free(notename_list[j]);
@@ -119,7 +124,12 @@ int show(char* list, int flag_num, char** flag_list){
             free(flag);
             free(datetime);
             free(notename);
-            return -1;
+            if (result == LIST_FORMAT_ERROR){
+                fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+                return LIST_FORMAT_ERROR;
+            }
+            fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+            return UNKNOWN_ERROR;
         }
 
         if (flag_num > 0){
@@ -130,7 +140,7 @@ int show(char* list, int flag_num, char** flag_list){
                 }
             }
         } else{
-            if (show_one_file(flag, notename) != 0){
+            if (show_one_file(flag, notename) == IO_ERROR){
                 fclose(fp);
                 for (j = 0; j < flag_num; j = j + 1){
                     free(notename_list[j]);
@@ -138,7 +148,7 @@ int show(char* list, int flag_num, char** flag_list){
                 free(notename_list);
                 free(flag);
                 free(notename);
-                return -1;
+                return IO_ERROR;
             }
         }
         free(flag);
@@ -153,25 +163,29 @@ int show(char* list, int flag_num, char** flag_list){
     if (flag_num > 0){
         for (j = 0; j <  flag_num; j = j + 1){
             if (notename_list[j][0] == '\0'){
-                fprintf(stderr, "%s Error: Note '%s' was not found\n", PROGRAM, flag_list[j]);
+                fprintf(stderr, "%s: No such note: '%s'\n", PROGRAM, flag_list[j]);
                 fclose(fp);
                 for (j = 0; j < flag_num; j = j + 1){
                     free(notename_list[j]);
                 }
                 free(notename_list);
-                free(flag);
-                free(notename);
-                return -1;
+                return KEY_NOT_FOUND;
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
-            if (show_one_file(flag_list[j], notename_list[j]) != 0){
+            result = show_one_file(flag_list[j], notename_list[j]);
+            if (result != 0){
+                fclose(fp);
                 for (j = 0; j < flag_num; j = j + 1){
                     free(notename_list[j]);
                 }
                 free(notename_list);
-                fclose(fp);
-                return -1;
+                if (result == IO_ERROR){
+                    fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, notename);
+                    return IO_ERROR;
+                }
+                fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+                return UNKNOWN_ERROR;
             }
         }
     }

@@ -80,6 +80,10 @@ int flag_validation(const char* flag){
         return CHARACTER_NOT_ALLOWED_ERROR;
     }
 
+    if (flag[0] == '-'){
+        return CHARACTER_NOT_ALLOWED_ERROR;
+    }
+
     for (i = 0; i < len; i = i + 1){
         c = flag[i];
         if (isalnum(c) || c == '_' || c == '-'){

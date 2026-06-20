@@ -23,6 +23,7 @@
 #define CHARACTER_NOT_ALLOWED_ERROR (-10)
 #define ACCESS_FAILED_ERROR (-11)
 #define INVALID_KEY_ERROR (-12)
+#define REGEX_ERROR (-13)
 #define UNKNOWN_ERROR (-100)
 
 #define false 0

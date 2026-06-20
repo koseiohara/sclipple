@@ -1,4 +1,5 @@
 
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <strings.h>
@@ -49,15 +50,14 @@ int main(int argc, char** argv){
         return 1;
     }
     init(&config, entry);
-    if (path_status(rc, &st) == 1){
+    if (path_status(rc, &st) == PATH_EXIST){
         result = read_rc(rc, entry, sizeof(entry) / sizeof(entry[0]));
         if (result < 0){
-            if (result == -1){
-                fprintf(stderr, "%s: Failed to read %s\n", PROGRAM, rc);
+            if (result == INPUT_ERROR){
                 free_config(&config);
                 free(rc);
                 return 1;
-            } else if (result == -2){
+            } else if (result == IO_ERROR){
                 free_config(&config);
                 free(rc);
                 return 1;
@@ -65,16 +65,22 @@ int main(int argc, char** argv){
         }
     }
 
-    if (cat(&dir, home, DIR, "/") == MALLOC_ERROR){
+    result = asprintf(&dir, "%s/%s", home, DIR);
+    if (result < 0){
+        perror("asprintf");
         free(rc);
         return 1;
     }
-    if (cat(&subdir, dir, SUBDIR, "/") == MALLOC_ERROR){
+    result = asprintf(&subdir, "%s/%s", dir, SUBDIR);
+    if (result < 0){
+        perror("asprintf");
         free(rc);
         free(dir);
         return 1;
     }
-    if (cat(&list, dir, LISTNAME, "/") == MALLOC_ERROR){
+    result = asprintf(&list, "%s/%s", dir, LISTNAME);
+    if (result < 0){
+        perror("asprintf");
         free(rc);
         free(dir);
         free(subdir);
