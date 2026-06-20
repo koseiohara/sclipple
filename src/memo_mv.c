@@ -70,8 +70,13 @@ int mv(const char* list, char* old_flag, char* new_flag){
     }
 
     // get new file name
-    if (mv_filename(old_file, new_flag, &new_file) < 0){
-        fprintf(stderr, "%s Error: list file is broken\n", PROGRAM);
+    result = mv_filename(old_file, new_flag, &new_file);
+    if (result < 0){
+        if (result == FILE_FORMAT_ERROR){
+            fprintf(stderr, "%s Error: list file is broken\n", PROGRAM);
+        } else if (result == IO_ERROR){
+            fprintf(stderr, "%s: IO ERROR\n", PROGRAM);
+        }
         free(new_file);
         free(old_file);
         return -4;

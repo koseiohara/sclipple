@@ -1,4 +1,5 @@
 
+#define  _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -89,6 +90,8 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
 
 // return false if flag does not exist
 // return true if flag exist
+// return LIST_FORMAT_ERROR if list file is broken
+// return UNKNOWN_ERROR otherwise
 int flag_exist_check(const char* list, char* flag){
     char* dummy = NULL;
     int   stat;
@@ -97,7 +100,7 @@ int flag_exist_check(const char* list, char* flag){
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
-        return -2;
+        return IO_ERROR;
     }
 
     stat = read_list_by_key(fp, flag, 0, &dummy);
@@ -105,19 +108,20 @@ int flag_exist_check(const char* list, char* flag){
 
     fclose(fp);
 
-    if (stat == KEY_NOT_FOUND){
-        return false;
-    } else if (stat == 0){
+    if (stat == 0){
         return true;
-    } else if (stat < 0){
-        exit(1);
+    } else if (stat == KEY_NOT_FOUND){
+        return false;
+    }else if (stat == LIST_FORMAT_ERROR || stat == INPUT_ERROR){
+        return LIST_FORMAT_ERROR;
     }
-    return -2;
+    return UNKNOWN_ERROR;
 }
 
 
 // return 0 if successed
-// return -1 if list file is broken, bug, or key is not found
+// return IO_ERROR if failed to open list file
+// return error code provided by read_list_by_key, otherwise
 int get_datetime_by_key(const char* list, char* flag, char** datetime){
     int  stat;
     FILE* fp;
@@ -125,22 +129,25 @@ int get_datetime_by_key(const char* list, char* flag, char** datetime){
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
-        return -2;
+        return IO_ERROR;
     }
 
     stat = read_list_by_key(fp, flag, 1, datetime);
 
     fclose(fp);
 
-    if (stat < 0 || stat == KEY_NOT_FOUND){
-        return -1;
+    if (stat == 0){
+        return 0;
+    } else if (stat < 0 || stat == KEY_NOT_FOUND){
+        return stat;
     }
-    return 0;
+    return UNKNOWN_ERROR;
 }
 
 
 // return 0 if successed
-// return -1 if list file is broken, bug, or key is not found
+// return IO_ERROR if failed to open list file
+// return error code provided by read_list_by_key, otherwise
 int get_filename_by_key(const char* list, char* flag, char** filename){
     int  stat;
     FILE* fp;
@@ -148,26 +155,29 @@ int get_filename_by_key(const char* list, char* flag, char** filename){
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
-        return -2;
+        return IO_ERROR;
     }
 
     stat = read_list_by_key(fp, flag, 2, filename);
 
     fclose(fp);
 
-    if (stat < 0 || stat == KEY_NOT_FOUND){
-        return -1;
+    if (stat == 0){
+        return 0;
+    } else if (stat < 0 || stat == KEY_NOT_FOUND){
+        return stat;
     }
-    return 0;
+    return UNKNOWN_ERROR;
 }
 
-
-// IO error, return -1
-// if failed to copy temporary file to list, return -2
-// list broken error, return -3
-// if flag is not found, return 1
-// if new flag is exist, return 2
-// otherwise, return 0
+// return IO_ERROR if IO failed
+// return MALLOC_ERROR if asprintf failed
+// return KEY_DUPLICATE if key already exist
+// return LIST_FORMAT_ERROR if list file is broken
+// return KEY_NOT_FOUND if old_flag does not exist
+// return FILE_FORMAT_ERROR if file name is not valid
+// return RENAME_ERROR if failed to rename tmpfile to list file
+// return 0, otherwise
 int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     FILE* fpr;
     FILE* fpw;
@@ -182,29 +192,33 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     char* out_notename = NULL;
     char* dummy = NULL;
     // const char* out_flag;
-    int   fd;
-    int   changed;
-    int   result;
-    int   len;
+    int    fd;
+    int    changed;
+    int    result;
     size_t size = 0;
     struct stat st;
 
-    changed = 0;
+    changed = false;
 
     if (stat(list, &st) != 0){
         perror(list);
-        return -1;
+        return IO_ERROR;
     }
 
 
-    len = strlen(list);
-    tmpfile = malloc(len+8);
-    snprintf(tmpfile, len + 8, "%s.XXXXXX", list);
+    // len = strlen(list);
+    // tmpfile = malloc(len+8);
+    // snprintf(tmpfile, len + 8, "%s.XXXXXX", list);
+    result = asprintf(&tmpfile, "%s.XXXXXX", list);
+    if (result == -1){
+        return MALLOC_ERROR;
+    }
+
     fd = mkstemp(tmpfile);
     if (fd == -1){
         perror(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     fpw = fdopen(fd, "w");
@@ -213,7 +227,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         close(fd);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     if (fchmod(fd, st.st_mode) != 0){
@@ -221,7 +235,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         fclose(fpw);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     fpr = fopen(list, "r");
@@ -230,25 +244,22 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         fclose(fpw);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     // check existence of the new flag
-// return LIST_FORMAT_ERROR if a line does not include comma
-// return INPUT_ERROR if col is too large
-// return KEY_NOT_FOUND if target_flag does not exist
-// return 0 otherwise
     result = read_list_by_key(fpr, new_flag, 0, &dummy);
     if (result != KEY_NOT_FOUND){
         fclose(fpr);
         fclose(fpw);
         unlink(tmpfile);
         free(tmpfile);
-        if (result < 0){
-            fprintf(stderr, "%s Error: Invalid list file. list file is broken\n", PROGRAM);
-            exit(1);
+        if (result == INPUT_ERROR){
+            return LIST_FORMAT_ERROR;
+        } else if (result < 0){
+            return result;
         }
-        return 2;
+        return KEY_DUPLICATE;
     }
     #ifdef DEBUG
     printf("Completed checking flag list\n");
@@ -285,25 +296,26 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
             free(line);
             unlink(tmpfile);
             free(tmpfile);
-            return -1;
+            return LIST_FORMAT_ERROR;
         }
 
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
-            if (mv_filename(notename, new_flag, &out_notename) < 0){
+            result = mv_filename(notename, new_flag, &out_notename);
+            if (result == FILE_FORMAT_ERROR || result == IO_ERROR){
                 fclose(fpr);
                 fclose(fpw);
                 unlink(tmpfile);
                 free(line);
                 // free(new_notename);
                 free(tmpfile);
-                return -3;
+                return result;
             }
             // snprintf(out_flag    , sizeof(out_flag)    , "%s", new_flag);
             // snprintf(out_notename, sizeof(out_notename), "%s", new_notename);
             out_flag = strdup(new_flag);
             // out_notename = strdup(new_notename);
-            changed = 1;
+            changed = true;
         } else{
             // snprintf(out_flag    , sizeof(out_flag)    , "%s", flag);
             // snprintf(out_notename, sizeof(out_notename), "%s", notename);
@@ -326,7 +338,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
             free(out_flag);
             free(out_notename);
             free(out_datetime);
-            return -1;
+            return IO_ERROR;
         }
         free(out_flag);
         free(out_datetime);
@@ -349,7 +361,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         fclose(fpw);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     if (fclose(fpr)){
@@ -357,27 +369,27 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         fclose(fpw);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     if (fclose(fpw)){
         perror(tmpfile);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     if (rename(tmpfile, list) != 0){
         perror("list rename");
         unlink(tmpfile);
         free(tmpfile);
-        return -2;
+        return RENAME_ERROR;
     }
     
     free(tmpfile);
 
-    if (changed == 0){
-        return 1;
+    if (changed == false){
+        return KEY_NOT_FOUND;
     }
 
     return 0;
@@ -388,6 +400,11 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 // if failed to copy tmporary file to list, return -2
 // if flag is not found, return 1
 // otherwise, return 0
+//
+// return IO_ERROR if IO failed
+// return LIST_FORMAT_ERROR if list file is broken
+// return KEY_NOT_FOUND if target_flag does not exist
+// return 0 otherwise
 int rm_key_in_list(const char* list, const char* target_flag){
     FILE* fpr;
     FILE* fpw;
@@ -402,11 +419,11 @@ int rm_key_in_list(const char* list, const char* target_flag){
     struct stat st;
     size_t size = 0;
 
-    removed = 0;
+    removed = false;
 
     if (stat(list, &st) != 0){
         perror(list);
-        return -1;
+        return IO_ERROR;
     }
 
     len = strlen(list);
@@ -417,7 +434,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     if (fd == -1){
         perror(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     if (fchmod(fd, st.st_mode) != 0){
@@ -425,7 +442,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         close(fd);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     fpw = fdopen(fd, "w");
@@ -434,7 +451,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         close(fd);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     fpr = fopen(list, "r");
@@ -443,7 +460,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         fclose(fpw);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     while (getline(&line, &size, fpr) != -1){
@@ -472,12 +489,12 @@ int rm_key_in_list(const char* list, const char* target_flag){
             unlink(tmpfile);
             free(tmpfile);
             free(line);
-            return -1;
+            return LIST_FORMAT_ERROR;
         }
 
         // if the flag of the current line is target_flag
         if (strcmp(flag, target_flag) == 0){
-            removed = 1;
+            removed = true;
             continue;
         }
 
@@ -489,7 +506,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
             unlink(tmpfile);
             free(tmpfile);
             free(line);
-            return -1;
+            return IO_ERROR;
         }
     }
 
@@ -501,7 +518,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         fclose(fpw);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     if (fclose(fpr)){
@@ -509,37 +526,37 @@ int rm_key_in_list(const char* list, const char* target_flag){
         fclose(fpw);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     if (fclose(fpw)){
         perror(tmpfile);
         unlink(tmpfile);
         free(tmpfile);
-        return -1;
+        return IO_ERROR;
     }
 
     if (rename(tmpfile, list) != 0){
         perror("list rename");
         unlink(tmpfile);
         free(tmpfile);
-        return -2;
+        return IO_ERROR;
     }
 
     free(tmpfile);
 
-    if (removed == 0){
-        return 1;
+    if (removed == false){
+        return KEY_NOT_FOUND;
     }
 
     return 0;
 }
 
 
-// return 0 if successed
-// return 1 if input failed
-// return 2 if line is white space
-// return -1 if list file is broken: does not have thee elements
+// return IO_ERROR if IO_faied
+// return LIST_WHITE_SPACE if line is empty
+// return LIST_FORMAT_ERROR if list file is broken
+// return 0 otherwise
 int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
     char*  line = NULL;
     char*  in_flag     = NULL;
@@ -550,12 +567,12 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
 
     if (getline(&line, &size, fp) == -1){
         free(line);
-        return 1;
+        return IO_ERROR;
     }
 
     if (is_white_space(line)){
         free(line);
-        return 2;
+        return LIST_WHITE_SPACE;
     }
 
     line[strcspn(line, "\n")] = '\0';
@@ -567,7 +584,7 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
 
     if (in_flag == NULL || in_datetime == NULL || in_notename == NULL || dummy != NULL){
         free(line);
-        return -1;
+        return LIST_FORMAT_ERROR;
     }
 
     // snprintf(flag    , flag_len    , "%s", in_flag    );

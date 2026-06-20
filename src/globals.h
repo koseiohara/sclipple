@@ -13,9 +13,20 @@
 #define true  1
 #define false 0
 
-#define IO_ERROR -1
-#define MALLOC_ERROR -2
-#define LIST_FORMAT_ERROR -3
-#define INPUT_ERROR -4
-#define KEY_NOT_FOUND 1
+#define IO_ERROR (-1)
+#define MALLOC_ERROR (-2)
+#define LIST_FORMAT_ERROR (-3)
+#define FILE_FORMAT_ERROR (-4)
+#define INPUT_ERROR (-5)
+#define RENAME_ERROR (-6)
+#define PROCESS_ERROR (-7)
+#define RESERVED_WORD_ERROR (-8)
+#define ACCESS_FAILED_ERROR (-9)
+#define UNKNOWN_ERROR (-100)
+
+#define KEY_NOT_FOUND 2
+#define KEY_DUPLICATE 3
+#define LIST_WHITE_SPACE 4
+#define PATH_EXIST 5
+#define PATH_NOT_EXIST 6
 

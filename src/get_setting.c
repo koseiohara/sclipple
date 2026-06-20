@@ -5,6 +5,10 @@
 #include "globals.h"
 #include "strutils.h"
 
+
+// return INPUT_ERROR if s is empty
+// return MALLOC_ERROR if malloc failed
+// return 0 otherwise
 int separate_words(char* s, int* n, char*** output){
     int i;
     int j;
@@ -47,7 +51,7 @@ int separate_words(char* s, int* n, char*** output){
     *output = malloc((*n) * sizeof(char*));
     if (*output == NULL){
         perror("malloc");
-        return -2;
+        return MALLOC_ERROR;
     }
 
     i = 0;

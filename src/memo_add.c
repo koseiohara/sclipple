@@ -90,7 +90,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     char* file     = NULL;
     char* path     = NULL;
     char* datetime = NULL;
-    int   stat;
+    int   result;
     int   len;
 
     #ifdef DEBUG
@@ -102,46 +102,53 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     printf("<DEBUG> Length of file: %lu\n", strlen(file));
     #endif
 
-    stat = flag_validation(flag);
-    if (stat < 0){
-        if (stat == -1){
+    result = flag_validation(flag);
+    if (result < 0){
+        if (result == -1){
             fprintf(stderr, "%s Error: Keyword is empty\n", PROGRAM);
-        } else if (stat == -2){
+        } else if (result == -2){
             fprintf(stderr, "%s Error: Invalid character is included in '%s'. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, flag);
-        } else if (stat == -3){
+        } else if (result == -3){
             fprintf(stderr, "%s Error: '%s' is a reserved word.\n", PROGRAM, flag);
         }
         return -3;
     }
 
-    stat = make_dir(dir);
-    if (stat < 0){
-        if (stat == -1){
+    result = make_dir(dir);
+    if (result < 0){
+        if (result == -1){
             fprintf(stderr, "%s Error: %s exists but is not a directory\n", PROGRAM, dir);
         }
         return -2;
-    } else if (stat == 0){
+    } else if (result == 0){
         printf("%s: Running initialization process\n", PROGRAM);
     }
 
-    stat = make_dir(note_stock);
-    if (stat < 0){
-        if (stat == -1){
+    result = make_dir(note_stock);
+    if (result < 0){
+        if (result == -1){
             fprintf(stderr, "%s Error: %s exists but is not a directory\n", PROGRAM, dir);
         }
         return -2;
-    } else if (stat == 0){
+    } else if (result == 0){
         printf("%s: Running initialization process\n", PROGRAM);
     }
 
-    get_datetime(clock, '-', &datetime);
+    result = get_datetime(clock, '-', &datetime);
+    if (result == MALLOC_ERROR){
+        return MALLOC_ERROR;
+    }
     get_filename(flag, datetime, ext, &file);
 
-    len = 2;        // for slash and \0
-    len = len + strlen(note_stock);
-    len = len + strlen(file);
-    path = malloc(len * sizeof(char));
-    snprintf(path, len, "%s/%s", note_stock, file);
+    // len = 2;        // for slash and \0
+    // len = len + strlen(note_stock);
+    // len = len + strlen(file);
+    // path = malloc(len * sizeof(char));
+    // snprintf(path, len, "%s/%s", note_stock, file);
+    result = asprintf(&path, "%s/%s", note_stock, file);
+    if (result == MALLOC_ERROR){
+        return MALLOC_ERROR;
+    }
     #ifdef DEBUG
     printf("File name     : %s\n", file);
     printf("Note file name: %s\n", path);
@@ -149,26 +156,26 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     printf("Length of file: %lu\n", strlen(file));
     #endif
 
-    stat = make_file(list, O_CREAT | O_WRONLY);
-    if (stat == -2){
+    result = make_file(list, O_CREAT | O_WRONLY);
+    if (result == -2){
         // fprintf(stderr, "%s Error: Failed to make list file\n", PROGRAM);
         free(datetime);
         free(file);
         free(path);
         return -2;
-    } else if (stat == 0){
+    } else if (result == 0){
         printf("%s: Running initialization process\n", PROGRAM);
     }
 
-    stat = flag_exist_check(list, flag);
-    if (stat < 0){
-        if (stat == -1){
+    result = flag_exist_check(list, flag);
+    if (result < 0){
+        if (result == -1){
             fprintf(stderr, "%s: '%s' already exist\n", PROGRAM, flag);
             free(datetime);
             free(file);
             free(path);
             return -1;
-        } else if (stat == -2){
+        } else if (result == -2){
             free(datetime);
             free(file);
             free(path);
@@ -183,15 +190,15 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     printf("%s: Passed Flag Existence Check\n", flag);
     #endif
 
-    stat = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
-    if (stat < 0){
-        if (stat == -1){
+    result = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
+    if (result < 0){
+        if (result == -1){
             fprintf(stderr, "%s Error: %s already exists\n", PROGRAM, path);
             free(datetime);
             free(file);
             free(path);
             return -1;
-        } else if (stat == -2){
+        } else if (result == -2){
             // fprintf(stderr, "%s IO Error: Failed to open %s\n", PROGRAM, path);
             free(datetime);
             free(file);
@@ -210,8 +217,11 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     free(datetime);
     datetime = NULL;
 
-    get_datetime(clock, '\0', &datetime);
-    if (write_new_content_to_list(list, flag, datetime, path) == -1){
+    result = get_datetime(clock, '\0', &datetime);
+    if (result == MALLOC_ERROR){
+        return MALLOC_ERROR;
+    }
+    if (write_new_content_to_list(list, flag, datetime, path) == IO_ERROR){
         free(datetime);
         free(path);
         free(file);

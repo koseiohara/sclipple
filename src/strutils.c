@@ -45,22 +45,29 @@ char* trim(char* s){
 }
 
 
-int cat(char** out, char* a, char* b, char* delim){
-    int len;
+// // return IO_ERROR if asprintf failed
+// // return 0 otherwise
+// int cat(char** out, char* a, char* b, char* delim){
+//     int result;
+//     // int len;
 
-    *out = NULL;
+//     // *out = NULL;
 
-    len = strlen(a) + strlen(b) + strlen(delim) + 1;        // the last +1 is for \0
-    *out = malloc(len);
+//     // len = strlen(a) + strlen(b) + strlen(delim) + 1;        // the last +1 is for \0
+//     // *out = malloc(len);
 
-    if (*out == NULL){
-        perror("cat");
-        return MALLOC_ERROR;
-    }
+//     // if (*out == NULL){
+//     //     perror("cat");
+//     //     return MALLOC_ERROR;
+//     // }
 
-    snprintf(*out, len, "%s%s%s", a, delim, b);
-    return 0;
-}
+//     // snprintf(*out, len, "%s%s%s", a, delim, b);
+//     result = asprintf(out, "%s%s%s", a, delim, b);
+//     if (result == -1){
+//         return IO_ERROR;
+//     }
+//     return 0;
+// }
 
 
 // return 1 if line is null or white space
@@ -79,13 +86,13 @@ int is_white_space(const char* line){
 }
 
 
-// return -1 if '=' is not found
+// return INPUT_ERROR if '=' is not found or memory not allocated
 // return 0 otherwise
 int line_to_dict(char* line, char** key, char** value){
     char* pt;
 
     if (line == NULL){
-        return -1;
+        return INPUT_ERROR;
     }
 
     // replace \n with \0
@@ -93,7 +100,7 @@ int line_to_dict(char* line, char** key, char** value){
 
     pt = strchr(line, '=');
     if (pt == NULL){
-        return -1;
+        return INPUT_ERROR;
     }
     *pt    = '\0';
     *key   = line;

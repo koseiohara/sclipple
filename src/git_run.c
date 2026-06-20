@@ -5,6 +5,9 @@
 
 #include "globals.h"
 
+
+// return PROCESS_ERROR if fork() failed
+// return 0 otherwise
 int git_run(const char* dir, char* const* git_cmmd){
     pid_t pid;
 
@@ -22,7 +25,7 @@ int git_run(const char* dir, char* const* git_cmmd){
         _exit(1);
     } else if (pid < 0){
         perror("fork");
-        return -1;
+        return PROCESS_ERROR;
     }
 
     wait(NULL);

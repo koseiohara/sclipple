@@ -50,8 +50,8 @@ void init(Config* config, RcEntry* entry){
 }
 
 
-// return -2 when bad input
-// return -1 when io error
+// return INPUT_ERROR when bad input
+// return IO_ERROR when io error
 // return 0 otherwise
 int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
     FILE*  fp;
@@ -69,7 +69,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
     fp = fopen(rc, "r");
     if (fp == NULL){
         perror(rc);
-        return -1;
+        return IO_ERROR;
     }
 
     size = 0;
@@ -109,7 +109,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
 
                         fclose(fp);
                         free(line);
-                        return -2;
+                        return INPUT_ERROR;
                     }
                 }
             }
