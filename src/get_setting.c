@@ -15,11 +15,11 @@ int separate_words(char* s, int* n, char*** output){
     int prev_space;
     int curr_space;
 
-    if (is_white_space(s)){
-        return -1;
+    if (is_white_space(s) == true){
+        return INPUT_ERROR;
     }
 
-    i = 0;
+    i  = 0;
     *n = 0;
     prev_space = true;
     curr_space = true;
@@ -32,7 +32,7 @@ int separate_words(char* s, int* n, char*** output){
             printf("%c is not a space", s[i]);
             #endif
             curr_space = false;
-            if (prev_space){
+            if (prev_space == true){
                 #ifdef DEBUG
                 printf(" ... increment word counter\n");
                 #endif
@@ -67,9 +67,7 @@ int separate_words(char* s, int* n, char*** output){
             printf("%c is not a space", s[i]);
             #endif
             curr_space = false;
-            if (prev_space){
-                #ifdef DEBUG
-                #endif
+            if (prev_space == true){
                 (*output)[j] = &s[i];
                 #ifdef DEBUG
                 printf(" ... new word defined: %s\n", (*output)[j]);

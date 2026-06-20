@@ -74,8 +74,8 @@ int mv(const char* list, char* old_flag, char* new_flag){
     if (result < 0){
         if (result == FILE_FORMAT_ERROR){
             fprintf(stderr, "%s Error: list file is broken\n", PROGRAM);
-        } else if (result == IO_ERROR){
-            fprintf(stderr, "%s: IO ERROR\n", PROGRAM);
+        } else if (result == MALLOC_ERROR){
+            fprintf(stderr, "%s: MALLOC ERROR\n", PROGRAM);
         }
         free(new_file);
         free(old_file);

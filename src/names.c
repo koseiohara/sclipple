@@ -65,7 +65,7 @@ int flag_validation(const char* flag){
 
     // check length
     if (flag == NULL){
-        return -1;
+        return INPUT_ERROR;
     }
 
     len = strlen(flag);
@@ -190,14 +190,9 @@ int mv_filename(char* old_file, const char* new_flag, char** output){
     printf("<DEBUG> File name after '--': %s\n", last);
     #endif
 
-    // len = strlen(prefix) + 1;       // +1 for the last \0
-    // len = len + strlen(new_flag);
-    // len = len + strlen(last);
-    // *output = malloc(len * sizeof(char));
-
     if (last != NULL){
         result = asprintf(output, "%s%s%s", prefix, new_flag, last);
-        free(tmp_old_file);
+        free(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
         if (result == -1){
             return MALLOC_ERROR;
         } else{

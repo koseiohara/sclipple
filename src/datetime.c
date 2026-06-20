@@ -12,10 +12,6 @@
 // return 0 otherwise
 int get_datetime(struct tm* clock, char delim, char** datetime){
     int result;
-    // int len;
-    // len = 20;
-
-    // *datetime = malloc(len * sizeof(char));
 
     if (delim == '\0'){
         result = asprintf(datetime, "%04d/%02d/%02d %02d:%02d:%02d", clock->tm_year+1900,

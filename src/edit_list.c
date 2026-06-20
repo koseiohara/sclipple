@@ -206,9 +206,6 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     }
 
 
-    // len = strlen(list);
-    // tmpfile = malloc(len+8);
-    // snprintf(tmpfile, len + 8, "%s.XXXXXX", list);
     result = asprintf(&tmpfile, "%s.XXXXXX", list);
     if (result == -1){
         return MALLOC_ERROR;
@@ -302,7 +299,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
             result = mv_filename(notename, new_flag, &out_notename);
-            if (result == FILE_FORMAT_ERROR || result == IO_ERROR){
+            if (result < 0){
                 fclose(fpr);
                 fclose(fpw);
                 unlink(tmpfile);
@@ -396,12 +393,8 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 }
 
 
-// IO error, return -1
-// if failed to copy tmporary file to list, return -2
-// if flag is not found, return 1
-// otherwise, return 0
-//
 // return IO_ERROR if IO failed
+// return MALLOC_ERROR if MALLOC failed
 // return LIST_FORMAT_ERROR if list file is broken
 // return KEY_NOT_FOUND if target_flag does not exist
 // return 0 otherwise
@@ -415,7 +408,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     char* notename = NULL;
     int   fd;
     int   removed;
-    int   len;
+    int   result;
     struct stat st;
     size_t size = 0;
 
@@ -426,9 +419,10 @@ int rm_key_in_list(const char* list, const char* target_flag){
         return IO_ERROR;
     }
 
-    len = strlen(list);
-    tmpfile = malloc(len+8);
-    snprintf(tmpfile, len+8, "%s.XXXXXX", list);
+    result = asprintf(&tmpfile, "%s.XXXXXX", list);
+    if (result == -1){
+        return MALLOC_ERROR;
+    }
 
     fd = mkstemp(tmpfile);
     if (fd == -1){
@@ -468,7 +462,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         line[strcspn(line, "\n")] = '\0';
 
         // skip empty line
-        if (is_white_space(line) == 1){
+        if (is_white_space(line) == true){
             continue;
         }
 
@@ -570,7 +564,7 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
         return IO_ERROR;
     }
 
-    if (is_white_space(line)){
+    if (is_white_space(line) == true){
         free(line);
         return LIST_WHITE_SPACE;
     }
@@ -587,9 +581,6 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
         return LIST_FORMAT_ERROR;
     }
 
-    // snprintf(flag    , flag_len    , "%s", in_flag    );
-    // snprintf(datetime, datetime_len, "%s", in_datetime);
-    // snprintf(notename, notename_len, "%s", in_notename);
     *flag     = strdup(in_flag);
     *datetime = strdup(in_datetime);
     *notename = strdup(in_notename);

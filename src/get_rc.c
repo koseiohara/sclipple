@@ -89,15 +89,6 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
             if (strcmp(in_key, entry[i].key) == 0){
                 delete_bracket(&in_value, (int)strlen(lbrack), lbrack, rbrack);
 
-//                 if (strlen(in_value) >= entry[i].len){
-//                     fprintf(stderr, "Invalid value in %s: '%s'.%s must be less than %d words\n", rc, entry[i].value, entry[i].key, (int)entry[i].len);
-
-//                     fclose(fp);
-//                     free(line);
-//                     return -2;
-//                 }
-
-//                 snprintf(entry[i].value, entry[i].len, "%s", in_value);
                 free(*(entry[i].value));
                 *(entry[i].value) = NULL;
                 *(entry[i].value) = strdup(in_value);
