@@ -212,7 +212,7 @@ int main(int argc, char** argv){
 
     } else if (strcmp(argv[1], "ls") == 0){
         result = ls(list, argc-2, &argv[2]);
-        if (result < 0){
+        if (result < 0 || result == KEY_NOT_FOUND){
             free_config(&config);
             free(rc);
             free(dir);
@@ -231,7 +231,7 @@ int main(int argc, char** argv){
             return 0;
         } else{
             result = search(list, argv[2], argc-3, &argv[3]);
-            if (result < 0){
+            if (result < 0 || result == KEY_NOT_FOUND){
                 free_config(&config);
                 free(rc);
                 free(dir);
@@ -242,7 +242,7 @@ int main(int argc, char** argv){
         }
     } else if (strcmp(argv[1], "show") == 0){
         result = show(list, argc-2, &argv[2]);
-        if (result < 0){
+        if (result < 0 || result == KEY_NOT_FOUND){
             free_config(&config);
             free(rc);
             free(dir);
@@ -262,7 +262,7 @@ int main(int argc, char** argv){
             return 1;
         }
         result = memo_edit(list, subdir, editor_commands[0], nwords-1, &editor_commands[1], argc-1, &argv[1]);
-        if (result < 0){
+        if (result < 0 || result == KEY_NOT_FOUND){
             free(editor_commands);
             free_config(&config);
             free(rc);
