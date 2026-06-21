@@ -19,7 +19,7 @@ The note can later be opened from any directory.
 
 - Keyword-based note management
 - Notes accessible from any directory
-- Editor-independent workflow
+- Editor-independent
 - Plain text storage
 - Fast full-text search using POSIX extended regular expressions
 - Git integration for version control
@@ -198,7 +198,8 @@ Remove notes.
 
 ### Git integration
 
-Run Git commands inside the sclipple data directory.
+Run Git commands in the sclipple data directory.
+Note that Git commands do not accept KEYs because sclipple only provides a thin wrapper around Git.
 
 ```sh
 $ sclipple git status
@@ -224,6 +225,7 @@ Example:
 ```ini
 editor = vim -p
 extension = txt
+directory = ~/.sclipple
 ```
 
 ### Supported options
@@ -232,6 +234,10 @@ extension = txt
 |----------|-------------|----------|
 | editor | Editor command used when opening notes | `vim -p` |
 | extension | Extension used for newly created notes | `txt` |
+| directory | Directory used to store sclipple data | `~/.sclipple` |
+
+The storage location can be changed using the `directory` option.
+The value must be an absolute path and may contain environment variables or `~`.
 
 Notes:
 
@@ -243,19 +249,20 @@ Example:
 ```ini
 editor = "nvim -p"
 extension = md
+directory = ~/notes
 ```
 
 ---
 
 ## Storage
 
-All data is stored under:
+By default, all data is stored under:
 
 ```text
 ~/.sclipple/
 ```
 
-Typical layout:
+Typical default layout:
 
 ```text
 ~/.sclipple/
@@ -283,8 +290,8 @@ todo--2025-07-01-12-34-56.txt
 
 A KEY:
 
-- must be unique
-- must not be `.` or `..`
+- be unique
+- not be `.` or `..`
 - may contain:
   - letters
   - digits
