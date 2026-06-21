@@ -78,7 +78,6 @@ int init(Config* config, RcEntry* entry, char* home){
 int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
     FILE*  fp;
     char*  line = NULL;
-    char*  decomm;
     char*  in_key;
     char*  in_value;
     const char* lbrack = "\"'";
@@ -98,9 +97,8 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
     n    = (int)n_entry;
     while(getline(&line, &size, fp) != -1){
         // delete comment
-        decomm = strchr(line, RC_COMMENT);
-        if (decomm != NULL){
-            *decomm = '\0';
+        if (line[0] == RC_COMMENT){
+            line[0] = '\0';
         }
 
         if (line_to_dict(line, &in_key, &in_value) < 0){

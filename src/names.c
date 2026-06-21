@@ -137,12 +137,16 @@ int flag_validation(const char* flag){
 // return 0 otherwise
 int parse_directory(const char* input_dir, char** output_dir){
     wordexp_t  we;
+    char* tmp;
+    char* tmp_trim;
     int result;
+    size_t len;
 
     if (output_dir == NULL){
         return INPUT_ERROR;
     }
 
+    *output_dir = NULL;
     if (input_dir == NULL || input_dir[0] == '\0'){
         return INPUT_ERROR;
     }
@@ -159,19 +163,31 @@ int parse_directory(const char* input_dir, char** output_dir){
         return WORDEXP_ERROR;
     }
 
-    *output_dir = strdup(we.we_wordv[0]);
+    tmp = strdup(we.we_wordv[0]);
     wordfree(&we);
+    if (tmp == NULL){
+        perror("strdup");
+        return MALLOC_ERROR;
+    }
+
+    tmp_trim = trim(tmp);
+
+    if (tmp_trim[0] != '/'){
+        free(tmp);
+        return RC_ERROR;
+    }
+
+    *output_dir = strdup(tmp_trim);
+    free(tmp);
     if (*output_dir == NULL){
         perror("strdup");
         return MALLOC_ERROR;
     }
 
-    *output_dir = trim(*output_dir);
-
-    if (*(output_dir[0]) != '/'){
-        free(*output_dir);
-        *output_dir = NULL;
-        return RC_ERROR;
+    len = strlen(*output_dir);
+    while (len > 1 && (*output_dir)[len - 1] == '/') {
+        (*output_dir)[len - 1] = '\0';
+        len = len - 1;
     }
 
     return 0;
