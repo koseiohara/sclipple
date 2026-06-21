@@ -13,13 +13,10 @@
 
 
 // return IO_ERROR if failed to open file
-// return REGEX_ERROR if compile failed
 // return 0 otherwise
-int search_one_file(char* flag, char* file, char* word){
+int search_one_file(regex_t* regex, char* flag, char* file){
     char*  line = NULL;
     char*  lp;
-    char   errbuf[256];
-    int    errcode;
     int    start;
     int    end;
     int    atty;
@@ -29,21 +26,12 @@ int search_one_file(char* flag, char* file, char* word){
     int    ln;
     FILE*  fp;
     size_t size = 0;
-    regex_t    regex;
     regmatch_t match[1];
 
     fp = fopen(file, "r");
     if (fp == NULL){
         perror(file);
         return IO_ERROR;
-    }
-
-    errcode = regcomp(&regex, word, REG_EXTENDED | REG_ICASE);
-    if (errcode != 0){
-        regerror(errcode, &regex, errbuf, sizeof(errbuf));
-        // regfree(&regex);
-        fclose(fp);
-        return REGEX_ERROR;
     }
 
     atty = isatty(fileno(stdout));
@@ -62,7 +50,7 @@ int search_one_file(char* flag, char* file, char* word){
         line[strcspn(line, "\n")] = '\0';
 
         lp = line;
-        while (regexec(&regex, lp, 1, match, 0) == 0){
+        while (regexec(regex, lp, 1, match, 0) == 0){
             matched = true;
 
             if (1 - say_name){
@@ -118,7 +106,6 @@ int search_one_file(char* flag, char* file, char* word){
         printf("\n");
     }
 
-    regfree(&regex);
     fclose(fp);
     free(line);
     return 0;
@@ -133,12 +120,15 @@ int search_one_file(char* flag, char* file, char* word){
 // return UNKNOWN_ERROR if program has a bug
 // return 0 otherwise
 int search(char* list, char* word, int flag_num, char** flag_list){
-    struct stat st;
+    struct  stat st;
+    regex_t regex;
     FILE*  fp;
     char*  flag = NULL;
     char*  datetime = NULL;
     char*  notename = NULL;
     char** notename_list = NULL;
+    char   errbuf[256];
+    int    errcode;
     int    result;
     int    i;
     int    j;
@@ -176,6 +166,15 @@ int search(char* list, char* word, int flag_num, char** flag_list){
         return IO_ERROR;
     }
 
+    errcode = regcomp(&regex, word, REG_EXTENDED | REG_ICASE);
+    if (errcode != 0){
+        regerror(errcode, &regex, errbuf, sizeof(errbuf));
+        // regfree(&regex);
+        fclose(fp);
+        fprintf(stderr, "%s: regcomp failed\n", PROGRAM);
+        return REGEX_ERROR;
+    }
+
     i = 0;
     while (1){
         i = i + 1;
@@ -193,6 +192,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             free(flag);
             free(datetime);
             free(notename);
+            regfree(&regex);
             if (result == LIST_FORMAT_ERROR){
                 fprintf(stderr, "%s: List file is broken\n", PROGRAM);
                 return LIST_FORMAT_ERROR;
@@ -209,7 +209,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 }
             }
         } else{
-            result = search_one_file(flag, notename, word);
+            result = search_one_file(&regex, flag, notename);
             if (result != 0){
                 fclose(fp);
                 for (j = 0; j < flag_num; j = j + 1){
@@ -219,12 +219,10 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 free(flag);
                 free(datetime);
                 free(notename);
+                regfree(&regex);
                 if (result == IO_ERROR){
                     fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, notename);
                     return IO_ERROR;
-                } else if (result == REGEX_ERROR){
-                    fprintf(stderr, "%s: regcomp failed\n", PROGRAM);
-                    return REGEX_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PROGRAM);
                 return UNKNOWN_ERROR;
@@ -248,23 +246,22 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                     free(notename_list[j]);
                 }
                 free(notename_list);
+                regfree(&regex);
                 return KEY_NOT_FOUND;
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
-            result = search_one_file(flag_list[j], notename_list[j], word);
+            result = search_one_file(&regex, flag_list[j], notename_list[j]);
             if (result != 0){
                 fclose(fp);
                 for (j = 0; j < flag_num; j = j + 1){
                     free(notename_list[j]);
                 }
                 free(notename_list);
+                regfree(&regex);
                 if (result == IO_ERROR){
                     fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, notename);
                     return IO_ERROR;
-                } else if (result == REGEX_ERROR){
-                    fprintf(stderr, "%s: regcomp failed\n", PROGRAM);
-                    return REGEX_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PROGRAM);
                 return UNKNOWN_ERROR;
@@ -276,6 +273,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
         free(notename_list[j]);
     }
     free(notename_list);
+    regfree(&regex);
     return 0;
 }
 
