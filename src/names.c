@@ -8,6 +8,7 @@
 #include <time.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <wordexp.h>
 
 #include "globals.h"
 #include "strutils.h"
@@ -123,6 +124,54 @@ int flag_validation(const char* flag){
 
     if (strcmp(flag, "show") == 0){
         return RESERVED_WORD_ERROR;
+    }
+
+    return 0;
+}
+
+
+// return INPUT_ERROR if arguments are invalid
+// return WORDEXP_ERROR if failed to parse
+// return MALLOC_ERROR if strdup failed
+// return RC_ERROR if specified is not the absolute path
+// return 0 otherwise
+int parse_directory(const char* input_dir, char** output_dir){
+    wordexp_t  we;
+    int result;
+
+    if (output_dir == NULL){
+        return INPUT_ERROR;
+    }
+
+    if (input_dir == NULL || input_dir[0] == '\0'){
+        return INPUT_ERROR;
+    }
+
+    *output_dir = NULL;
+
+    result = wordexp(input_dir, &we, WRDE_NOCMD | WRDE_UNDEF);
+    if (result != 0){
+        return WORDEXP_ERROR;
+    }
+    
+    if (we.we_wordc != 1 || we.we_wordv == NULL || we.we_wordv[0] == NULL){
+        wordfree(&we);
+        return WORDEXP_ERROR;
+    }
+
+    *output_dir = strdup(we.we_wordv[0]);
+    wordfree(&we);
+    if (*output_dir == NULL){
+        perror("strdup");
+        return MALLOC_ERROR;
+    }
+
+    *output_dir = trim(*output_dir);
+
+    if (*(output_dir[0]) != '/'){
+        free(*output_dir);
+        *output_dir = NULL;
+        return RC_ERROR;
     }
 
     return 0;

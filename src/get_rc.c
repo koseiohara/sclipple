@@ -1,4 +1,5 @@
 
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,21 +11,29 @@
 #include "get_rc.h"
 
 
-void init_config(Config* config){
-    config->editor = strdup("vim -p");
-    config->ext    = strdup("txt");
-    config->dir    = strdup("~/.sclipple");
-    // snprintf(config->editor,
-    //          sizeof(config->editor),
-    //          "%s",
-    //          "vim -p"
-    //          );
+// return MALLOC_ERROR if asprintf or strdup failed
+// return 0 otherwise
+int init_config(Config* config, char* home){
+    int result;
 
-    // snprintf(config->ext,
-    //          sizeof(config->ext),
-    //          "%s",
-    //          "txt"
-    //          );
+    config->editor = strdup("vim -p");
+    if (config->editor == NULL){
+        perror("strdup");
+        return MALLOC_ERROR;
+    }
+
+    config->ext = strdup("txt");
+    if (config->ext == NULL){
+        perror("strdup");
+        return MALLOC_ERROR;
+    }
+
+    result = asprintf(&(config->dir), "%s/%s", home, DIR);
+    if (result < 0){
+        perror("asprintf");
+        return MALLOC_ERROR;
+    }
+    return 0;
 }
 
 
@@ -50,14 +59,21 @@ void init_entry(Config* config, RcEntry* entry){
 }
 
 
-void init(Config* config, RcEntry* entry){
-    init_config(config);
+// return MALLOC_ERROR if asprintf or strdup failed in init_config
+// return 0 otherwise
+int init(Config* config, RcEntry* entry, char* home){
+    int result;
+    result = init_config(config, home);
     init_entry(config, entry);
+    return result;
 }
 
 
-// return INPUT_ERROR when bad input
+// return RC_ERROR when bad input
 // return IO_ERROR when io error
+// return MALLOC_ERROR if strdup failed
+// return INPUT_ERROR if a bug
+// return UNKNOWN_ERROR if an unknown error
 // return 0 otherwise
 int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
     FILE*  fp;
@@ -98,6 +114,10 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                 free(*(entry[i].value));
                 *(entry[i].value) = NULL;
                 *(entry[i].value) = strdup(in_value);
+                if (*(entry[i].value) == NULL){
+                    perror("strdup");
+                    return MALLOC_ERROR;
+                }
 
                 if (strcmp(entry[i].key, "extension") == 0){
                     result = ext_validation(*(entry[i].value));
@@ -106,7 +126,30 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
 
                         fclose(fp);
                         free(line);
-                        return INPUT_ERROR;
+                        return RC_ERROR;
+                    }
+                } else if (strcmp(entry[i].key, "directory") == 0){
+                    free(*(entry[i].value));
+                    result = parse_directory(in_value, entry[i].value);
+                    if (result >= 0){
+                        // printf("Directory: %s\n", *(entry[i].value));
+                        continue;
+                    } else{
+                        if (result == RC_ERROR){
+                            fprintf(stderr, "%s: Invalid directory: '%s'\nDirectory must be the absolute path format\n", rc, in_value);
+                            return RC_ERROR;
+                        } else if (result == WORDEXP_ERROR){
+                            fprintf(stderr, "%s: Invalid directory specified: '%s'\n", rc, in_value);
+                            return RC_ERROR;
+                        } else if (result == MALLOC_ERROR){
+                            return MALLOC_ERROR;
+                        } else if (result == INPUT_ERROR){
+                            fprintf(stderr, "%s: Invalid input to function parse_directory()\n", PACKAGE_NAME);
+                            return INPUT_ERROR;
+                        } else{
+                            fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
+                            return UNKNOWN_ERROR;
+                        }
                     }
                 }
             }

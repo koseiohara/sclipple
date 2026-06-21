@@ -16,10 +16,10 @@ typedef struct{
     size_t len;
 } RcEntry;
 
-#define N_ENTRY 2
+#define N_ENTRY 3
 
 
-void init(Config* config, RcEntry* entry);
+int init(Config* config, RcEntry* entry, char* home);
 void free_config(Config* config);
 int read_rc(const char* rc, RcEntry* entry, const size_t n_entry);
 

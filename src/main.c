@@ -27,7 +27,6 @@ int main(int argc, char** argv){
     RcEntry entry[N_ENTRY];
     char** editor_commands=NULL;
     char*  home;
-    char*  dir;
     char*  subdir;
     char*  rc;
     char*  list;
@@ -50,41 +49,34 @@ int main(int argc, char** argv){
         perror("asprintf");
         return 1;
     }
-    init(&config, entry);
+
+    result = init(&config, entry, home);
+    if (result < 0){
+        return 1;
+    }
+
     if (path_status(rc, &st) == PATH_EXIST){
         result = read_rc(rc, entry, sizeof(entry) / sizeof(entry[0]));
         if (result < 0){
-            if (result == INPUT_ERROR){
-                free_config(&config);
-                free(rc);
-                return 1;
-            } else if (result == IO_ERROR){
-                free_config(&config);
-                free(rc);
-                return 1;
-            }
+            free_config(&config);
+            free(rc);
+            return 1;
         }
     }
 
-    result = asprintf(&dir, "%s/%s", home, DIR);
+    result = asprintf(&subdir, "%s/%s", config.dir, SUBDIR);
     if (result < 0){
         perror("asprintf");
         free(rc);
+        free_config(&config);
         return 1;
     }
-    result = asprintf(&subdir, "%s/%s", dir, SUBDIR);
+    result = asprintf(&list, "%s/%s", config.dir, LISTNAME);
     if (result < 0){
         perror("asprintf");
         free(rc);
-        free(dir);
-        return 1;
-    }
-    result = asprintf(&list, "%s/%s", dir, LISTNAME);
-    if (result < 0){
-        perror("asprintf");
-        free(rc);
-        free(dir);
         free(subdir);
+        free_config(&config);
         return 1;
     }
     #ifdef DEBUG
@@ -100,7 +92,6 @@ int main(int argc, char** argv){
         show_help_all();
         free_config(&config);
         free(rc);
-        free(dir);
         free(subdir);
         free(list);
         return 0;
@@ -117,7 +108,6 @@ int main(int argc, char** argv){
         }
         free_config(&config);
         free(rc);
-        free(dir);
         free(subdir);
         free(list);
         return 0;
@@ -125,15 +115,13 @@ int main(int argc, char** argv){
         printf("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
         free_config(&config);
         free(rc);
-        free(dir);
         free(subdir);
         free(list);
         return 0;
     } else if (strcmp(argv[1], "git") == 0){
-        result = git_run(dir, &argv[1]);
+        result = git_run(config.dir, &argv[1]);
         free_config(&config);
         free(rc);
-        free(dir);
         free(subdir);
         free(list);
         if (result < 0){
@@ -151,20 +139,18 @@ int main(int argc, char** argv){
             show_help_add();
             free_config(&config);
             free(rc);
-            free(dir);
             free(subdir);
             free(list);
             return 0;
         } else{
             for (i = 2; i < argc; i = i + 1){
-                result = add(list, dir, subdir, argv[i], config.ext, lt);
+                result = add(list, config.dir, subdir, argv[i], config.ext, lt);
                 if (result >= 0 || result == INVALID_KEY_ERROR){
                     continue;
                 }
                 if (result < 0){
                     free_config(&config);
                     free(rc);
-                    free(dir);
                     free(subdir);
                     free(list);
                     return 1;
@@ -177,7 +163,6 @@ int main(int argc, char** argv){
             show_help_rm();
             free_config(&config);
             free(rc);
-            free(dir);
             free(subdir);
             free(list);
             return 0;
@@ -187,7 +172,6 @@ int main(int argc, char** argv){
                 if (result < 0 || result == KEY_NOT_FOUND){
                     free_config(&config);
                     free(rc);
-                    free(dir);
                     free(subdir);
                     free(list);
                     return 1;
@@ -200,7 +184,6 @@ int main(int argc, char** argv){
             show_help_mv();
             free_config(&config);
             free(rc);
-            free(dir);
             free(subdir);
             free(list);
             return 0;
@@ -209,7 +192,6 @@ int main(int argc, char** argv){
             if (result < 0 || result == KEY_NOT_FOUND || result == KEY_DUPLICATE){
                 free_config(&config);
                 free(rc);
-                free(dir);
                 free(subdir);
                 free(list);
                 return 1;
@@ -221,7 +203,6 @@ int main(int argc, char** argv){
         if (result < 0 || result == KEY_NOT_FOUND){
             free_config(&config);
             free(rc);
-            free(dir);
             free(subdir);
             free(list);
             return 1;
@@ -231,7 +212,6 @@ int main(int argc, char** argv){
             show_help_search();
             free_config(&config);
             free(rc);
-            free(dir);
             free(subdir);
             free(list);
             return 0;
@@ -240,7 +220,6 @@ int main(int argc, char** argv){
             if (result < 0 || result == KEY_NOT_FOUND){
                 free_config(&config);
                 free(rc);
-                free(dir);
                 free(subdir);
                 free(list);
                 return 1;
@@ -251,7 +230,6 @@ int main(int argc, char** argv){
         if (result < 0 || result == KEY_NOT_FOUND){
             free_config(&config);
             free(rc);
-            free(dir);
             free(subdir);
             free(list);
             return 1;
@@ -262,7 +240,6 @@ int main(int argc, char** argv){
             free(editor_commands);
             free_config(&config);
             free(rc);
-            free(dir);
             free(subdir);
             free(list);
             return 1;
@@ -272,7 +249,6 @@ int main(int argc, char** argv){
     free(editor_commands);
     free_config(&config);
     free(rc);
-    free(dir);
     free(subdir);
     free(list);
     return 0;

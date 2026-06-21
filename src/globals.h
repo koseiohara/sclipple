@@ -34,6 +34,8 @@
 #define ACCESS_FAILED_ERROR (-11)
 #define INVALID_KEY_ERROR (-12)
 #define REGEX_ERROR (-13)
+#define WORDEXP_ERROR (-14)
+#define RC_ERROR (-15)
 #define UNKNOWN_ERROR (-100)
 
 #define false 0
