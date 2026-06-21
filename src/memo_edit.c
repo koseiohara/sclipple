@@ -56,7 +56,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
     pid_t pid;
     FILE* fp;
     char** command = NULL;
-    char*  files[flag_num];
+    char** files;
     int i;
     int j;
     int result;
@@ -71,6 +71,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         return IO_ERROR;
     } 
 
+    files = malloc(flag_num * sizeof(char*));
     for (j = 0; j < flag_num; j = j + 1){
         files[j] = NULL;
     }
@@ -87,6 +88,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             for (j = 0; j < flag_num; j = j + 1){
                 free(files[j]);
             }
+            free(files);
             fclose(fp);
             return LIST_FORMAT_ERROR;
         } else if (result == KEY_NOT_FOUND){
@@ -94,6 +96,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             for (j = 0; j < flag_num; j = j + 1){
                 free(files[j]);
             }
+            free(files);
             fclose(fp);
             return KEY_NOT_FOUND;
         }
@@ -110,6 +113,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             for (j = 0; j < flag_num; j = j + 1){
                 free(files[j]);
             }
+            free(files);
             _exit(1);
         }
 
@@ -120,6 +124,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             for (j = 0; j < flag_num; j = j + 1){
                 free(files[j]);
             }
+            free(files);
             _exit(1);
         }
         get_command(editor, editor_options_num, editor_options, flag_num, files, command);
@@ -133,12 +138,14 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         for (j = 0; j < flag_num; j = j + 1){
             free(files[j]);
         }
+        free(files);
         _exit(1);
     } else if (pid < 0){
         perror("fork");
         for (j = 0; j < flag_num; j = j + 1){
             free(files[j]);
         }
+        free(files);
         return PROCESS_ERROR;
     }
 
@@ -147,6 +154,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
     for (j = 0; j < flag_num; j = j + 1){
         free(files[j]);
     }
+    free(files);
 
     return 0;
 }
