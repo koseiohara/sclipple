@@ -326,13 +326,13 @@ run_cmd "$BIN" show mdnote
 assert_success
 assert_contains "$STDOUT" "markdown body"
 
-echo "14. rc parser handles whitespace, comments, and quotes"
+echo "14. rc parser handles whitespace, line-head comments, and quotes"
 
 reset_home
 
 cat > "$HOME/.sclipplerc" <<'RC'
 # comment
-   editor   =   "cat"   # trailing comment
+   editor   =   "cat"
    extension = 'memo'
 RC
 
@@ -348,7 +348,50 @@ run_cmd "$BIN" quoted
 assert_success
 assert_contains "$STDOUT" "quoted rc body"
 
-echo "15. invalid rc extension is fatal"
+echo "15. rc parser keeps non-leading hash characters"
+
+reset_home
+
+cat > "$HOME/.sclipplerc" <<'RC'
+editor = cat
+extension = txt # not a comment
+RC
+
+run_cmd "$BIN" add hash
+assert_failure
+assert_diagnostic
+assert_note_count 0
+
+echo "16. rc directory option is used for storage"
+
+reset_home
+
+custom_dir="$HOME/custom-sclipple"
+cat > "$HOME/.sclipplerc" <<RC
+editor = cat
+extension = log
+directory = $custom_dir
+RC
+
+run_cmd "$BIN" add custom
+assert_success
+
+custom_note="$(find "$custom_dir/notes" -type f -name 'custom--*.log' | head -n 1)"
+assert_file_exists "$custom_note"
+assert_file_not_exists "$HOME/.sclipple"
+assert_contains "$(cat "$custom_dir/.list.csv")" "custom,"
+
+printf 'custom directory body\n' > "$custom_note"
+
+run_cmd "$BIN" show custom
+assert_success
+assert_contains "$STDOUT" "custom directory body"
+
+run_cmd "$BIN" git init
+assert_success
+assert_file_exists "$custom_dir/.git"
+
+echo "17. invalid rc extension is fatal"
 
 reset_home
 
@@ -361,7 +404,7 @@ assert_failure
 assert_diagnostic
 assert_note_count 0
 
-echo "16. mv succeeds and preserves content"
+echo "18. mv succeeds and preserves content"
 
 reset_home
 setup_rc
@@ -394,21 +437,21 @@ assert_contains "$STDOUT" "new"
 assert_contains "$STDOUT" "other"
 assert_not_contains "$STDOUT" "old:"
 
-echo "17. mv missing old key fails with status 1 and preserves existing notes"
+echo "19. mv missing old key fails with status 1 and preserves existing notes"
 
 run_cmd "$BIN" mv missing dst
 assert_status 1
 assert_diagnostic
 assert_storage_intact_for_new_other
 
-echo "18. mv existing new key fails with status 1 and preserves existing notes"
+echo "20. mv existing new key fails with status 1 and preserves existing notes"
 
 run_cmd "$BIN" mv new other
 assert_status 1
 assert_diagnostic
 assert_storage_intact_for_new_other
 
-echo "19. mv invalid new key fails and preserves existing note"
+echo "21. mv invalid new key fails and preserves existing note"
 
 run_cmd "$BIN" mv new ..
 assert_status 1
@@ -420,7 +463,7 @@ run_cmd "$BIN" show new
 assert_success
 assert_contains "$STDOUT" "content for old"
 
-echo "20. rm removes key and note file"
+echo "22. rm removes key and note file"
 
 run_cmd "$BIN" rm new
 assert_success
@@ -431,13 +474,13 @@ run_cmd "$BIN" show new
 assert_failure
 assert_diagnostic
 
-echo "21. rm missing key fails"
+echo "23. rm missing key fails"
 
 run_cmd "$BIN" rm missing
 assert_failure
 assert_diagnostic
 
-echo "22. storage-dependent commands fail before storage exists"
+echo "24. storage-dependent commands fail before storage exists"
 
 reset_home
 setup_rc
@@ -460,7 +503,7 @@ run_cmd "$BIN" mv x y
 assert_failure
 assert_diagnostic
 
-echo "23. storage path conflicts are rejected"
+echo "25. storage path conflicts are rejected"
 
 reset_home
 setup_rc
@@ -481,7 +524,7 @@ run_cmd "$BIN" add x
 assert_failure
 assert_diagnostic
 
-echo "24. broken list file is detected"
+echo "26. broken list file is detected"
 
 reset_home
 setup_rc
@@ -503,7 +546,7 @@ run_cmd "$BIN" search anything
 assert_failure
 assert_diagnostic
 
-echo "25. git subcommand runs inside storage"
+echo "27. git subcommand runs inside storage"
 
 reset_home
 setup_rc
@@ -519,7 +562,7 @@ run_cmd "$BIN" git status --short
 assert_success
 assert_contains "$STDOUT$STDERR" ".list.csv"
 
-echo "26. git before storage reports diagnostic and returns success in the uploaded source"
+echo "28. git before storage reports diagnostic and returns success in the uploaded source"
 
 reset_home
 setup_rc
