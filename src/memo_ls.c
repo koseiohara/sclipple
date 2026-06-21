@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #include "globals.h"
@@ -15,6 +16,9 @@
 
 
 #define NOTE_EMPTY 1
+// #define OUTPUT_TTY  "[\033[34m%s\033[0m]\ncreated: %s\nfile   : %s\n%s\n\n"
+#define OUTPUT_TTY  "[\033[34m%s\033[0m]\n\033[36mcreated\033[0m: %s\n\033[36mfile\033[0m   : %s\n%s\n\n"
+#define OUTPUT_NTTY "[%s]\ncreated: %s\nfile   : %s\n%s\n\n"
 
 // return IO_ERROR if failed to open note
 // return NOTE_EMPTY if note is empty
@@ -86,6 +90,7 @@ int ls(const char* list, int flag_num, char** flag_list){
     char*  notename = NULL;
     char** lines    = NULL;
     char   first_line[LS_LINE_LEN];
+    int    atty;
     int    result;
     int    i;
     int    j;
@@ -133,6 +138,8 @@ int ls(const char* list, int flag_num, char** flag_list){
         return IO_ERROR;
     }
 
+    atty = isatty(fileno(stdout));
+
     result = 0;
     i      = 0;
     while (1){
@@ -178,7 +185,11 @@ int ls(const char* list, int flag_num, char** flag_list){
                             return UNKNOWN_ERROR;
                         }
                     }
-                    result = asprintf(&lines[j], "%s:\n  created: %s\n  file   : %s\n  %s\n\n", flag, datetime, notename, first_line);
+                    if (atty){
+                        result = asprintf(&lines[j], OUTPUT_TTY , flag, datetime, notename, first_line);
+                    } else{
+                        result = asprintf(&lines[j], OUTPUT_NTTY, flag, datetime, notename, first_line);
+                    }
                     if (result < 0){
                         perror("asprintf");
                         for (j = 0; j < flag_num; j = j + 1){
@@ -207,7 +218,11 @@ int ls(const char* list, int flag_num, char** flag_list){
                     return UNKNOWN_ERROR;
                 }
             }
-            printf("%s:\n  created: %s\n  file   : %s\n  %s\n\n", flag, datetime, notename, first_line);
+            if (atty){
+                result = printf(OUTPUT_TTY , flag, datetime, notename, first_line);
+            } else{
+                result = printf(OUTPUT_NTTY, flag, datetime, notename, first_line);
+            }
         }
 
         free(flag);

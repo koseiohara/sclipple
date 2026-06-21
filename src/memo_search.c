@@ -53,7 +53,7 @@ int search_one_file(regex_t* regex, char* flag, char* file){
         while (regexec(regex, lp, 1, match, 0) == 0){
             matched = true;
 
-            if (1 - say_name){
+            if (!say_name){
                 if (atty){
                     printf("[\033[34m%s\033[0m]\n", flag);
                 } else{
