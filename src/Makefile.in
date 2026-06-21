@@ -102,11 +102,11 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_sclipple_OBJECTS = help.$(OBJEXT) strutils.$(OBJEXT) \
-	get_rc.$(OBJEXT) get_setting.$(OBJEXT) datetime.$(OBJEXT) \
-	names.$(OBJEXT) edit_list.$(OBJEXT) git_run.$(OBJEXT) \
-	memo_add.$(OBJEXT) memo_edit.$(OBJEXT) memo_rm.$(OBJEXT) \
-	memo_mv.$(OBJEXT) memo_ls.$(OBJEXT) memo_search.$(OBJEXT) \
-	memo_show.$(OBJEXT) main.$(OBJEXT)
+	get_rc.$(OBJEXT) datetime.$(OBJEXT) names.$(OBJEXT) \
+	edit_list.$(OBJEXT) git_run.$(OBJEXT) memo_add.$(OBJEXT) \
+	memo_edit.$(OBJEXT) memo_rm.$(OBJEXT) memo_mv.$(OBJEXT) \
+	memo_ls.$(OBJEXT) memo_search.$(OBJEXT) memo_show.$(OBJEXT) \
+	main.$(OBJEXT)
 sclipple_OBJECTS = $(am_sclipple_OBJECTS)
 sclipple_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -125,8 +125,8 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/datetime.Po ./$(DEPDIR)/edit_list.Po \
-	./$(DEPDIR)/get_rc.Po ./$(DEPDIR)/get_setting.Po \
-	./$(DEPDIR)/git_run.Po ./$(DEPDIR)/help.Po ./$(DEPDIR)/main.Po \
+	./$(DEPDIR)/get_rc.Po ./$(DEPDIR)/git_run.Po \
+	./$(DEPDIR)/help.Po ./$(DEPDIR)/main.Po \
 	./$(DEPDIR)/memo_add.Po ./$(DEPDIR)/memo_edit.Po \
 	./$(DEPDIR)/memo_ls.Po ./$(DEPDIR)/memo_mv.Po \
 	./$(DEPDIR)/memo_rm.Po ./$(DEPDIR)/memo_search.Po \
@@ -268,7 +268,6 @@ sclipple_SOURCES = \
     help.c help.h \
     strutils.c strutils.h \
     get_rc.c get_rc.h \
-    get_setting.c get_setting.h \
     datetime.c datetime.h \
     names.c names.h \
     edit_list.c edit_list.h \
@@ -377,7 +376,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/datetime.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/edit_list.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_rc.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_setting.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/git_run.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/help.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@ # am--include-marker
@@ -541,7 +539,6 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/datetime.Po
 	-rm -f ./$(DEPDIR)/edit_list.Po
 	-rm -f ./$(DEPDIR)/get_rc.Po
-	-rm -f ./$(DEPDIR)/get_setting.Po
 	-rm -f ./$(DEPDIR)/git_run.Po
 	-rm -f ./$(DEPDIR)/help.Po
 	-rm -f ./$(DEPDIR)/main.Po
@@ -602,7 +599,6 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/datetime.Po
 	-rm -f ./$(DEPDIR)/edit_list.Po
 	-rm -f ./$(DEPDIR)/get_rc.Po
-	-rm -f ./$(DEPDIR)/get_setting.Po
 	-rm -f ./$(DEPDIR)/git_run.Po
 	-rm -f ./$(DEPDIR)/help.Po
 	-rm -f ./$(DEPDIR)/main.Po

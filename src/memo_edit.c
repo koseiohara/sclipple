@@ -1,4 +1,5 @@
 
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,38 +12,29 @@
 #include "edit_list.h"
 
 
-void get_command(char* editor, const int editor_options_num, char* const* editor_options, const int file_num, char* file[], char** command){
+void get_command(char* editor, const int file_num, char* file[], char** command){
     int i;
     int base_idx;
 
-    command[0] = editor;
-    #ifdef DEBUG
-    printf("command[0] = %s\n", command[0]);
-    #endif
+    command[0] = "sh";
+    command[1] = "-c";
+    command[2] = editor;
+    command[3] = "sh";
 
-    base_idx = 1;
-    for (i = 0; i < editor_options_num; i = i + 1){
-        command[i+base_idx] = editor_options[i];
-        #ifdef DEBUG
-        printf("command[%d] = %s: original=editor_options[%d]\n", i+base_idx, command[i+base_idx], i);
-        #endif
-    }
-
-    base_idx = 1 + editor_options_num;
+    base_idx = 4;
     for (i = 0; i < file_num; i = i + 1){
-        // #ifdef DEBUG
-        // printf("file[%d] = %s\n", i, file[i]);
-        // #endif
         command[i+base_idx] = file[i];
-        #ifdef DEBUG
-        printf("command[%d] = %s: original=file[%d]\n", i+base_idx, command[i+base_idx], i);
-        #endif
     }
 
-    command[1+editor_options_num+file_num] = NULL;
-    #ifdef DEBUG
-    printf("command[%d] set null manually\n", 1+editor_options_num+file_num);
-    #endif
+    command[4+file_num] = NULL;
+
+    // i = 0;
+    // while(command[i] != NULL){
+    //     printf("%s\n", command[i]);
+    //     i = i + 1;
+    // }
+    // printf("%s\n", command[i]);
+    // exit(1);
 }
 
 
@@ -51,12 +43,13 @@ void get_command(char* editor, const int editor_options_num, char* const* editor
 // return KEY_NOT_FOUND if keyword is not found in the list file
 // return PROCESS_ERROR if failed to make a child process
 // return 0 otherwise
-int memo_edit(const char* list, const char* dir, char* editor, const int editor_options_num, char* const* editor_options, const int flag_num, char** flags){
+int memo_edit(const char* list, const char* dir, char* editor, const int flag_num, char** flags){
     struct stat st;
     pid_t pid;
     FILE* fp;
     char** command = NULL;
     char** files;
+    char*  tmp_editor = NULL;
     int i;
     int j;
     int result;
@@ -82,6 +75,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
         return IO_ERROR;
     }
     for (i = 0; i < flag_num; i = i + 1){
+        rewind(fp);
         result = read_list_by_key(fp, flags[i], 2, &files[i]);
         if (result < 0){
             fprintf(stderr, "%s: list file is broken\n", PACKAGE_NAME);
@@ -117,7 +111,16 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             _exit(1);
         }
 
-        command = malloc((1+editor_options_num+flag_num+1) * sizeof(char*));   // $(editor) $(editor_option) $(file) NULL
+        result = asprintf(&tmp_editor, "%s \"$@\"", editor);
+        if (result < 0){
+            perror("asprintf");
+            for (j = 0; j < flag_num; j = j + 1){
+                free(files[j]);
+            }
+            free(files);
+            _exit(1);
+        }
+        command = malloc((4+flag_num+1) * sizeof(char*));   // sh -c "rc input" sh file1 file2 ... NULL
         if (command == NULL){
             perror("malloc");
             // free(command);
@@ -125,11 +128,12 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
                 free(files[j]);
             }
             free(files);
+            free(tmp_editor);
             _exit(1);
         }
-        get_command(editor, editor_options_num, editor_options, flag_num, files, command);
+        get_command(tmp_editor, flag_num, files, command);
 
-        execvp(editor, command);
+        execvp("sh", command);
 
         // if execvp() successed, the following processes never be executed
         perror(editor);
@@ -139,6 +143,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
             free(files[j]);
         }
         free(files);
+        free(tmp_editor);
         _exit(1);
     } else if (pid < 0){
         perror("fork");

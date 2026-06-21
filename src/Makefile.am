@@ -5,7 +5,6 @@ sclipple_SOURCES = \
     help.c help.h \
     strutils.c strutils.h \
     get_rc.c get_rc.h \
-    get_setting.c get_setting.h \
     datetime.c datetime.h \
     names.c names.h \
     edit_list.c edit_list.h \

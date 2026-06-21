@@ -10,7 +10,7 @@
 
 #include "globals.h"
 #include "help.h"
-#include "get_setting.h"
+// #include "get_setting.h"
 #include "git_run.h"
 #include "names.h"
 #include "strutils.h"
@@ -32,7 +32,6 @@ int main(int argc, char** argv){
     char*  subdir;
     char*  rc;
     char*  list;
-    int    nwords;
     int    result;
     int    i;
     time_t now;
@@ -259,17 +258,7 @@ int main(int argc, char** argv){
             return 1;
         }
     } else {
-        result = separate_words(config.editor, &nwords, &editor_commands);
-        if (result < 0){
-            free(editor_commands);
-            free_config(&config);
-            free(rc);
-            free(dir);
-            free(subdir);
-            free(list);
-            return 1;
-        }
-        result = memo_edit(list, subdir, editor_commands[0], nwords-1, &editor_commands[1], argc-1, &argv[1]);
+        result = memo_edit(list, subdir, config.editor, argc-1, &argv[1]);
         if (result < 0 || result == KEY_NOT_FOUND){
             free(editor_commands);
             free_config(&config);
