@@ -203,7 +203,7 @@ int main(int argc, char** argv){
             return 0;
         } else{
             result = mv(list, argv[2], argv[3]);
-            if ((result < 0 && result != INVALID_KEY_ERROR) || result == KEY_NOT_FOUND){
+            if ((result < 0 && result != INVALID_KEY_ERROR) || (result == KEY_NOT_FOUND || result == KEY_DUPLICATE)){
                 free_config(&config);
                 free(rc);
                 free(dir);
