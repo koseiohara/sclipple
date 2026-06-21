@@ -1,4 +1,5 @@
 
+#include "config.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -63,6 +64,8 @@ int make_dir(const char* dir){
 // return IO_ERROR if failed to open
 // return PATH_EXIST if path already exist
 // return ACCESS_FAILED_ERROR if failed to access path
+// return LIST_FORMAT_ERROR if list file is broken
+// return UNKNOWN_ERROR if program has bug
 // return 0 and make a file if file does not exist
 int make_file(const char* path, const int cond){
     struct stat st;

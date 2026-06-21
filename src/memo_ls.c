@@ -1,5 +1,7 @@
 
 
+#include "config.h"
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,7 +89,6 @@ int ls(const char* list, int flag_num, char** flag_list){
     int    result;
     int    i;
     int    j;
-    int    len;
 
     #ifdef DEBUG
     printf("<DEBUG> Number of Flags: %d\n", flag_num);
@@ -97,11 +98,11 @@ int ls(const char* list, int flag_num, char** flag_list){
     #endif
 
     result = path_status(list, &st);
-    if (result != 1){
+    if (result != PATH_EXIST){
         if (result == PATH_NOT_EXIST){
-            fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+            fprintf(stderr, "%s: No notes have been added\n", PROGRAM);
         } else if (result == ACCESS_FAILED_ERROR){
-            fprintf(stderr, "%s IO Error: Failed to access list file\n", PROGRAM);
+            fprintf(stderr, "%s: Failed to access list file\n", PROGRAM);
         }
         return IO_ERROR;
     } 

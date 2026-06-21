@@ -1,5 +1,6 @@
 
-#define _GNU_SOURCE
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <strings.h>
@@ -39,7 +40,7 @@ int main(int argc, char** argv){
     struct stat st;
 
 
-    if (get_env("HOME", &home) == -1){
+    if (get_env("HOME", &home) < 0){
         return 1;
     }
     #ifdef DEBUG

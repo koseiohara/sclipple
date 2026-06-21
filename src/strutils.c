@@ -70,8 +70,8 @@ char* trim(char* s){
 // }
 
 
-// return 1 if line is null or white space
-// return 0 if line is not a white space
+// return true  if line is null or white space
+// return false if line is not a white space
 int is_white_space(const char* line){
     int i;
 

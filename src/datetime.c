@@ -1,5 +1,6 @@
 
-#define _GNU_SOURCE
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -35,7 +36,7 @@ int get_datetime(struct tm* clock, char delim, char** datetime){
     }
 
     #ifdef DEBUG
-    printf("<DEBUG> DATETIME = %s\n", datetime);
+    printf("<DEBUG> DATETIME = %s\n", *datetime);
     #endif
 
     if (result < 0){

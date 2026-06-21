@@ -1,5 +1,6 @@
 
-#define  _GNU_SOURCE
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -16,8 +17,8 @@
 #define DELIM ","
 
 
-// if failed to open list file or failed to write info to list, return -1
-// otherwise, return 0
+// return IO_ERROR if failed to open or write to list file
+// return 0 otherwise
 int write_new_content_to_list(const char* list, const char* flag, const char* datetime, const char* file){
     FILE* fp;
 
@@ -95,6 +96,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
 
 // return false if flag does not exist
 // return true if flag exist
+// return IO_ERROR if failed to open list
 // return LIST_FORMAT_ERROR if list file is broken
 // return UNKNOWN_ERROR otherwise
 int flag_exist_check(const char* list, char* flag){
