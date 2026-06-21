@@ -29,11 +29,11 @@ int mv(const char* list, char* old_flag, char* new_flag){
     result = flag_validation(new_flag);
     if (result < 0){
         if (result == INPUT_ERROR){
-            fprintf(stderr, "%s: Keyword is empty\n", PROGRAM);
+            fprintf(stderr, "%s: Keyword is empty\n", PACKAGE_NAME);
         } else if (result == CHARACTER_NOT_ALLOWED_ERROR){
-            fprintf(stderr, "%s: Invalid character is included in '%s'\nKeywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, new_flag);
+            fprintf(stderr, "%s: Invalid character is included in '%s'\nKeywords can include alphabets, numbers, '_', and '-'\n", PACKAGE_NAME, new_flag);
         } else if (result == RESERVED_WORD_ERROR){
-            fprintf(stderr, "%s: '%s' is a reserved word\n", PROGRAM, new_flag);
+            fprintf(stderr, "%s: '%s' is a reserved word\n", PACKAGE_NAME, new_flag);
         }
         return INVALID_KEY_ERROR;
     }
@@ -42,9 +42,9 @@ int mv(const char* list, char* old_flag, char* new_flag){
     result = path_status(list, &st);
     if (result != PATH_EXIST){
         if (result == PATH_NOT_EXIST){
-            fprintf(stderr, "%s: No notes have been added\n", PROGRAM);
+            fprintf(stderr, "%s: No notes have been added\n", PACKAGE_NAME);
         } else if (result == ACCESS_FAILED_ERROR){
-            fprintf(stderr, "%s: Failed to access list file\n", PROGRAM);
+            fprintf(stderr, "%s: Failed to access list file\n", PACKAGE_NAME);
         }
         return IO_ERROR;
     } 
@@ -52,22 +52,22 @@ int mv(const char* list, char* old_flag, char* new_flag){
     result = get_filename_by_key(list, old_flag, &old_file);
     if (result < 0){
         if (result == IO_ERROR){
-            fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, list);
+            fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, list);
             free(old_file);
             return IO_ERROR;
         } else if (result == LIST_FORMAT_ERROR || result == INPUT_ERROR){
-            fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             free(old_file);
             return LIST_FORMAT_ERROR;
         } else if (result == MALLOC_ERROR){
             free(old_file);
             return MALLOC_ERROR;
         }
-        fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+        fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
         free(old_file);
         return UNKNOWN_ERROR;
     } else if (result == KEY_NOT_FOUND){
-        fprintf(stderr, "%s: No such key: '%s'\n", PROGRAM, old_flag);
+        fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, old_flag);
         free(old_file);
         return KEY_NOT_FOUND;
     }
@@ -77,23 +77,23 @@ int mv(const char* list, char* old_flag, char* new_flag){
     if (result < 0){
         free(old_file);
         if (result == IO_ERROR || result == RENAME_ERROR){
-            fprintf(stderr, "%s: Failed to update list file\n", PROGRAM);
+            fprintf(stderr, "%s: Failed to update list file\n", PACKAGE_NAME);
             return IO_ERROR;
         } else if (result == MALLOC_ERROR){
             return MALLOC_ERROR;
         } else if (result == LIST_FORMAT_ERROR || result == FILE_FORMAT_ERROR){
-            fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             return LIST_FORMAT_ERROR;
         } else{
-            fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+            fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             return UNKNOWN_ERROR;
         }
     } else if (result == KEY_NOT_FOUND){
-        fprintf(stderr, "%s: No such key: '%s'\n", PROGRAM, old_flag);
+        fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, old_flag);
         free(old_file);
         return KEY_NOT_FOUND;
     } else if (result == KEY_DUPLICATE){
-        fprintf(stderr, "%s: New keyword '%s' already exists\n", PROGRAM, new_flag);
+        fprintf(stderr, "%s: New keyword '%s' already exists\n", PACKAGE_NAME, new_flag);
         free(old_file);
         return KEY_DUPLICATE;
     }
@@ -102,7 +102,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
     result = mv_filename(old_file, new_flag, &new_file);
     if (result < 0){
         if (result == FILE_FORMAT_ERROR){
-            fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             free(new_file);
             free(old_file);
             return FILE_FORMAT_ERROR;
@@ -111,13 +111,13 @@ int mv(const char* list, char* old_flag, char* new_flag){
             free(old_file);
             return MALLOC_ERROR;
         } else{
-            fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+            fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             free(new_file);
             free(old_file);
             return UNKNOWN_ERROR;
         }
     }
-    printf("%s: RENAME %s -> %s\n", PROGRAM, old_flag, new_flag);
+    printf("%s: RENAME %s -> %s\n", PACKAGE_NAME, old_flag, new_flag);
 
     #ifdef DEBUG
     printf("<DEBUG> Rename %s to %s\n", old_file, new_file);

@@ -29,9 +29,9 @@ int rm(const char* list, char* flag){
     result = path_status(list, &st);
     if (result != PATH_EXIST){
         if (result == PATH_NOT_EXIST){
-            fprintf(stderr, "%s: No notes have been added\n", PROGRAM);
+            fprintf(stderr, "%s: No notes have been added\n", PACKAGE_NAME);
         } else if (result == ACCESS_FAILED_ERROR){
-            fprintf(stderr, "%s: Failed to access %s\n", PROGRAM, list);
+            fprintf(stderr, "%s: Failed to access %s\n", PACKAGE_NAME, list);
         }
         return IO_ERROR;
     } 
@@ -40,22 +40,22 @@ int rm(const char* list, char* flag){
     result = get_filename_by_key(list, flag, &filename);
     if (result < 0){
         if (result == IO_ERROR){
-            fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, list);
+            fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, list);
             free(filename);
             return IO_ERROR;
         } else if (result == LIST_FORMAT_ERROR || result == INPUT_ERROR){
-            fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             free(filename);
             return LIST_FORMAT_ERROR;
         } else if (result == MALLOC_ERROR){
             free(filename);
             return MALLOC_ERROR;
         }
-        fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+        fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
         free(filename);
         return UNKNOWN_ERROR;
     } else if (result == KEY_NOT_FOUND){
-        fprintf(stderr, "%s: No such key: '%s'\n", PROGRAM, flag);
+        fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag);
         free(filename);
         return KEY_NOT_FOUND;
     }
@@ -64,29 +64,29 @@ int rm(const char* list, char* flag){
     result = rm_key_in_list(list, flag);
     if (result < 0){
         if (result == IO_ERROR){
-            fprintf(stderr, "%s: Failed to update list file\n", PROGRAM);
+            fprintf(stderr, "%s: Failed to update list file\n", PACKAGE_NAME);
             free(filename);
             return IO_ERROR;
         } else if (result == MALLOC_ERROR){
             free(filename);
             return MALLOC_ERROR;
         } else if (result == LIST_FORMAT_ERROR){
-            fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             free(filename);
             return LIST_FORMAT_ERROR;
         } else{
-            fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+            fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             free(filename);
             return UNKNOWN_ERROR;
         }
     } else if (result == KEY_NOT_FOUND){
-        fprintf(stderr, "%s: No such key: '%s'\n", PROGRAM, flag);
+        fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag);
         free(filename);
         return KEY_NOT_FOUND;
     }
 
     if (unlink(filename) == 0){
-        printf("%s: removed '%s'\n", PROGRAM, flag);
+        printf("%s: removed '%s'\n", PACKAGE_NAME, flag);
         free(filename);
         return 0;
     }

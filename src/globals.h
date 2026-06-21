@@ -1,7 +1,17 @@
 
+#include "config.h"
+
+
 #define LS_LINE_LEN 100             // Length of the 1st line shown when ls run
 
-#define PROGRAM    "sclipple"
+#ifndef PACKAGE_NAME
+#define PACKAGE_NAME "sclipple"
+#endif
+
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION "unkown"
+#endif
+
 #define DIR        ".sclipple"
 // #define EXT        "txt"
 #define SUBDIR     "notes"

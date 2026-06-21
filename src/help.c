@@ -10,7 +10,7 @@ static void print_separator(void){
 void show_help_add(void){
     printf("ADD\n");
     printf("  Usage:\n");
-    printf("    %s add KEY [KEY ...]\n", PROGRAM);
+    printf("    %s add KEY [KEY ...]\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    Create one or more new notes. Each KEY becomes the note keyword.\n");
@@ -28,28 +28,28 @@ void show_help_add(void){
     printf("    - The created filename has the form KEY--YYYY-MM-DD-hh-mm-ss.EXT.\n");
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s add <KEY>\n", PROGRAM);
-    printf("    %s add <KEY1> <KEY2>\n", PROGRAM);
+    printf("    %s add <KEY>\n", PACKAGE_NAME);
+    printf("    %s add <KEY1> <KEY2>\n", PACKAGE_NAME);
 }
 
 void show_help_rm(void){
     printf("RM\n");
     printf("  Usage:\n");
-    printf("    %s rm KEY [KEY ...]\n", PROGRAM);
+    printf("    %s rm KEY [KEY ...]\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    Remove one or more notes. The note file is deleted and the matching\n");
     printf("    KEY entry is removed from the index.\n");
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s rm <KEY>\n", PROGRAM);
-    printf("    %s rm <KEY1> <KEY2>\n", PROGRAM);
+    printf("    %s rm <KEY>\n", PACKAGE_NAME);
+    printf("    %s rm <KEY1> <KEY2>\n", PACKAGE_NAME);
 }
 
 void show_help_mv(void){
     printf("MV\n");
     printf("  Usage:\n");
-    printf("    %s mv OLD_KEY NEW_KEY\n", PROGRAM);
+    printf("    %s mv OLD_KEY NEW_KEY\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    Rename a note keyword. The index entry is updated and the note file is\n");
@@ -61,13 +61,13 @@ void show_help_mv(void){
     printf("    - NEW_KEY must not already exist.\n");
     printf("\n");
     printf("  Example:\n");
-    printf("    %s mv <OLD_KEY> <NEW_KEY>\n", PROGRAM);
+    printf("    %s mv <OLD_KEY> <NEW_KEY>\n", PACKAGE_NAME);
 }
 
 void show_help_ls(void){
     printf("LS\n");
     printf("  Usage:\n");
-    printf("    %s ls [KEY ...]\n", PROGRAM);
+    printf("    %s ls [KEY ...]\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    List notes. Without KEY, all notes are listed. With one or more KEY\n");
@@ -78,14 +78,14 @@ void show_help_ls(void){
     printf("    the first non-empty line of the note. Long first lines are shortened.\n");
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s ls\n", PROGRAM);
-    printf("    %s ls <KEY1> <KEY2>\n", PROGRAM);
+    printf("    %s ls\n", PACKAGE_NAME);
+    printf("    %s ls <KEY1> <KEY2>\n", PACKAGE_NAME);
 }
 
 void show_help_search(void){
     printf("SEARCH\n");
     printf("  Usage:\n");
-    printf("    %s search PATTERN [KEY ...]\n", PROGRAM);
+    printf("    %s search PATTERN [KEY ...]\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    Search note contents using a POSIX extended regular expression. The\n");
@@ -98,14 +98,14 @@ void show_help_search(void){
     printf("    numbers, and matches are colorized.\n");
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s search <PATTERN>\n", PROGRAM);
-    printf("    %s search '<PATTERN1>|<PATTERN2>' <KEY>\n", PROGRAM);
+    printf("    %s search <PATTERN>\n", PACKAGE_NAME);
+    printf("    %s search '<PATTERN1>|<PATTERN2>' <KEY>\n", PACKAGE_NAME);
 }
 
 void show_help_show(void){
     printf("SHOW\n");
     printf("  Usage:\n");
-    printf("    %s show [KEY ...]\n", PROGRAM);
+    printf("    %s show [KEY ...]\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    Print full note contents to stdout. Without KEY, all notes are shown.\n");
@@ -117,14 +117,14 @@ void show_help_show(void){
     printf("    header is colorized.\n");
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s show\n", PROGRAM);
-    printf("    %s show <KEY1> <KEY2>\n", PROGRAM);
+    printf("    %s show\n", PACKAGE_NAME);
+    printf("    %s show <KEY1> <KEY2>\n", PACKAGE_NAME);
 }
 
 void show_help_edit(void){
     printf("EDIT\n");
     printf("  Usage:\n");
-    printf("    %s KEY [KEY ...]\n", PROGRAM);
+    printf("    %s KEY [KEY ...]\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    Edit one or more existing notes. Any first argument that is not a built-in\n");
@@ -136,14 +136,14 @@ void show_help_edit(void){
     printf("    'editor' setting in $HOME/%s.\n", RCNAME);
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s <KEY>\n", PROGRAM);
-    printf("    %s <KEY1> <KEY2>\n", PROGRAM);
+    printf("    %s <KEY>\n", PACKAGE_NAME);
+    printf("    %s <KEY1> <KEY2>\n", PACKAGE_NAME);
 }
 
 void show_help_git(void){
     printf("GIT\n");
     printf("  Usage:\n");
-    printf("    %s git GIT_ARGUMENTS...\n", PROGRAM);
+    printf("    %s git GIT_ARGUMENTS...\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    Run git inside the note storage directory $HOME/%s. The word 'git' is\n", DIR);
@@ -151,10 +151,10 @@ void show_help_git(void){
     printf("    it.\n");
     printf("\n");
     printf("  Examples:\n");
-    printf("    %s git status\n", PROGRAM);
-    printf("    %s git init\n", PROGRAM);
-    printf("    %s git add .\n", PROGRAM);
-    printf("    %s git commit -m 'update notes'\n", PROGRAM);
+    printf("    %s git status\n", PACKAGE_NAME);
+    printf("    %s git init\n", PACKAGE_NAME);
+    printf("    %s git add .\n", PACKAGE_NAME);
+    printf("    %s git commit -m 'update notes'\n", PACKAGE_NAME);
 }
 
 void show_help_config(void){
@@ -181,18 +181,18 @@ void show_help_config(void){
 void show_help_all(void){
     printf("\n");
     printf("NAME\n");
-    printf("  %s - small command-line memo manager using keyword-based notes\n", PROGRAM);
+    printf("  %s - small command-line memo manager using keyword-based notes\n", PACKAGE_NAME);
     printf("\n");
     printf("SYNOPSIS\n");
-    printf("  %s add KEY [KEY ...]\n", PROGRAM);
-    printf("  %s rm KEY [KEY ...]\n", PROGRAM);
-    printf("  %s mv OLD_KEY NEW_KEY\n", PROGRAM);
-    printf("  %s ls [KEY ...]\n", PROGRAM);
-    printf("  %s search PATTERN [KEY ...]\n", PROGRAM);
-    printf("  %s show [KEY ...]\n", PROGRAM);
-    printf("  %s git GIT_ARGUMENTS...\n", PROGRAM);
-    printf("  %s KEY [KEY ...]\n", PROGRAM);
-    printf("  %s help [COMMAND|config|all]\n", PROGRAM);
+    printf("  %s add KEY [KEY ...]\n", PACKAGE_NAME);
+    printf("  %s rm KEY [KEY ...]\n", PACKAGE_NAME);
+    printf("  %s mv OLD_KEY NEW_KEY\n", PACKAGE_NAME);
+    printf("  %s ls [KEY ...]\n", PACKAGE_NAME);
+    printf("  %s search PATTERN [KEY ...]\n", PACKAGE_NAME);
+    printf("  %s show [KEY ...]\n", PACKAGE_NAME);
+    printf("  %s git GIT_ARGUMENTS...\n", PACKAGE_NAME);
+    printf("  %s KEY [KEY ...]\n", PACKAGE_NAME);
+    printf("  %s help [COMMAND|config|all]\n", PACKAGE_NAME);
     printf("\n");
     printf("STORAGE\n");
     printf("  Directory: $HOME/%s\n", DIR);
@@ -201,7 +201,7 @@ void show_help_all(void){
     printf("  Config:    $HOME/%s\n", RCNAME);
     printf("\n");
     printf("COMMAND HELP\n");
-    printf("  Use '%s help COMMAND' to show only one help section.\n", PROGRAM);
+    printf("  Use '%s help COMMAND' to show only one help section.\n", PACKAGE_NAME);
     printf("\n");
     show_help_add();
     print_separator();
@@ -244,7 +244,7 @@ void show_help_command(const char* command){
     } else if (strcmp(command, "config") == 0 || strcmp(command, "rc") == 0){
         show_help_config();
     } else{
-        fprintf(stderr, "%s Error: Unknown help topic: %s\n", PROGRAM, command);
+        fprintf(stderr, "%s Error: Unknown help topic: %s\n", PACKAGE_NAME, command);
         fprintf(stderr, "Available topics: add, rm, mv, ls, search, show, edit, git, config, all\n");
     }
 }

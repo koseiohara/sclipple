@@ -136,9 +136,9 @@ int search(char* list, char* word, int flag_num, char** flag_list){
     result = path_status(list, &st);
     if (result != PATH_EXIST){
         if (result == PATH_NOT_EXIST){
-            fprintf(stderr, "%s: No notes have been added\n", PROGRAM);
+            fprintf(stderr, "%s: No notes have been added\n", PACKAGE_NAME);
         } else if (result == ACCESS_FAILED_ERROR){
-            fprintf(stderr, "%s: Failed to access list file\n", PROGRAM);
+            fprintf(stderr, "%s: Failed to access list file\n", PACKAGE_NAME);
         }
         return IO_ERROR;
     } 
@@ -171,7 +171,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
         regerror(errcode, &regex, errbuf, sizeof(errbuf));
         // regfree(&regex);
         fclose(fp);
-        fprintf(stderr, "%s: regcomp failed\n", PROGRAM);
+        fprintf(stderr, "%s: regcomp failed\n", PACKAGE_NAME);
         return REGEX_ERROR;
     }
 
@@ -194,10 +194,10 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             free(notename);
             regfree(&regex);
             if (result == LIST_FORMAT_ERROR){
-                fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+                fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
                 return LIST_FORMAT_ERROR;
             }
-            fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+            fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             return UNKNOWN_ERROR;
         }
 
@@ -221,10 +221,10 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 free(notename);
                 regfree(&regex);
                 if (result == IO_ERROR){
-                    fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, notename);
+                    fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename);
                     return IO_ERROR;
                 }
-                fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+                fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
                 return UNKNOWN_ERROR;
             }
         }
@@ -240,7 +240,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
     if (flag_num > 0){
         for (j = 0; j <  flag_num; j = j + 1){
             if (notename_list[j][0] == '\0'){
-                fprintf(stderr, "%s: No such note: '%s'\n", PROGRAM, flag_list[j]);
+                fprintf(stderr, "%s: No such note: '%s'\n", PACKAGE_NAME, flag_list[j]);
                 fclose(fp);
                 for (j = 0; j < flag_num; j = j + 1){
                     free(notename_list[j]);
@@ -260,10 +260,10 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 free(notename_list);
                 regfree(&regex);
                 if (result == IO_ERROR){
-                    fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, notename);
+                    fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename);
                     return IO_ERROR;
                 }
-                fprintf(stderr, "%s: Unknown error\n", PROGRAM);
+                fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
                 return UNKNOWN_ERROR;
             }
         }

@@ -123,6 +123,14 @@ int main(int argc, char** argv){
         free(subdir);
         free(list);
         return 0;
+    } else if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0){
+        printf("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
+        free_config(&config);
+        free(rc);
+        free(dir);
+        free(subdir);
+        free(list);
+        return 0;
     } else if (strcmp(argv[1], "git") == 0){
         result = git_run(dir, &argv[1]);
         free_config(&config);

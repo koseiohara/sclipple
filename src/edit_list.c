@@ -59,7 +59,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
 
         flag = strtok(line, DELIM);
         if (flag == NULL){
-            fprintf(stderr, "%s: List file is broken\n", PROGRAM);
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             free(line);
             return LIST_FORMAT_ERROR;
         }
@@ -75,7 +75,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
         for (i = 1; i <= col; i = i + 1){
             flag = strtok(NULL, DELIM);
             if (flag == NULL){
-                fprintf(stderr, "%s: Invalid col. col exceeds the number of actual columns\n", PROGRAM);
+                fprintf(stderr, "%s: Invalid col. col exceeds the number of actual columns\n", PACKAGE_NAME);
                 free(line);
                 return INPUT_ERROR;
             }
@@ -295,7 +295,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         #endif
 
         if (flag == NULL || datetime == NULL || notename == NULL){
-            fprintf(stderr, "%s: Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", PROGRAM, flag, datetime, notename);
+            fprintf(stderr, "%s: Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", PACKAGE_NAME, flag, datetime, notename);
             fclose(fpr);
             fclose(fpw);
             free(line);
@@ -486,7 +486,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         #endif
 
         if (flag == NULL || datetime == NULL || notename == NULL){
-            fprintf(stderr, "%s: Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", PROGRAM, flag, datetime, notename);
+            fprintf(stderr, "%s: Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", PACKAGE_NAME, flag, datetime, notename);
             fclose(fpr);
             fclose(fpw);
             unlink(tmpfile);
