@@ -177,16 +177,16 @@ int show(char* list, int flag_num, char** flag_list){
             if (result != 0){
                 fclose(fp);
                 if (result == IO_ERROR){
-                    for (j = 0; j < flag_num; j = j + 1){
-                        free(notename_list[j]);
+                    // fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename_list[j]);
+                    for (i = 0; i < flag_num; i = i + 1){
+                        free(notename_list[i]);
                     }
                     free(notename_list);
-                    fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename_list[j]);
                     return IO_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-                for (j = 0; j < flag_num; j = j + 1){
-                    free(notename_list[j]);
+                for (i = 0; i < flag_num; i = i + 1){
+                    free(notename_list[i]);
                 }
                 free(notename_list);
                 return UNKNOWN_ERROR;

@@ -221,7 +221,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 free(notename);
                 regfree(&regex);
                 if (result == IO_ERROR){
-                    fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename);
+                    // fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename);
                     return IO_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
@@ -242,8 +242,8 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             if (notename_list[j][0] == '\0'){
                 fprintf(stderr, "%s: No such note: '%s'\n", PACKAGE_NAME, flag_list[j]);
                 fclose(fp);
-                for (j = 0; j < flag_num; j = j + 1){
-                    free(notename_list[j]);
+                for (i = 0; i < flag_num; i = i + 1){
+                    free(notename_list[i]);
                 }
                 free(notename_list);
                 regfree(&regex);
@@ -256,16 +256,16 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 fclose(fp);
                 regfree(&regex);
                 if (result == IO_ERROR){
-                    fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename_list[j]);
-                    for (j = 0; j < flag_num; j = j + 1){
-                        free(notename_list[j]);
+                    // fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename_list[j]);
+                    for (i = 0; i < flag_num; i = i + 1){
+                        free(notename_list[i]);
                     }
                     free(notename_list);
                     return IO_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-                for (j = 0; j < flag_num; j = j + 1){
-                    free(notename_list[j]);
+                for (i = 0; i < flag_num; i = i + 1){
+                    free(notename_list[i]);
                 }
                 free(notename_list);
                 return UNKNOWN_ERROR;
