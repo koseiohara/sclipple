@@ -6,6 +6,7 @@
 typedef struct{
     char* editor;
     char* ext;
+    char* dir;
 } Config;
 
 

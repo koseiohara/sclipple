@@ -13,6 +13,7 @@
 void init_config(Config* config){
     config->editor = strdup("vim -p");
     config->ext    = strdup("txt");
+    config->dir    = strdup("~/.sclipple");
     // snprintf(config->editor,
     //          sizeof(config->editor),
     //          "%s",
@@ -30,6 +31,7 @@ void init_config(Config* config){
 void free_config(Config* config){
     free(config->editor);
     free(config->ext);
+    free(config->dir);
 }
 
 
@@ -41,6 +43,10 @@ void init_entry(Config* config, RcEntry* entry){
     entry[1].key   = "extension";
     entry[1].value = &config->ext;
     entry[1].len   = strlen(config->ext);
+
+    entry[2].key   = "directory";
+    entry[2].value = &config->dir;
+    entry[2].len   = strlen(config->dir);
 }
 
 
