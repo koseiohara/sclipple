@@ -12,9 +12,9 @@
 // return IO_ERROR if failed to open list file
 // return LIST_FORMAT_ERROR if list file is broken
 // return MALLOC_ERROR if strdup failed
-// return KEY_NOT_FOUND if flag does not exist
 // return UNKNOWN_ERROR if program include bugs
 // return UNLINK_ERROR if unlink failed
+// return KEY_NOT_FOUND if flag does not exist
 // return 0 otherwise
 int rm(const char* list, char* flag){
     struct stat st;

@@ -16,6 +16,7 @@ int separate_words(char* s, int* n, char*** output){
     int curr_space;
 
     if (is_white_space(s) == true){
+        fprintf(stderr, "%s: Editor command is empty\n", PROGRAM);
         return INPUT_ERROR;
     }
 

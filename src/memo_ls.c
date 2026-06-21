@@ -228,7 +228,7 @@ int ls(const char* list, int flag_num, char** flag_list){
             printf("Note %d: %s\n", i, flag_list[i]);
             #endif
             if (lines[i][0] == '\0'){
-                fprintf(stderr, "%s Error: Note '%s' was not found\n", PROGRAM, flag_list[i]);
+                fprintf(stderr, "%s: Note '%s' was not found\n", PROGRAM, flag_list[i]);
                 for (j = 0; j < flag_num; j = j + 1){
                     free(lines[j]);
                 }
