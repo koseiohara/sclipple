@@ -178,10 +178,7 @@ int main(int argc, char** argv){
         } else{
             for (i = 2; i < argc; i = i + 1){
                 result = rm(list, argv[i]);
-                if (result >= 0){
-                    continue;
-                }
-                if (result < 0){
+                if (result < 0 || result == KEY_NOT_FOUND){
                     free_config(&config);
                     free(rc);
                     free(dir);
