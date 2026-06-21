@@ -10,7 +10,6 @@
 
 #include "globals.h"
 #include "help.h"
-// #include "get_setting.h"
 #include "git_run.h"
 #include "names.h"
 #include "strutils.h"
