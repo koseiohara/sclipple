@@ -89,7 +89,7 @@ int main(int argc, char** argv){
 
 
     if (argc == 1){
-        show_help_all();
+        show_help_all(config.dir, subdir, list, rc);
         free_config(&config);
         free(rc);
         free(subdir);
@@ -97,10 +97,10 @@ int main(int argc, char** argv){
         return 0;
     } else if (strcmp(argv[1], "help") == 0 || strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0){
         if (argc == 2){
-            show_help_all();
+            show_help_all(config.dir, subdir, list, rc);
         } else{
             for (i = 2; i < argc; i = i + 1){
-                show_help_command(argv[i]);
+                show_help_command(argv[i], config.dir, subdir, list, rc);
                 if (i + 1 < argc){
                     printf("\n");
                 }
@@ -136,7 +136,7 @@ int main(int argc, char** argv){
 
     if (strcmp(argv[1], "add") == 0){
         if (argc == 2){
-            show_help_add();
+            show_help_add(subdir, list);
             free_config(&config);
             free(rc);
             free(subdir);

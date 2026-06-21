@@ -7,7 +7,7 @@ static void print_separator(void){
     printf("\n");
 }
 
-void show_help_add(void){
+void show_help_add(char* subdir, char* list){
     printf("ADD\n");
     printf("  Usage:\n");
     printf("    %s add KEY [KEY ...]\n", PACKAGE_NAME);
@@ -23,8 +23,8 @@ void show_help_add(void){
     printf("    - KEY must not already exist.\n");
     printf("\n");
     printf("  Files:\n");
-    printf("    - Notes are stored under $HOME/%s/%s.\n", DIR, SUBDIR);
-    printf("    - The note index is stored at $HOME/%s/%s.\n", DIR, LISTNAME);
+    printf("    - Notes are stored under %s.\n", subdir);
+    printf("    - The note index is stored at %s.\n", list);
     printf("    - The created filename has the form KEY--YYYY-MM-DD-hh-mm-ss.EXT.\n");
     printf("\n");
     printf("  Examples:\n");
@@ -121,7 +121,7 @@ void show_help_show(void){
     printf("    %s show <KEY1> <KEY2>\n", PACKAGE_NAME);
 }
 
-void show_help_edit(void){
+void show_help_edit(char* rc){
     printf("EDIT\n");
     printf("  Usage:\n");
     printf("    %s KEY [KEY ...]\n", PACKAGE_NAME);
@@ -133,7 +133,7 @@ void show_help_edit(void){
     printf("\n");
     printf("  Editor:\n");
     printf("    The default editor command is 'vim -p'. It can be changed with the\n");
-    printf("    'editor' setting in $HOME/%s.\n", RCNAME);
+    printf("    'editor' setting in %s.\n", rc);
     printf("\n");
     printf("  Examples:\n");
     printf("    %s <KEY>\n", PACKAGE_NAME);
@@ -146,9 +146,9 @@ void show_help_git(void){
     printf("    %s git GIT_ARGUMENTS...\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
-    printf("    Run git inside the note storage directory $HOME/%s. The word 'git' is\n", DIR);
-    printf("    passed through as argv[0], so ordinary git subcommands can be used after\n");
-    printf("    it.\n");
+    printf("    Run git inside the configured note storage directory.\n");
+    printf("    Arguments are passed directly to git, so ordinary git subcommands can\n");
+    printf("    be used.\n");
     printf("\n");
     printf("  Examples:\n");
     printf("    %s git status\n", PACKAGE_NAME);
@@ -157,10 +157,10 @@ void show_help_git(void){
     printf("    %s git commit -m 'update notes'\n", PACKAGE_NAME);
 }
 
-void show_help_config(void){
+void show_help_config(char* rc){
     printf("CONFIGURATION\n");
     printf("  File:\n");
-    printf("    $HOME/%s\n", RCNAME);
+    printf("    %s\n", rc);
     printf("\n");
     printf("  Syntax:\n");
     printf("    key = value\n");
@@ -168,20 +168,25 @@ void show_help_config(void){
     printf("  Supported keys:\n");
     printf("    editor     Editor command used by the edit command. Default: vim -p\n");
     printf("    extension  File extension for newly created notes. Default: txt\n");
+    printf("    directory  Directory used to store sclipple data. Default: $HOME/%s\n", DIR);
     printf("\n");
     printf("  Notes:\n");
-    printf("    - Lines may include comments beginning with '#'.\n");
+    printf("    - Lines beginning with '#' are treated as comments.\n");
     printf("    - Surrounding single or double quotes around values are removed.\n");
     printf("\n");
     printf("  Example:\n");
     printf("    editor = 'nvim -p'\n");
     printf("    extension = md\n");
+    printf("    extension = ~/notes\n");
 }
 
-void show_help_all(void){
+void show_help_all(char* dir, char* subdir, char* list, char* rc){
     printf("\n");
     printf("NAME\n");
     printf("  %s - small command-line memo manager using keyword-based notes\n", PACKAGE_NAME);
+    printf("\n");
+    printf("VERSION\n");
+    printf("  %s\n", PACKAGE_VERSION);
     printf("\n");
     printf("SYNOPSIS\n");
     printf("  %s add KEY [KEY ...]\n", PACKAGE_NAME);
@@ -195,15 +200,15 @@ void show_help_all(void){
     printf("  %s help [COMMAND|config|all]\n", PACKAGE_NAME);
     printf("\n");
     printf("STORAGE\n");
-    printf("  Directory: $HOME/%s\n", DIR);
-    printf("  Notes:     $HOME/%s/%s\n", DIR, SUBDIR);
-    printf("  Index:     $HOME/%s/%s\n", DIR, LISTNAME);
-    printf("  Config:    $HOME/%s\n", RCNAME);
+    printf("  Directory: %s\n", dir);
+    printf("  Notes:     %s\n", subdir);
+    printf("  Index:     %s\n", list);
+    printf("  Config:    %s\n", rc);
     printf("\n");
     printf("COMMAND HELP\n");
     printf("  Use '%s help COMMAND' to show only one help section.\n", PACKAGE_NAME);
     printf("\n");
-    show_help_add();
+    show_help_add(subdir, list);
     print_separator();
     show_help_rm();
     print_separator();
@@ -215,18 +220,18 @@ void show_help_all(void){
     print_separator();
     show_help_show();
     print_separator();
-    show_help_edit();
+    show_help_edit(rc);
     print_separator();
     show_help_git();
     print_separator();
-    show_help_config();
+    show_help_config(rc);
 }
 
-void show_help_command(const char* command){
+void show_help_command(const char* command, char* dir, char* subdir, char* list, char* rc){
     if (command == NULL || strcmp(command, "all") == 0){
-        show_help_all();
+        show_help_all(dir, subdir, list, rc);
     } else if (strcmp(command, "add") == 0){
-        show_help_add();
+        show_help_add(subdir, list);
     } else if (strcmp(command, "rm") == 0){
         show_help_rm();
     } else if (strcmp(command, "mv") == 0){
@@ -238,17 +243,17 @@ void show_help_command(const char* command){
     } else if (strcmp(command, "show") == 0){
         show_help_show();
     } else if (strcmp(command, "edit") == 0){
-        show_help_edit();
+        show_help_edit(rc);
     } else if (strcmp(command, "git") == 0){
         show_help_git();
     } else if (strcmp(command, "config") == 0 || strcmp(command, "rc") == 0){
-        show_help_config();
+        show_help_config(rc);
     } else{
         fprintf(stderr, "%s Error: Unknown help topic: %s\n", PACKAGE_NAME, command);
         fprintf(stderr, "Available topics: add, rm, mv, ls, search, show, edit, git, config, all\n");
     }
 }
 
-void show_help(void){
-    show_help_all();
+void show_help(char* dir, char* subdir, char* list, char* rc){
+    show_help_all(dir, subdir, list, rc);
 }
