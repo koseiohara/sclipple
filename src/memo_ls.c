@@ -108,7 +108,7 @@ int ls(const char* list, int flag_num, char** flag_list){
     } 
 
     if (flag_num < 0){
-        fprintf(stderr, "%s Error: Invalid number of flags: %d\n", PROGRAM, flag_num);
+        fprintf(stderr, "%s: Invalid number of flags: %d\n", PROGRAM, flag_num);
         return INPUT_ERROR;
     } else if (flag_num > 0){
         lines = malloc((size_t)flag_num * sizeof(char*));
@@ -143,7 +143,7 @@ int ls(const char* list, int flag_num, char** flag_list){
         } else if (result == LIST_WHITE_SPACE){
             continue;
         } else if (result == LIST_FORMAT_ERROR){
-            fprintf(stderr, "%s Error: Invalid line is found in list file\nlist file is broken in line %d\n", PROGRAM, i);
+            fprintf(stderr, "%s: Invalid line is found in list file\nlist file is broken in line %d\n", PROGRAM, i);
             for (j = 0; j < flag_num; j = j + 1){
                 free(lines[j]);
             }
@@ -229,7 +229,7 @@ int ls(const char* list, int flag_num, char** flag_list){
             printf("Note %d: %s\n", i, flag_list[i]);
             #endif
             if (lines[i][0] == '\0'){
-                fprintf(stderr, "%s: Note '%s' was not found\n", PROGRAM, flag_list[i]);
+                fprintf(stderr, "%s: No such key: '%s'\n", PROGRAM, flag_list[i]);
                 for (j = 0; j < flag_num; j = j + 1){
                     free(lines[j]);
                 }

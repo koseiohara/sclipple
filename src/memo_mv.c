@@ -107,7 +107,6 @@ int mv(const char* list, char* old_flag, char* new_flag){
             free(old_file);
             return FILE_FORMAT_ERROR;
         } else if (result == MALLOC_ERROR){
-            fprintf(stderr, "%s: MALLOC ERROR\n", PROGRAM);
             free(new_file);
             free(old_file);
             return MALLOC_ERROR;

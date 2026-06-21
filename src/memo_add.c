@@ -84,7 +84,7 @@ int make_file(const char* path, const int cond){
     } else if (result == PATH_EXIST){
         return PATH_EXIST;
     } else{
-        fprintf(stderr, "%s IO Error: Failed to open %s\n", PROGRAM, path);
+        fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, path);
         return ACCESS_FAILED_ERROR;
     }
 }
@@ -115,11 +115,11 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     result = flag_validation(flag);
     if (result < 0){
         if (result == INPUT_ERROR){
-            fprintf(stderr, "%s Error: Keyword is empty\n", PROGRAM);
+            fprintf(stderr, "%s: Keyword is empty\n", PROGRAM);
         } else if (result == CHARACTER_NOT_ALLOWED_ERROR){
-            fprintf(stderr, "%s Error: Invalid character is included in '%s'. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, flag);
+            fprintf(stderr, "%s: Invalid character is included in '%s'. Keywords can include alphabets, numbers, '_', and '-'\n", PROGRAM, flag);
         } else if (result == RESERVED_WORD_ERROR){
-            fprintf(stderr, "%s Error: '%s' is a reserved word.\n", PROGRAM, flag);
+            fprintf(stderr, "%s: '%s' is a reserved word.\n", PROGRAM, flag);
         }
         return INVALID_KEY_ERROR;
     }
@@ -127,9 +127,9 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     result = make_dir(dir);
     if (result < 0){
         if (result == IS_NOT_DIRECTORY_ERROR){
-            fprintf(stderr, "%s Error: '%s' exists but is not a directory\n", PROGRAM, dir);
+            fprintf(stderr, "%s: '%s' exists but is not a directory\n", PROGRAM, dir);
         } else if (result == MKDIR_ERROR){
-            fprintf(stderr, "%s Error: Failed to make directory '%s'\n", PROGRAM, dir);
+            fprintf(stderr, "%s: Failed to make directory '%s'\n", PROGRAM, dir);
         }
         return IO_ERROR;
     }
@@ -137,9 +137,9 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     result = make_dir(note_stock);
     if (result < 0){
         if (result == IS_NOT_DIRECTORY_ERROR){
-            fprintf(stderr, "%s Error: '%s' exists but is not a directory\n", PROGRAM, dir);
+            fprintf(stderr, "%s: '%s' exists but is not a directory\n", PROGRAM, dir);
         } else if (result == MKDIR_ERROR){
-            fprintf(stderr, "%s Error: Failed to make directory '%s'\n", PROGRAM, dir);
+            fprintf(stderr, "%s: Failed to make directory '%s'\n", PROGRAM, dir);
         }
         return IO_ERROR;
     }
@@ -200,9 +200,9 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     result = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
     if (result < 0){
         if (result == IO_ERROR){
-            fprintf(stderr, "%s Error: Failed to open %s\n", PROGRAM, path);
+            fprintf(stderr, "%s: Failed to open %s\n", PROGRAM, path);
         } else if (result == ACCESS_FAILED_ERROR){
-            fprintf(stderr, "%s Error: Failed to access to %s\n", PROGRAM, path);
+            fprintf(stderr, "%s: Failed to access to %s\n", PROGRAM, path);
         } else{
             fprintf(stderr, "%s: Undefined Error\n", PROGRAM);
         }
@@ -211,7 +211,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         free(path);
         return IO_ERROR;
     } else if (result == PATH_EXIST){
-        fprintf(stderr, "%s Error: %s already exists\n", PROGRAM, path);
+        fprintf(stderr, "%s: %s already exists\n", PROGRAM, path);
         free(datetime);
         free(file);
         free(path);

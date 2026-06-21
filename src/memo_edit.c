@@ -64,9 +64,9 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
     result = path_status(list, &st);
     if (result != PATH_EXIST){
         if (result == PATH_NOT_EXIST){
-            fprintf(stderr, "%s Error: No notes have been added\n", PROGRAM);
+            fprintf(stderr, "%s: No notes have been added\n", PROGRAM);
         } else if (result == ACCESS_FAILED_ERROR){
-            fprintf(stderr, "%s Error: Failed to access list file\n", PROGRAM);
+            fprintf(stderr, "%s: Failed to access list file\n", PROGRAM);
         }
         return IO_ERROR;
     } 
@@ -83,14 +83,14 @@ int memo_edit(const char* list, const char* dir, char* editor, const int editor_
     for (i = 0; i < flag_num; i = i + 1){
         result = read_list_by_key(fp, flags[i], 2, &files[i]);
         if (result < 0){
-            fprintf(stderr, "%s Error: list file is broken\n", PROGRAM);
+            fprintf(stderr, "%s: list file is broken\n", PROGRAM);
             for (j = 0; j < flag_num; j = j + 1){
                 free(files[j]);
             }
             fclose(fp);
             return LIST_FORMAT_ERROR;
         } else if (result == KEY_NOT_FOUND){
-            fprintf(stderr, "%s Error: %s does not exist\nRun '%s add %s'\n", PROGRAM, flags[i], PROGRAM, flags[i]);
+            fprintf(stderr, "%s: %s does not exist\nRun '%s add %s'\n", PROGRAM, flags[i], PROGRAM, flags[i]);
             for (j = 0; j < flag_num; j = j + 1){
                 free(files[j]);
             }

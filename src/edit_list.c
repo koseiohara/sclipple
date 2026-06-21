@@ -59,7 +59,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
 
         flag = strtok(line, DELIM);
         if (flag == NULL){
-            fprintf(stderr, "%s Error: Invalid list file. list file is broken\n", PROGRAM);
+            fprintf(stderr, "%s: List file is broken\n", PROGRAM);
             free(line);
             return LIST_FORMAT_ERROR;
         }
@@ -75,7 +75,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
         for (i = 1; i <= col; i = i + 1){
             flag = strtok(NULL, DELIM);
             if (flag == NULL){
-                fprintf(stderr, "%s Error: Invalid col. col exceeds the number of actual columns\n", PROGRAM);
+                fprintf(stderr, "%s: Invalid col. col exceeds the number of actual columns\n", PROGRAM);
                 free(line);
                 return INPUT_ERROR;
             }
