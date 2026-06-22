@@ -177,7 +177,7 @@ void show_help_config(char* rc){
     printf("  Example:\n");
     printf("    editor = 'nvim -p'\n");
     printf("    extension = md\n");
-    printf("    extension = ~/notes\n");
+    printf("    directory = ~/notes\n");
 }
 
 void show_help_all(char* dir, char* subdir, char* list, char* rc){
