@@ -26,6 +26,17 @@ The note can later be opened from any directory.
 
 ---
 
+## Example
+
+A typical workflow:
+
+1. Create a note with a short key.
+2. Edit it using your favorite editor.
+3. List notes and inspect their contents.
+4. Search across all notes with regular expressions.
+
+![Example workflow](figs/example.png)
+
 ## Installation
 
 ```sh
