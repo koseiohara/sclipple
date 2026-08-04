@@ -196,10 +196,10 @@ int parse_directory(const char* input_dir, char** output_dir){
 
 // return MALLOC_ERROR if MALLOC failed
 // return 0 otherwise
-int get_filename(const char* flag, char* datetime, char* ext, char** output){
+int get_filename(const char* flag, char* ext, char** output){
     int result;
 
-    result = asprintf(output,  "%s--%s.%s", flag, datetime, ext);
+    result = asprintf(output,  "%s.%s", flag, ext);
     if (result < 0){
         perror("asprintf");
         return MALLOC_ERROR;
@@ -251,7 +251,7 @@ int mv_filename(char* old_file, const char* new_flag, char** output){
     #endif
 
     last = NULL;
-    while ((cp = strstr(cp, "--")) != NULL){
+    while ((cp = strstr(cp, ".")) != NULL){
         last = cp;
         cp = cp + 2;
         #ifdef DEBUG
