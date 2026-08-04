@@ -148,7 +148,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     if (result == MALLOC_ERROR){
         return MALLOC_ERROR;
     }
-    result = get_filename(flag, datetime, ext, &file);
+    result = get_filename(flag, ext, &file);
     if (result == MALLOC_ERROR){
         return MALLOC_ERROR;
     }
