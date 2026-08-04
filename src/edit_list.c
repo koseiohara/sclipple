@@ -295,7 +295,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         #endif
 
         if (flag == NULL || datetime == NULL || notename == NULL){
-            fprintf(stderr, "%s: Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", PACKAGE_NAME, flag, datetime, notename);
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             fclose(fpr);
             fclose(fpw);
             free(line);
@@ -486,7 +486,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         #endif
 
         if (flag == NULL || datetime == NULL || notename == NULL){
-            fprintf(stderr, "%s: Invalid line format.\nFLAG = %s\nDATETIME = %s\nNOTENAME = %s\n", PACKAGE_NAME, flag, datetime, notename);
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             fclose(fpr);
             fclose(fpw);
             unlink(tmpfile);
