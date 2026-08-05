@@ -553,13 +553,13 @@ cleanup:
 // return KEY_NOT_FOUND if target_flag does not exist
 // return 0 otherwise
 int rm_key_in_list(const char* list, const char* target_flag){
-    FILE* fpr      = NULL;
-    FILE* fpw      = NULL;
-    char* line     = NULL;
-    char* tmpfile  = NULL;
-    char* flag     = NULL;
-    char* datetime = NULL;
-    char* notename = NULL;
+    FILE* fpr     = NULL;
+    FILE* fpw     = NULL;
+    char* line    = NULL;
+    char* tmpfile = NULL;
+    char* flag;
+    char* datetime;
+    char* notename;
     int   fd;
     int   removed;
     int   result;
@@ -735,9 +735,6 @@ cleanup:
     XFCLOSE(fpw);
     free(line);
     free(tmpfile);
-    free(flag);
-    free(datetime);
-    free(notename);
 
     return ret;
 }

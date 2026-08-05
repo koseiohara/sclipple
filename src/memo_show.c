@@ -186,7 +186,7 @@ int show(char* list, int flag_num, char** flag_list){
 
     if (flag_num > 0){
         for (j = 0; j <  flag_num; j = j + 1){
-            if (notename_list[j][0] == '\0'){
+            if (notename_list[j] == NULL){
                 fprintf(stderr, "%s: No such note: '%s'\n", PACKAGE_NAME, flag_list[j]);
                 ret = KEY_NOT_FOUND;
                 goto cleanup;
