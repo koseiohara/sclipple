@@ -245,14 +245,14 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     FILE* fpw  = NULL;
     char* line = NULL;
     char* tmpfile  = NULL;
-    char* flag     = NULL;
-    char* datetime = NULL;
-    char* notename = NULL;
     // char* new_notename;
     char* out_flag     = NULL;
     char* out_datetime = NULL;
     char* out_notename = NULL;
     char* dummy = NULL;
+    char* flag;
+    char* datetime;
+    char* notename;
     // const char* out_flag;
     int    fd;
     int    changed;
@@ -522,7 +522,9 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     XFREE(tmpfile);
 
     if (changed == false){
-        return KEY_NOT_FOUND;
+        ret = KEY_NOT_FOUND;
+        goto cleanup;
+        // return KEY_NOT_FOUND;
     }
 
     ret = 0;
@@ -531,17 +533,15 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
 
 cleanup:
+    XFCLOSE(fpr);
+    XFCLOSE(fpw);
+
     free(line);
     free(tmpfile);
-    free(flag);
-    free(datetime);
-    free(notename);
     free(out_flag);
     free(out_datetime);
     free(out_notename);
     free(dummy);
-    XFCLOSE(fpr);
-    XFCLOSE(fpw);
 
     return ret;
 }
