@@ -120,7 +120,7 @@ find_note() {
   local key="$1"
 
   if [ -d "$HOME/.sclipple/notes" ]; then
-    find "$HOME/.sclipple/notes" -type f -name "$key--*" | head -n 1
+    find "$HOME/.sclipple/notes" -type f -name "$key*" | head -n 1
   fi
 }
 
