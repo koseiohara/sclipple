@@ -317,7 +317,7 @@ RC
 run_cmd "$BIN" add mdnote
 assert_success
 
-md_note="$(find "$HOME/.sclipple/notes" -type f -name 'mdnote--*.md' | head -n 1)"
+md_note="$(find "$HOME/.sclipple/notes" -type f -name 'mdnote.md' | head -n 1)"
 assert_file_exists "$md_note"
 
 printf 'markdown body\n' > "$md_note"
@@ -339,7 +339,7 @@ RC
 run_cmd "$BIN" add quoted
 assert_success
 
-quoted_note="$(find "$HOME/.sclipple/notes" -type f -name 'quoted--*.memo' | head -n 1)"
+quoted_note="$(find "$HOME/.sclipple/notes" -type f -name 'quoted.memo' | head -n 1)"
 assert_file_exists "$quoted_note"
 
 printf 'quoted rc body\n' > "$quoted_note"
@@ -376,7 +376,7 @@ RC
 run_cmd "$BIN" add custom
 assert_success
 
-custom_note="$(find "$custom_dir/notes" -type f -name 'custom--*.log' | head -n 1)"
+custom_note="$(find "$custom_dir/notes" -type f -name 'custom.log' | head -n 1)"
 assert_file_exists "$custom_note"
 assert_file_not_exists "$HOME/.sclipple"
 assert_contains "$(cat "$custom_dir/.list.csv")" "custom,"
