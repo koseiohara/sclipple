@@ -115,7 +115,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
         printf("Checked existence of %s\n", files[i]);
         #endif
     }
-    XFCLOSE(fp);
+    xfclose(&fp);
 
     pid = fork();
     if (pid == 0){
@@ -188,7 +188,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
 
 
 cleanup:
-    XFCLOSE(fp);
+    xfclose(&fp);
     if (files != NULL){
         for (j = 0; j < flag_num; j = j + 1){
             free(files[j]);

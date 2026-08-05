@@ -53,7 +53,7 @@ int show_one_file(char* flag, char* file){
 
 
 cleanup:
-    XFCLOSE(fp);
+    xfclose(&fp);
     free(line);
 
     return ret;
@@ -238,7 +238,7 @@ int show(char* list, int flag_num, char** flag_list){
 
 
 cleanup:
-    XFCLOSE(fp);
+    xfclose(&fp);
 
     if (notename_list != NULL){
         for (j = 0; j < flag_num; j = j + 1){

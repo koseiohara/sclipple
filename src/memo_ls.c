@@ -71,7 +71,7 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
     #endif
 
     first_line[0] = '\0';
-    XFCLOSE(fp);
+    xfclose(&fp);
     return NOTE_EMPTY;
 }
 
@@ -296,7 +296,7 @@ int ls(const char* list, int flag_num, char** flag_list){
 
 
 cleanup:
-    XFCLOSE(fp);
+    xfclose(&fp);
     if (lines != NULL){
         for (j = 0; j < flag_num; j = j + 1){
             free(lines[j]);

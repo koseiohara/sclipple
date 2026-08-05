@@ -118,7 +118,7 @@ int search_one_file(regex_t* regex, char* flag, char* file){
 
 
 cleanup:
-    XFCLOSE(fp);
+    xfclose(&fp);
     free(line);
 
     return ret;
@@ -178,20 +178,24 @@ int search(char* list, char* word, int flag_num, char** flag_list){
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
-        for (j = 0; j < flag_num; j = j + 1){
-            free(notename_list[j]);
-        }
-        free(notename_list);
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
+        // for (j = 0; j < flag_num; j = j + 1){
+        //     free(notename_list[j]);
+        // }
+        // free(notename_list);
+        // return IO_ERROR;
     }
 
     errcode = regcomp(&regex, word, REG_EXTENDED | REG_ICASE);
     if (errcode != 0){
         regerror(errcode, &regex, errbuf, sizeof(errbuf));
         // regfree(&regex);
-        fclose(fp);
         fprintf(stderr, "%s: regcomp failed\n", PACKAGE_NAME);
-        return REGEX_ERROR;
+        fclose(fp);
+        ret = REGEX_ERROR;
+        goto cleanup;
+        // return REGEX_ERROR;
     }
 
     i = 0;
@@ -281,7 +285,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
 
     if (flag_num > 0){
         for (j = 0; j <  flag_num; j = j + 1){
-            if (notename_list[j][0] == '\0'){
+            if (notename_list[j] == NULL){
                 fprintf(stderr, "%s: No such note: '%s'\n", PACKAGE_NAME, flag_list[j]);
                 regfree(&regex);
                 ret = KEY_NOT_FOUND;
@@ -332,7 +336,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
 
 
 cleanup:
-    XFCLOSE(fp);
+    xfclose(&fp);
     if (notename_list != NULL){
         for (j = 0; j < flag_num; j = j + 1){
             free(notename_list[j]);

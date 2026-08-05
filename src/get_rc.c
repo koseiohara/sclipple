@@ -189,7 +189,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
 
 
 cleanup:
-    XFCLOSE(fp);
+    xfclose(&fp);
     free(line);
 
     return ret;

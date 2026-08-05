@@ -40,7 +40,7 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
     }
 
 cleanup:
-    XFCLOSE(fp);
+    xfclose(&fp);
     return ret;
 }
 
@@ -127,7 +127,7 @@ int flag_exist_check(const char* list, char* flag){
     stat = read_list_by_key(fp, flag, 0, &dummy);
     XFREE(dummy);
 
-    XFCLOSE(fp);
+    xfclose(&fp);
 
     if (stat == 0){
         // return true;
@@ -149,7 +149,7 @@ int flag_exist_check(const char* list, char* flag){
 
 cleanup:
     free(dummy);
-    XFCLOSE(fp);
+    xfclose(&fp);
     return ret;
 }
 
@@ -172,7 +172,7 @@ int get_datetime_by_key(const char* list, char* flag, char** datetime){
 
     stat = read_list_by_key(fp, flag, 1, datetime);
 
-    XFCLOSE(fp);
+    xfclose(&fp);
 
     if (stat == 0){
         ret = 0;
@@ -189,7 +189,7 @@ int get_datetime_by_key(const char* list, char* flag, char** datetime){
     goto cleanup;
 
 cleanup:
-    XFCLOSE(fp);
+    xfclose(&fp);
     return ret;
 }
 
@@ -212,7 +212,7 @@ int get_filename_by_key(const char* list, char* flag, char** filename){
 
     stat = read_list_by_key(fp, flag, 2, filename);
 
-    XFCLOSE(fp);
+    xfclose(&fp);
 
     if (stat == 0){
         ret = 0;
@@ -228,7 +228,7 @@ int get_filename_by_key(const char* list, char* flag, char** filename){
     // return UNKNOWN_ERROR;
 
 cleanup:
-    XFCLOSE(fp);
+    xfclose(&fp);
     return ret;
 }
 
@@ -491,7 +491,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         // return IO_ERROR;
     }
 
-    if (fclose(fpr)){
+    if (xfclose(&fpr)){
         perror(list);
         unlink(tmpfile);
         ret = IO_ERROR;
@@ -501,7 +501,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         // return IO_ERROR;
     }
 
-    if (fclose(fpw)){
+    if (xfclose(&fpw)){
         perror(tmpfile);
         unlink(tmpfile);
         ret = IO_ERROR;
@@ -533,8 +533,8 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
 
 cleanup:
-    XFCLOSE(fpr);
-    XFCLOSE(fpw);
+    xfclose(&fpr);
+    xfclose(&fpw);
 
     free(line);
     free(tmpfile);
@@ -689,7 +689,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         // return IO_ERROR;
     }
 
-    if (fclose(fpr)){
+    if (xfclose(&fpr)){
         perror(list);
         unlink(tmpfile);
         ret = IO_ERROR;
@@ -699,7 +699,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
         // return IO_ERROR;
     }
 
-    if (fclose(fpw)){
+    if (xfclose(&fpw)){
         perror(tmpfile);
         unlink(tmpfile);
         ret = IO_ERROR;
@@ -731,8 +731,8 @@ int rm_key_in_list(const char* list, const char* target_flag){
 
 
 cleanup:
-    XFCLOSE(fpr);
-    XFCLOSE(fpw);
+    xfclose(&fpr);
+    xfclose(&fpw);
     free(line);
     free(tmpfile);
 

@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 
 #define XFREE(p)              \
     do {                      \
@@ -7,14 +8,5 @@
     } while (0)
 
 
-
-#define XFCLOSE(fp)            \
-    do {                      \
-        if ((fp) != NULL) {   \
-            fclose(fp);       \
-            (fp) = NULL;      \
-        }                     \
-    } while (0)
-
-
+int xfclose(FILE** fp);
 

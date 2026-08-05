@@ -101,12 +101,12 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_sclipple_OBJECTS = help.$(OBJEXT) strutils.$(OBJEXT) \
-	get_rc.$(OBJEXT) datetime.$(OBJEXT) names.$(OBJEXT) \
-	edit_list.$(OBJEXT) git_run.$(OBJEXT) memo_add.$(OBJEXT) \
-	memo_edit.$(OBJEXT) memo_rm.$(OBJEXT) memo_mv.$(OBJEXT) \
-	memo_ls.$(OBJEXT) memo_search.$(OBJEXT) memo_show.$(OBJEXT) \
-	main.$(OBJEXT)
+am_sclipple_OBJECTS = ptrutils.$(OBJEXT) help.$(OBJEXT) \
+	strutils.$(OBJEXT) get_rc.$(OBJEXT) datetime.$(OBJEXT) \
+	names.$(OBJEXT) edit_list.$(OBJEXT) git_run.$(OBJEXT) \
+	memo_add.$(OBJEXT) memo_edit.$(OBJEXT) memo_rm.$(OBJEXT) \
+	memo_mv.$(OBJEXT) memo_ls.$(OBJEXT) memo_search.$(OBJEXT) \
+	memo_show.$(OBJEXT) main.$(OBJEXT)
 sclipple_OBJECTS = $(am_sclipple_OBJECTS)
 sclipple_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -131,7 +131,7 @@ am__depfiles_remade = ./$(DEPDIR)/datetime.Po ./$(DEPDIR)/edit_list.Po \
 	./$(DEPDIR)/memo_ls.Po ./$(DEPDIR)/memo_mv.Po \
 	./$(DEPDIR)/memo_rm.Po ./$(DEPDIR)/memo_search.Po \
 	./$(DEPDIR)/memo_show.Po ./$(DEPDIR)/names.Po \
-	./$(DEPDIR)/strutils.Po
+	./$(DEPDIR)/ptrutils.Po ./$(DEPDIR)/strutils.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -264,7 +264,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 sclipple_SOURCES = \
-    globals.h ptrutils.h \
+    globals.h \
+    ptrutils.c ptrutils.h \
     help.c help.h \
     strutils.c strutils.h \
     get_rc.c get_rc.h \
@@ -387,6 +388,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_search.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_show.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/names.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ptrutils.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strutils.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
@@ -550,6 +552,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/memo_search.Po
 	-rm -f ./$(DEPDIR)/memo_show.Po
 	-rm -f ./$(DEPDIR)/names.Po
+	-rm -f ./$(DEPDIR)/ptrutils.Po
 	-rm -f ./$(DEPDIR)/strutils.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -610,6 +613,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/memo_search.Po
 	-rm -f ./$(DEPDIR)/memo_show.Po
 	-rm -f ./$(DEPDIR)/names.Po
+	-rm -f ./$(DEPDIR)/ptrutils.Po
 	-rm -f ./$(DEPDIR)/strutils.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
