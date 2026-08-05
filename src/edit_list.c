@@ -322,7 +322,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
     // check existence of the new flag
     result = read_list_by_key(fpr, new_flag, 0, &dummy);
-    free(dummy);
+    XFREE(dummy);
     if (result != KEY_NOT_FOUND){
         unlink(tmpfile);
         if (result == INPUT_ERROR){
