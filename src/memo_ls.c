@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 
 #include "globals.h"
+#include "ptrutils.h"
 #include "names.h"
 #include "strutils.h"
 #include "edit_list.h"
@@ -24,7 +25,7 @@
 // return NOTE_EMPTY if note is empty
 // return 0 otherwise
 int get_first_line(const char* notename, const int first_line_len, char* first_line){
-    FILE* fp;
+    FILE* fp = NULL;
     char* enter;
 
     fp = fopen(notename, "r");
@@ -70,7 +71,7 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
     #endif
 
     first_line[0] = '\0';
-    fclose(fp);
+    XFCLOSE(fp);
     return NOTE_EMPTY;
 }
 
@@ -84,7 +85,7 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
 // return 0 otherwise
 int ls(const char* list, int flag_num, char** flag_list){
     struct stat st;
-    FILE*  fp;
+    FILE*  fp = NULL;
     char*  flag     = NULL;
     char*  datetime = NULL;
     char*  notename = NULL;
@@ -92,6 +93,7 @@ int ls(const char* list, int flag_num, char** flag_list){
     char   first_line[LS_LINE_LEN];
     int    atty;
     int    result;
+    int    ret;
     int    i;
     int    j;
 
@@ -102,6 +104,7 @@ int ls(const char* list, int flag_num, char** flag_list){
     }
     #endif
 
+    // check the existence of the list file
     result = path_status(list, &st);
     if (result != PATH_EXIST){
         if (result == PATH_NOT_EXIST){
@@ -109,33 +112,37 @@ int ls(const char* list, int flag_num, char** flag_list){
         } else if (result == ACCESS_FAILED_ERROR){
             fprintf(stderr, "%s: Failed to access list file\n", PACKAGE_NAME);
         }
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
+        // return IO_ERROR;
     } 
 
     if (flag_num < 0){
         fprintf(stderr, "%s: Invalid number of flags: %d\n", PACKAGE_NAME, flag_num);
-        return INPUT_ERROR;
+        ret = INPUT_ERROR;
+        goto cleanup;
+        // return INPUT_ERROR;
     } else if (flag_num > 0){
         lines = malloc((size_t)flag_num * sizeof(char*));
         if (lines == NULL){
             perror("malloc");
-            return MALLOC_ERROR;
+            ret = MALLOC_ERROR;
+            goto cleanup;
+            // return MALLOC_ERROR;
         }
 
         for (j = 0; j < flag_num; j = j + 1){
-            lines[j] = malloc(sizeof(char));
-            lines[j][0] = '\0';
+            lines[j] = NULL;
         }
     }
 
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
-        for (j = 0; j < flag_num; j = j + 1){
-            free(lines[j]);
-        }
-        free(lines);
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
+        // free(lines);
+        // return IO_ERROR;
     }
 
     atty = isatty(fileno(stdout));
@@ -151,15 +158,17 @@ int ls(const char* list, int flag_num, char** flag_list){
             continue;
         } else if (result == LIST_FORMAT_ERROR){
             fprintf(stderr, "%s: Invalid line is found in list file\nlist file is broken in line %d\n", PACKAGE_NAME, i);
-            for (j = 0; j < flag_num; j = j + 1){
-                free(lines[j]);
-            }
-            free(lines);
-            fclose(fp);
-            free(flag);
-            free(datetime);
-            free(notename);
-            return LIST_FORMAT_ERROR;
+            ret = LIST_FORMAT_ERROR;
+            goto cleanup;
+            // for (j = 0; j < flag_num; j = j + 1){
+            //     free(lines[j]);
+            // }
+            // free(lines);
+            // fclose(fp);
+            // free(flag);
+            // free(datetime);
+            // free(notename);
+            // return LIST_FORMAT_ERROR;
         }
 
         #ifdef DEBUG
@@ -171,18 +180,22 @@ int ls(const char* list, int flag_num, char** flag_list){
                 if (strcmp(flag_list[j], flag) == 0){
                     result = get_first_line(notename, LS_LINE_LEN, first_line);
                     if (result < 0){
-                        for (j = 0; j < flag_num; j = j + 1){
-                            free(lines[j]);
-                        }
-                        free(lines);
-                        fclose(fp);
-                        free(flag);
-                        free(datetime);
-                        free(notename);
+                        // for (i = 0; i < flag_num; i = i + 1){
+                        //     free(lines[j]);
+                        // }
+                        // free(lines);
+                        // fclose(fp);
+                        // free(flag);
+                        // free(datetime);
+                        // free(notename);
                         if (result == IO_ERROR){
-                            return IO_ERROR;
+                            ret = IO_ERROR;
+                            goto cleanup;
+                            // return IO_ERROR;
                         } else{
-                            return UNKNOWN_ERROR;
+                            ret = UNKNOWN_ERROR;
+                            goto cleanup;
+                            // return UNKNOWN_ERROR;
                         }
                     }
                     if (atty){
@@ -192,30 +205,36 @@ int ls(const char* list, int flag_num, char** flag_list){
                     }
                     if (result < 0){
                         perror("asprintf");
-                        for (j = 0; j < flag_num; j = j + 1){
-                            free(lines[j]);
-                        }
-                        free(lines);
-                        fclose(fp);
-                        free(flag);
-                        free(datetime);
-                        free(notename);
-                        return MALLOC_ERROR;
+                        ret = MALLOC_ERROR;
+                        goto cleanup;
+                        // for (j = 0; j < flag_num; j = j + 1){
+                        //     free(lines[j]);
+                        // }
+                        // free(lines);
+                        // fclose(fp);
+                        // free(flag);
+                        // free(datetime);
+                        // free(notename);
+                        // return MALLOC_ERROR;
                     }
                 }
             }
         } else{
             result = get_first_line(notename, LS_LINE_LEN, first_line);
             if (result < 0){
-                free(lines);
-                fclose(fp);
-                free(flag);
-                free(datetime);
-                free(notename);
+                // free(lines);
+                // fclose(fp);
+                // free(flag);
+                // free(datetime);
+                // free(notename);
                 if (result == IO_ERROR){
-                    return IO_ERROR;
+                    ret = IO_ERROR;
+                    goto cleanup;
+                    // return IO_ERROR;
                 } else{
-                    return UNKNOWN_ERROR;
+                    ret = UNKNOWN_ERROR;
+                    goto cleanup;
+                    // return UNKNOWN_ERROR;
                 }
             }
             if (atty){
@@ -225,13 +244,13 @@ int ls(const char* list, int flag_num, char** flag_list){
             }
         }
 
-        free(flag);
-        free(datetime);
-        free(notename);
+        XFREE(flag);
+        XFREE(datetime);
+        XFREE(notename);
 
-        flag     = NULL;
-        datetime = NULL;
-        notename = NULL;
+        // flag     = NULL;
+        // datetime = NULL;
+        // notename = NULL;
     }
 
     // free(flag);
@@ -243,14 +262,16 @@ int ls(const char* list, int flag_num, char** flag_list){
             #ifdef DEBUG
             printf("Note %d: %s\n", i, flag_list[i]);
             #endif
-            if (lines[i][0] == '\0'){
+            if (lines[i] == NULL){
                 fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag_list[i]);
-                for (j = 0; j < flag_num; j = j + 1){
-                    free(lines[j]);
-                }
-                free(lines);
-                fclose(fp);
-                return KEY_NOT_FOUND;
+                ret = KEY_NOT_FOUND;
+                goto cleanup;
+                // for (j = 0; j < flag_num; j = j + 1){
+                //     free(lines[j]);
+                // }
+                // free(lines);
+                // fclose(fp);
+                // return KEY_NOT_FOUND;
             }
         }
 
@@ -259,13 +280,30 @@ int ls(const char* list, int flag_num, char** flag_list){
         }
     }
 
-    for (j = 0; j < flag_num; j = j + 1){
-        free(lines[j]);
+    ret = 0;
+    goto cleanup;
+    // for (j = 0; j < flag_num; j = j + 1){
+    //     free(lines[j]);
+    // }
+    // free(lines);
+
+    // fclose(fp);
+    // return 0;
+
+
+cleanup:
+    XFCLOSE(fp);
+    if (lines != NULL){
+        for (j = 0; j < flag_num; j = j + 1){
+            free(lines[j]);
+        }
     }
+    free(flag);
+    free(datetime);
+    free(notename);
     free(lines);
 
-    fclose(fp);
-    return 0;
+    return ret;
 }
 
 

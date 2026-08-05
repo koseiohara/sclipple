@@ -19,6 +19,7 @@
 int rm(const char* list, char* flag){
     struct stat st;
     int   result;
+    int   ret;
     char* filename = NULL;
 
     #ifdef DEBUG
@@ -33,67 +34,102 @@ int rm(const char* list, char* flag){
         } else if (result == ACCESS_FAILED_ERROR){
             fprintf(stderr, "%s: Failed to access %s\n", PACKAGE_NAME, list);
         }
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
+        // return IO_ERROR;
     } 
 
     // get the target filename from list file
     result = get_filename_by_key(list, flag, &filename);
-    if (result < 0){
-        if (result == IO_ERROR){
-            fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, list);
-            free(filename);
-            return IO_ERROR;
+    if (result != 0){
+        if (result == KEY_NOT_FOUND){
+            fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag);
+            ret = KEY_NOT_FOUND;
+            goto cleanup;
+            // free(filename);
+            // return KEY_NOT_FOUND;
         } else if (result == LIST_FORMAT_ERROR || result == INPUT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
-            free(filename);
-            return LIST_FORMAT_ERROR;
+            ret = LIST_FORMAT_ERROR;
+            goto cleanup;
+            // free(filename);
+            // return LIST_FORMAT_ERROR;
+        } else if (result == IO_ERROR){
+            fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, list);
+            ret = IO_ERROR;
+            goto cleanup;
+            // free(filename);
+            // return IO_ERROR;
         } else if (result == MALLOC_ERROR){
-            free(filename);
-            return MALLOC_ERROR;
+            fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+            ret = MALLOC_ERROR;
+            goto cleanup;
+            // free(filename);
+            // return MALLOC_ERROR;
         }
         fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-        free(filename);
-        return UNKNOWN_ERROR;
-    } else if (result == KEY_NOT_FOUND){
-        fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag);
-        free(filename);
-        return KEY_NOT_FOUND;
+        ret = UNKNOWN_ERROR;
+        goto cleanup;
+        // free(filename);
+        // return UNKNOWN_ERROR;
     }
 
     // delete the target flag line from the list file
     result = rm_key_in_list(list, flag);
     if (result < 0){
-        if (result == IO_ERROR){
+        if (result == KEY_NOT_FOUND){
+            fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag);
+            ret = KEY_NOT_FOUND;
+            goto cleanup;
+            // free(filename);
+            // return KEY_NOT_FOUND;
+        } else if (result == IO_ERROR){
             fprintf(stderr, "%s: Failed to update list file\n", PACKAGE_NAME);
-            free(filename);
-            return IO_ERROR;
+            ret = IO_ERROR;
+            goto cleanup;
+            // free(filename);
+            // return IO_ERROR;
         } else if (result == MALLOC_ERROR){
-            free(filename);
-            return MALLOC_ERROR;
+            fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+            ret = MALLOC_ERROR;
+            goto cleanup;
+            // free(filename);
+            // return MALLOC_ERROR;
         } else if (result == LIST_FORMAT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
-            free(filename);
-            return LIST_FORMAT_ERROR;
+            ret = LIST_FORMAT_ERROR;
+            goto cleanup;
+            // free(filename);
+            // return LIST_FORMAT_ERROR;
         } else{
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-            free(filename);
-            return UNKNOWN_ERROR;
+            ret = UNKNOWN_ERROR;
+            goto cleanup;
+            // free(filename);
+            // return UNKNOWN_ERROR;
         }
-    } else if (result == KEY_NOT_FOUND){
-        fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag);
-        free(filename);
-        return KEY_NOT_FOUND;
     }
 
     if (unlink(filename) == 0){
         printf("%s: removed '%s'\n", PACKAGE_NAME, flag);
-        free(filename);
-        return 0;
+        ret = 0;
+        goto cleanup;
+        // free(filename);
+        // return 0;
     }
 
-    perror(flag);
+    fprintf(stderr, "%s: Failed to remove %s\n", PACKAGE_NAME, filename);
+    ret = UNLINK_ERROR;
+    goto cleanup;
+    // perror(flag);
+    // free(filename);
+    // return UNLINK_ERROR;
+
+
+cleanup:
     free(filename);
-    return UNLINK_ERROR;
+
+    return ret;
 }
 
 
