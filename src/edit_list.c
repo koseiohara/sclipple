@@ -743,6 +743,7 @@ cleanup:
 // return END_OF_FILE if getline failed
 // return LIST_WHITE_SPACE if line is empty
 // return LIST_FORMAT_ERROR if list file is broken
+// return MALLOC_ERROR if malloc failed
 // return 0 otherwise
 int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
     char*  line = NULL;
@@ -752,6 +753,10 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
     char*  in_notename;
     int    ret;
     size_t size  = 0;
+
+    *flag     = NULL;
+    *datetime = NULL;
+    *notename = NULL;
 
     if (getline(&line, &size, fp) == -1){
         ret = END_OF_FILE;
@@ -783,6 +788,10 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
     *flag     = strdup(in_flag);
     *datetime = strdup(in_datetime);
     *notename = strdup(in_notename);
+    if (*flag == NULL || *datetime == NULL || *notename == NULL){
+        ret = MALLOC_ERROR;
+        goto cleanup;
+    }
 
     ret = 0;
     goto cleanup;
@@ -792,7 +801,6 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
 
 cleanup:
     free(line);
-    free(dummy);
 
     return ret;
 }

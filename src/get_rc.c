@@ -17,6 +17,10 @@
 int init_config(Config* config, char* home){
     int result;
 
+    config->editor = NULL;
+    config->ext    = NULL;
+    config->dir    = NULL;
+
     config->editor = strdup("vim -p");
     if (config->editor == NULL){
         perror("strdup");
@@ -68,6 +72,7 @@ int init(Config* config, RcEntry* entry, char* home){
 
     if (result == MALLOC_ERROR){
         free_config(config);
+        return result;
     }
 
     init_entry(config, entry);
@@ -153,9 +158,9 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                             // return RC_ERROR;
                         } else if (result == WORDEXP_ERROR){
                             fprintf(stderr, "%s: Invalid directory specified: '%s'\n", rc, in_value);
-                            return RC_ERROR;
                             ret = RC_ERROR;
-                            // goto cleanup;
+                            goto cleanup;
+                            // return RC_ERROR;
                         } else if (result == MALLOC_ERROR){
                             ret = MALLOC_ERROR;
                             goto cleanup;

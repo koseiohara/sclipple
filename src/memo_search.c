@@ -217,6 +217,10 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 ret = LIST_FORMAT_ERROR;
                 goto cleanup;
                 // return LIST_FORMAT_ERROR;
+            } else if (result == MALLOC_ERROR){
+                fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+                ret = MALLOC_ERROR;
+                goto cleanup;
             }
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;

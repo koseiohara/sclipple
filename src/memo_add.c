@@ -252,8 +252,6 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         // free(file);
         // free(path);
         // return PATH_EXIST;
-    } else{
-        printf("%s: Create new note: '%s'\n", PACKAGE_NAME, flag);
     }
 
     XFREE(datetime);
@@ -274,6 +272,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         // return IO_ERROR;
     }
 
+    printf("%s: Create new note: '%s'\n", PACKAGE_NAME, flag);
     ret = 0;
     goto cleanup;
     // free(datetime);
