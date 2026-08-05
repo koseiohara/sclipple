@@ -150,7 +150,7 @@ int show(char* list, int flag_num, char** flag_list){
         if (flag_num > 0){
             for (j = 0; j <  flag_num; j = j + 1){
                 if (strcmp(flag, flag_list[j]) == 0){
-                    free(notename_list[j]);
+                    // free(notename_list[j]);
                     if (notename_list[j] != NULL){
                         fprintf(stderr, "%s: Key '%s' found twice\n", PACKAGE_NAME, flag);
                         ret = LIST_FORMAT_ERROR;

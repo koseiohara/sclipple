@@ -40,7 +40,11 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
     }
 
 cleanup:
-    xfclose(&fp);
+    if (xfclose(&fp) != 0){
+        if (ret == 0){
+            ret = IO_ERROR;
+        }
+    }
     return ret;
 }
 

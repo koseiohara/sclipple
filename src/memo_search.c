@@ -192,7 +192,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
         regerror(errcode, &regex, errbuf, sizeof(errbuf));
         // regfree(&regex);
         fprintf(stderr, "%s: regcomp failed\n", PACKAGE_NAME);
-        fclose(fp);
+        // fclose(fp);
         ret = REGEX_ERROR;
         goto cleanup;
         // return REGEX_ERROR;
