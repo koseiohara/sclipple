@@ -1,7 +1,7 @@
 bin_PROGRAMS = sclipple
 
 sclipple_SOURCES = \
-    globals.h \
+    globals.h ptrutils.h \
     help.c help.h \
     strutils.c strutils.h \
     get_rc.c get_rc.h \

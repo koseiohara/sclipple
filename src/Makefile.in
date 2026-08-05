@@ -264,7 +264,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 sclipple_SOURCES = \
-    globals.h \
+    globals.h ptrutils.h \
     help.c help.h \
     strutils.c strutils.h \
     get_rc.c get_rc.h \

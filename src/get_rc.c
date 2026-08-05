@@ -142,7 +142,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                 } else if (strcmp(entry[i].key, "directory") == 0){
                     XFREE(*(entry[i].value));
                     result = parse_directory(in_value, entry[i].value);
-                    if (result >= 0){
+                    if (result == 0){
                         // printf("Directory: %s\n", *(entry[i].value));
                         continue;
                     } else{

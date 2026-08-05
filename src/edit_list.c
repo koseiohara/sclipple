@@ -52,7 +52,7 @@ cleanup:
 // return 0 otherwise
 int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
     char*  line = NULL;
-    char*  flag = NULL;
+    char*  flag;
     int    i;
     int    ret;
     size_t size = 0;
@@ -102,7 +102,6 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
 
 cleanup:
     free(line);
-    free(flag);
     return ret;
 }
 
@@ -138,7 +137,7 @@ int flag_exist_check(const char* list, char* flag){
         // return false;
         ret = false;
         goto cleanup;
-    }else if (stat == LIST_FORMAT_ERROR || stat == INPUT_ERROR){
+    } else if (stat == LIST_FORMAT_ERROR || stat == INPUT_ERROR){
         // return LIST_FORMAT_ERROR;
         ret = LIST_FORMAT_ERROR;
         goto cleanup;
@@ -797,6 +796,8 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
 cleanup:
     free(line);
     free(dummy);
+
+    return ret;
 }
 
 
