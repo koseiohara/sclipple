@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <regex.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -104,6 +105,11 @@ int search_one_file(regex_t* regex, char* flag, char* file){
             // right side of match
             printf("%s\n", lp);
         }
+    }
+
+    if (ferror(fp)){
+        ret = IO_ERROR;
+        goto cleanup;
     }
 
     if (say_name){
@@ -221,6 +227,10 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 ret = LIST_FORMAT_ERROR;
                 goto cleanup;
                 // return LIST_FORMAT_ERROR;
+            } else if (result == IO_ERROR){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+                ret = IO_ERROR;
+                goto cleanup;
             } else if (result == MALLOC_ERROR){
                 fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
                 ret = MALLOC_ERROR;
@@ -263,7 +273,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 // free(datetime);
                 // free(notename);
                 if (result == IO_ERROR){
-                    fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename);
+                    fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                     ret = IO_ERROR;
                     goto cleanup;
                     // return IO_ERROR;
@@ -304,7 +314,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 regfree(&regex);
                 // fclose(fp);
                 if (result == IO_ERROR){
-                    fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename_list[j]);
+                    fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename_list[j], strerror(errno));
                     ret = IO_ERROR;
                     goto cleanup;
                     // for (i = 0; i < flag_num; i = i + 1){

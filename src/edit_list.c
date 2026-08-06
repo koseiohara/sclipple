@@ -101,6 +101,12 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
         ret = 0;
         goto cleanup;
     }
+
+    if (ferror(fp)){
+        ret = IO_ERROR;
+        goto cleanup;
+    }
+
     ret = KEY_NOT_FOUND;
     goto cleanup;
 
@@ -748,6 +754,7 @@ cleanup:
 // return LIST_WHITE_SPACE if line is empty
 // return LIST_FORMAT_ERROR if list file is broken
 // return MALLOC_ERROR if malloc failed
+// return IO_ERROR if IO failed
 // return 0 otherwise
 int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
     char*  line = NULL;
@@ -763,6 +770,10 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
     *notename = NULL;
 
     if (getline(&line, &size, fp) == -1){
+        if (ferror(fp)){
+            ret = IO_ERROR;
+            goto cleanup;
+        }
         ret = END_OF_FILE;
         goto cleanup;
         // free(line);

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include "globals.h"
 #include "ptrutils.h"
@@ -180,6 +181,12 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                 }
             }
         }
+    }
+
+    if (ferror(fp)){
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, rc, strerror(errno));
+        ret = IO_ERROR;
+        goto cleanup;
     }
     ret = 0;
     goto cleanup;

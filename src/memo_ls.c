@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -33,7 +34,7 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
         #ifdef DEBUG
         printf("<DEBUG> get_first_line() failed to open file\n");
         #endif
-        perror(notename);
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
         return IO_ERROR;
     }
 
@@ -64,6 +65,12 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
 
         fclose(fp);
         return 0;
+    }
+
+    if (ferror(fp)){
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
+        xfclose(&fp);
+        return IO_ERROR;
     }
 
     #ifdef DEBUG
@@ -169,6 +176,10 @@ int ls(const char* list, int flag_num, char** flag_list){
             // free(datetime);
             // free(notename);
             // return LIST_FORMAT_ERROR;
+        } else if (result == IO_ERROR){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+            goto cleanup;
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
             ret = MALLOC_ERROR;
@@ -183,7 +194,7 @@ int ls(const char* list, int flag_num, char** flag_list){
             for (j = 0; j < flag_num; j = j + 1){
                 if (strcmp(flag_list[j], flag) == 0){
                     result = get_first_line(notename, LS_LINE_LEN, first_line);
-                    if (result < 0){
+                    if (result != 0){
                         // for (i = 0; i < flag_num; i = i + 1){
                         //     free(lines[j]);
                         // }

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -42,6 +43,11 @@ int show_one_file(char* flag, char* file){
 
     while (getline(&line, &size, fp) != -1){
         printf("%s", line);
+    }
+
+    if (ferror(fp)){
+        ret = IO_ERROR;
+        goto cleanup;
     }
 
     printf("\n");
@@ -136,6 +142,10 @@ int show(char* list, int flag_num, char** flag_list){
                 ret = LIST_FORMAT_ERROR;
                 goto cleanup;
                 // return LIST_FORMAT_ERROR;
+            } else if (result == IO_ERROR){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+                ret = IO_ERROR;
+                goto cleanup;
             } else if (result == MALLOC_ERROR){
                 fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
                 ret = MALLOC_ERROR;
@@ -166,7 +176,7 @@ int show(char* list, int flag_num, char** flag_list){
             }
         } else{
             if (show_one_file(flag, notename) == IO_ERROR){
-                fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename);
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                 ret = IO_ERROR;
                 goto cleanup;
                 // fclose(fp);
@@ -207,7 +217,7 @@ int show(char* list, int flag_num, char** flag_list){
             if (result != 0){
                 // fclose(fp);
                 if (result == IO_ERROR){
-                    fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename_list[j]);
+                    fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename_list[j], strerror(errno));
                     ret = IO_ERROR;
                     goto cleanup;
                     // for (i = 0; i < flag_num; i = i + 1){
