@@ -250,18 +250,19 @@ int mv_filename(char* old_file, const char* new_flag, char** output){
     printf("<DEBUG> mv_filename: prefix is %s\n", prefix);
     #endif
 
-    last = NULL;
-    while ((cp = strstr(cp, ".")) != NULL){
-        last = cp;
-        cp = cp + 2;
-        #ifdef DEBUG
-        printf("<DEBUG> mv_filename: %s", cp);
-        #endif
-    }
-    #ifdef DEBUG
-    printf("<DEBUG> File name after '--': %s\n", last);
-    #endif
+    // last = NULL;
+    // while ((cp = strstr(cp, ".")) != NULL){
+    //     last = cp;
+    //     cp = cp + 2;
+    //     #ifdef DEBUG
+    //     printf("<DEBUG> mv_filename: %s", cp);
+    //     #endif
+    // }
+    // #ifdef DEBUG
+    // printf("<DEBUG> File name after '--': %s\n", last);
+    // #endif
 
+    last = strchr(cp, '.');
     if (last != NULL){
         result = asprintf(output, "%s%s%s", prefix, new_flag, last);
         XFREE(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
