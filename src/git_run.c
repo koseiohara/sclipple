@@ -17,7 +17,6 @@ int git_run(const char* dir, char* const* git_cmmd){
 
     if (pid == 0){
         if (chdir(dir) != 0){
-            // perror("git error");
             fprintf(stderr, "%s: No notes have been added\n", PACKAGE_NAME);
             _exit(1);
         }

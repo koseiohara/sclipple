@@ -30,14 +30,6 @@ void get_command(char* editor, const int file_num, char* file[], char** command)
     }
 
     command[4+file_num] = NULL;
-
-    // i = 0;
-    // while(command[i] != NULL){
-    //     printf("%s\n", command[i]);
-    //     i = i + 1;
-    // }
-    // printf("%s\n", command[i]);
-    // exit(1);
 }
 
 
@@ -68,7 +60,6 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
         }
         ret = IO_ERROR;
         goto cleanup;
-        // return IO_ERROR;
     } 
 
     files = malloc(flag_num * sizeof(char*));
@@ -76,7 +67,6 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
-        // return MALLOC_ERROR;
     }
 
     for (j = 0; j < flag_num; j = j + 1){
@@ -88,7 +78,6 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
-        // return IO_ERROR;
     }
     for (i = 0; i < flag_num; i = i + 1){
         rewind(fp);
@@ -114,12 +103,6 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;
             goto cleanup;
-            // for (j = 0; j < flag_num; j = j + 1){
-            //     free(files[j]);
-            // }
-            // free(files);
-            // fclose(fp);
-            // return LIST_FORMAT_ERROR;
         }
         #ifdef DEBUG
         printf("Checked existence of %s\n", files[i]);
@@ -131,32 +114,18 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
     if (pid == 0){
         if (chdir(dir) != 0){
             fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, editor, strerror(errno));
-            // for (j = 0; j < flag_num; j = j + 1){
-            //     free(files[j]);
-            // }
-            // free(files);
             _exit(1);
         }
 
         result = asprintf(&tmp_editor, "%s \"$@\"", editor);
         if (result < 0){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-            // for (j = 0; j < flag_num; j = j + 1){
-            //     free(files[j]);
-            // }
-            // free(files);
             _exit(1);
         }
         command_len = 4+flag_num+1;
         command = malloc(command_len * sizeof(char*));   // sh -c "rc input" sh file1 file2 ... NULL
         if (command == NULL){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-            // free(command);
-            // for (j = 0; j < flag_num; j = j + 1){
-            //     free(files[j]);
-            // }
-            // free(files);
-            // free(tmp_editor);
             _exit(1);
         }
         get_command(tmp_editor, flag_num, files, command);
@@ -167,34 +136,17 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
         // if execvp() successed, the following processes never be executed
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, editor, strerror(errno));
 
-        // free(command);
-        // for (j = 0; j < flag_num; j = j + 1){
-        //     free(files[j]);
-        // }
-        // free(files);
-        // free(tmp_editor);
         _exit(1);
     } else if (pid < 0){
         fprintf(stderr, "%s: fork: %s\n", PACKAGE_NAME, strerror(errno));
         ret = PROCESS_ERROR;
         goto cleanup;
-        // for (j = 0; j < flag_num; j = j + 1){
-        //     free(files[j]);
-        // }
-        // free(files);
-        // return PROCESS_ERROR;
     }
 
     wait(NULL);
 
     ret = 0;
     goto cleanup;
-    // for (j = 0; j < flag_num; j = j + 1){
-    //     free(files[j]);
-    // }
-    // free(files);
-
-    // return 0;
 
 
 cleanup:

@@ -38,7 +38,6 @@ int rm(const char* list, char* flag){
         }
         ret = IO_ERROR;
         goto cleanup;
-        // return IO_ERROR;
     } 
 
     // get the target filename from list file
@@ -48,32 +47,22 @@ int rm(const char* list, char* flag){
             fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag);
             ret = KEY_NOT_FOUND;
             goto cleanup;
-            // free(filename);
-            // return KEY_NOT_FOUND;
         } else if (result == LIST_FORMAT_ERROR || result == INPUT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             ret = LIST_FORMAT_ERROR;
             goto cleanup;
-            // free(filename);
-            // return LIST_FORMAT_ERROR;
         } else if (result == IO_ERROR){
             fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, list);
             ret = IO_ERROR;
             goto cleanup;
-            // free(filename);
-            // return IO_ERROR;
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
             ret = MALLOC_ERROR;
             goto cleanup;
-            // free(filename);
-            // return MALLOC_ERROR;
         }
         fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
         ret = UNKNOWN_ERROR;
         goto cleanup;
-        // free(filename);
-        // return UNKNOWN_ERROR;
     }
 
     // delete the target flag line from the list file
@@ -83,32 +72,22 @@ int rm(const char* list, char* flag){
             fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag);
             ret = KEY_NOT_FOUND;
             goto cleanup;
-            // free(filename);
-            // return KEY_NOT_FOUND;
         } else if (result == IO_ERROR){
             fprintf(stderr, "%s: Failed to update list file\n", PACKAGE_NAME);
             ret = IO_ERROR;
             goto cleanup;
-            // free(filename);
-            // return IO_ERROR;
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
             ret = MALLOC_ERROR;
             goto cleanup;
-            // free(filename);
-            // return MALLOC_ERROR;
         } else if (result == LIST_FORMAT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             ret = LIST_FORMAT_ERROR;
             goto cleanup;
-            // free(filename);
-            // return LIST_FORMAT_ERROR;
         } else{
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;
             goto cleanup;
-            // free(filename);
-            // return UNKNOWN_ERROR;
         }
     }
 
@@ -116,16 +95,11 @@ int rm(const char* list, char* flag){
         printf("%s: removed '%s'\n", PACKAGE_NAME, flag);
         ret = 0;
         goto cleanup;
-        // free(filename);
-        // return 0;
     }
 
     fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, filename, strerror(errno));
     ret = UNLINK_ERROR;
     goto cleanup;
-    // perror(flag);
-    // free(filename);
-    // return UNLINK_ERROR;
 
 
 cleanup:

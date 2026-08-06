@@ -36,7 +36,6 @@ int search_one_file(regex_t* regex, char* flag, char* file){
         perror(file);
         ret = IO_ERROR;
         goto cleanup;
-        // return IO_ERROR;
     }
 
     atty = isatty(fileno(stdout));
@@ -118,9 +117,6 @@ int search_one_file(regex_t* regex, char* flag, char* file){
 
     ret = 0;
     goto cleanup;
-    // fclose(fp);
-    // free(line);
-    // return 0;
 
 
 cleanup:
@@ -162,46 +158,35 @@ int search(char* list, char* word, int flag_num, char** flag_list){
         }
         ret = IO_ERROR;
         goto cleanup;
-        // return IO_ERROR;
     } 
 
     if (flag_num > 0){
         notename_list = malloc((size_t)flag_num * sizeof(char*));
         if (notename_list == NULL){
-            fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
             goto cleanup;
-            // return MALLOC_ERROR;
         }
 
         for (j = 0; j < flag_num; j = j + 1){
             notename_list[j] = NULL;
-            // notename_list[j] = malloc(sizeof(char));
-            // notename_list[j][0] = '\0';
         }
     }
 
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
-        // for (j = 0; j < flag_num; j = j + 1){
-        //     free(notename_list[j]);
-        // }
-        // free(notename_list);
-        // return IO_ERROR;
     }
 
     errcode = regcomp(&regex, word, REG_EXTENDED | REG_ICASE);
     if (errcode != 0){
         regerror(errcode, &regex, errbuf, sizeof(errbuf));
-        // regfree(&regex);
-        fprintf(stderr, "%s: regcomp failed\n", PACKAGE_NAME);
-        // fclose(fp);
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = REGEX_ERROR;
         goto cleanup;
-        // return REGEX_ERROR;
     }
 
     i = 0;
@@ -214,38 +199,27 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             continue;
         } else if (result != 0){
             regfree(&regex);
-            // fclose(fp);
-            // for (j = 0; j < flag_num; j = j + 1){
-            //     free(notename_list[j]);
-            // }
-            // free(notename_list);
-            // free(flag);
-            // free(datetime);
-            // free(notename);
             if (result == LIST_FORMAT_ERROR){
                 fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
                 ret = LIST_FORMAT_ERROR;
                 goto cleanup;
-                // return LIST_FORMAT_ERROR;
             } else if (result == IO_ERROR){
                 fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
                 ret = IO_ERROR;
                 goto cleanup;
             } else if (result == MALLOC_ERROR){
-                fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+                fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
                 ret = MALLOC_ERROR;
                 goto cleanup;
             }
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;
             goto cleanup;
-            // return UNKNOWN_ERROR;
         }
 
         if (flag_num > 0){
             for (j = 0; j <  flag_num; j = j + 1){
                 if (strcmp(flag, flag_list[j]) == 0){
-                    // free(notename_list[j]);
                     if (notename_list[j] != NULL){
                         fprintf(stderr, "%s: Key '%s' found twice\n", PACKAGE_NAME, flag);
                         regfree(&regex);
@@ -254,7 +228,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                     }
                     notename_list[j] = strdup(notename);
                     if (notename_list[j] == NULL){
-                        fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+                        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
@@ -264,33 +238,19 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             result = search_one_file(&regex, flag, notename);
             if (result != 0){
                 regfree(&regex);
-                // fclose(fp);
-                // for (j = 0; j < flag_num; j = j + 1){
-                //     free(notename_list[j]);
-                // }
-                // free(notename_list);
-                // free(flag);
-                // free(datetime);
-                // free(notename);
                 if (result == IO_ERROR){
                     fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                     ret = IO_ERROR;
                     goto cleanup;
-                    // return IO_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
                 ret = UNKNOWN_ERROR;
                 goto cleanup;
-                // return UNKNOWN_ERROR;
             }
         }
         XFREE(flag);
         XFREE(datetime);
         XFREE(notename);
-
-        // flag     = NULL;
-        // datetime = NULL;
-        // notename = NULL;
     }
 
     if (flag_num > 0){
@@ -300,49 +260,26 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 regfree(&regex);
                 ret = KEY_NOT_FOUND;
                 goto cleanup;
-                // fclose(fp);
-                // for (i = 0; i < flag_num; i = i + 1){
-                //     free(notename_list[i]);
-                // }
-                // free(notename_list);
-                // return KEY_NOT_FOUND;
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
             result = search_one_file(&regex, flag_list[j], notename_list[j]);
             if (result != 0){
                 regfree(&regex);
-                // fclose(fp);
                 if (result == IO_ERROR){
                     fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename_list[j], strerror(errno));
                     ret = IO_ERROR;
                     goto cleanup;
-                    // for (i = 0; i < flag_num; i = i + 1){
-                    //     free(notename_list[i]);
-                    // }
-                    // free(notename_list);
-                    // return IO_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
                 ret = UNKNOWN_ERROR;
                 goto cleanup;
-                // for (i = 0; i < flag_num; i = i + 1){
-                //     free(notename_list[i]);
-                // }
-                // free(notename_list);
-                // return UNKNOWN_ERROR;
             }
         }
     }
     regfree(&regex);
     ret = 0;
     goto cleanup;
-    // fclose(fp);
-    // for (j = 0; j < flag_num; j = j + 1){
-    //     free(notename_list[j]);
-    // }
-    // free(notename_list);
-    // return 0;
 
 
 cleanup:

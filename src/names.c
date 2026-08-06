@@ -25,7 +25,6 @@ int get_env(const char* env, char** output){
     printf("<DEBUG> Expand %s: %s\n", env, *output);
     #endif
     if (*output == NULL){
-        // perror(env);
         return INPUT_ERROR;
     }
     return 0;

@@ -24,10 +24,8 @@ int show_one_file(char* flag, char* file){
 
     fp = fopen(file, "r");
     if (fp == NULL){
-        // perror(file);
         ret = IO_ERROR;
         goto cleanup;
-        // return IO_ERROR;
     }
 
     size = 0;
@@ -53,9 +51,6 @@ int show_one_file(char* flag, char* file){
     printf("\n");
     ret = 0;
     goto cleanup;
-    // fclose(fp);
-    // free(line);
-    // return 0;
 
 
 cleanup:
@@ -93,7 +88,6 @@ int show(char* list, int flag_num, char** flag_list){
         }
         ret = IO_ERROR;
         goto cleanup;
-        // return IO_ERROR;
     } 
 
     if (flag_num > 0){
@@ -113,11 +107,6 @@ int show(char* list, int flag_num, char** flag_list){
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
-        // for (j = 0; j < flag_num; j = j + 1){
-        //     free(notename_list[j]);
-        // }
-        // free(notename_list);
-        // return IO_ERROR;
     }
 
     i = 0;
@@ -129,14 +118,6 @@ int show(char* list, int flag_num, char** flag_list){
         } else if (result == LIST_WHITE_SPACE){
             continue;
         } else if (result != 0){
-            // fclose(fp);
-            // for (j = 0; j < flag_num; j = j + 1){
-            //     free(notename_list[j]);
-            // }
-            // free(notename_list);
-            // free(flag);
-            // free(datetime);
-            // free(notename);
             if (result == LIST_FORMAT_ERROR){
                 fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
                 ret = LIST_FORMAT_ERROR;
@@ -154,13 +135,11 @@ int show(char* list, int flag_num, char** flag_list){
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;
             goto cleanup;
-            // return UNKNOWN_ERROR;
         }
 
         if (flag_num > 0){
             for (j = 0; j <  flag_num; j = j + 1){
                 if (strcmp(flag, flag_list[j]) == 0){
-                    // free(notename_list[j]);
                     if (notename_list[j] != NULL){
                         fprintf(stderr, "%s: Key '%s' found twice\n", PACKAGE_NAME, flag);
                         ret = LIST_FORMAT_ERROR;
@@ -179,23 +158,11 @@ int show(char* list, int flag_num, char** flag_list){
                 fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                 ret = IO_ERROR;
                 goto cleanup;
-                // fclose(fp);
-                // for (j = 0; j < flag_num; j = j + 1){
-                //     free(notename_list[j]);
-                // }
-                // free(notename_list);
-                // free(flag);
-                // free(notename);
-                // return IO_ERROR;
             }
         }
         XFREE(flag);
         XFREE(datetime);
         XFREE(notename);
-
-        // flag     = NULL;
-        // datetime = NULL;
-        // notename = NULL;
     }
 
     if (flag_num > 0){
@@ -204,12 +171,6 @@ int show(char* list, int flag_num, char** flag_list){
                 fprintf(stderr, "%s: No such note: '%s'\n", PACKAGE_NAME, flag_list[j]);
                 ret = KEY_NOT_FOUND;
                 goto cleanup;
-                // fclose(fp);
-                // for (j = 0; j < flag_num; j = j + 1){
-                //     free(notename_list[j]);
-                // }
-                // free(notename_list);
-                // return KEY_NOT_FOUND;
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
@@ -220,31 +181,15 @@ int show(char* list, int flag_num, char** flag_list){
                     fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename_list[j], strerror(errno));
                     ret = IO_ERROR;
                     goto cleanup;
-                    // for (i = 0; i < flag_num; i = i + 1){
-                    //     free(notename_list[i]);
-                    // }
-                    // free(notename_list);
-                    // return IO_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
                 ret = UNKNOWN_ERROR;
                 goto cleanup;
-                // for (i = 0; i < flag_num; i = i + 1){
-                //     free(notename_list[i]);
-                // }
-                // free(notename_list);
-                // return UNKNOWN_ERROR;
             }
         }
     }
     ret = 0;
     goto cleanup;
-    // for (j = 0; j < flag_num; j = j + 1){
-    //     free(notename_list[j]);
-    // }
-    // free(notename_list);
-    // fclose(fp);
-    // return 0;
 
 
 cleanup:

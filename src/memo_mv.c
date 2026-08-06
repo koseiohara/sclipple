@@ -41,7 +41,6 @@ int mv(const char* list, char* old_flag, char* new_flag){
         }
         ret = INVALID_KEY_ERROR;
         goto cleanup;
-        // return INVALID_KEY_ERROR;
     }
 
     // check whether list file is exist
@@ -54,7 +53,6 @@ int mv(const char* list, char* old_flag, char* new_flag){
         }
         ret = IO_ERROR;
         goto cleanup;
-        // return IO_ERROR;
     } 
 
     result = get_filename_by_key(list, old_flag, &old_file);
@@ -63,20 +61,14 @@ int mv(const char* list, char* old_flag, char* new_flag){
             fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
             goto cleanup;
-            // free(old_file);
-            // return IO_ERROR;
         } else if (result == LIST_FORMAT_ERROR || result == INPUT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             ret = LIST_FORMAT_ERROR;
             goto cleanup;
-            // free(old_file);
-            // return LIST_FORMAT_ERROR;
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
             goto cleanup;
-            // free(old_file);
-            // return MALLOC_ERROR;
         } else if (result == KEY_NOT_FOUND){
             fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, old_flag);
             ret = KEY_NOT_FOUND;
@@ -85,51 +77,39 @@ int mv(const char* list, char* old_flag, char* new_flag){
         fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
         ret = UNKNOWN_ERROR;
         goto cleanup;
-        // free(old_file);
-        // return UNKNOWN_ERROR;
     }
 
     // rewrite list file
     result = mv_key_in_list(list, old_flag, new_flag);
     if (result != 0){
-        // XFREE(old_file);
         if (result == IO_ERROR || result == RENAME_ERROR){
             fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
             goto cleanup;
-            // return IO_ERROR;
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
             goto cleanup;
-            // return MALLOC_ERROR;
         } else if (result == LIST_FORMAT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             ret = LIST_FORMAT_ERROR;
             goto cleanup;
-            // return LIST_FORMAT_ERROR;
         } else if (result == FILE_FORMAT_ERROR){
             fprintf(stderr, "%s: Invalid filename format: %s\n", PACKAGE_NAME, old_file);
             ret = LIST_FORMAT_ERROR;
             goto cleanup;
-            // return LIST_FORMAT_ERROR;
         } else if (result == KEY_NOT_FOUND){
             fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, old_flag);
             ret = KEY_NOT_FOUND;
             goto cleanup;
-            // free(old_file);
-            // return KEY_NOT_FOUND;
         } else if (result == KEY_DUPLICATE){
             fprintf(stderr, "%s: New keyword '%s' already exists\n", PACKAGE_NAME, new_flag);
             ret = KEY_DUPLICATE;
             goto cleanup;
-            // free(old_file);
-            // return KEY_DUPLICATE;
         } else{
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;
             goto cleanup;
-            // return UNKNOWN_ERROR;
         }
     }
 
@@ -140,23 +120,14 @@ int mv(const char* list, char* old_flag, char* new_flag){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             ret = FILE_FORMAT_ERROR;
             goto cleanup;
-            // free(new_file);
-            // free(old_file);
-            // return FILE_FORMAT_ERROR;
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
             goto cleanup;
-            // free(new_file);
-            // free(old_file);
-            // return MALLOC_ERROR;
         } else{
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;
             goto cleanup;
-            // free(new_file);
-            // free(old_file);
-            // return UNKNOWN_ERROR;
         }
     }
 
@@ -170,18 +141,11 @@ int mv(const char* list, char* old_flag, char* new_flag){
         printf("%s: RENAME %s -> %s\n", PACKAGE_NAME, old_flag, new_flag);
         ret = 0;
         goto cleanup;
-        // free(old_file);
-        // free(new_file);
-        // return 0;
     }
 
     fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, old_flag, strerror(errno));
-    // perror(new_file);
     ret = RENAME_ERROR;
     goto cleanup;
-    // free(old_file);
-    // free(new_file);
-    // return RENAME_ERROR;
 
 
 cleanup:

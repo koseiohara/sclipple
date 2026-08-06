@@ -52,7 +52,6 @@ int make_dir(const char* dir){
         printf("mkdir %s\n", dir);
         #endif
         if (mkdir(dir, 0755) == -1){
-            // perror(dir);
             return MKDIR_ERROR;
         }
         return 0;
@@ -124,7 +123,6 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         }
         ret = INVALID_KEY_ERROR;
         goto cleanup;
-        // return INVALID_KEY_ERROR;
     }
 
     result = make_dir(dir);
@@ -136,7 +134,6 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         }
         ret = IO_ERROR;
         goto cleanup;
-        // return IO_ERROR;
     }
 
     result = make_dir(note_stock);
@@ -148,7 +145,6 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         }
         ret = IO_ERROR;
         goto cleanup;
-        // return IO_ERROR;
     }
 
     result = get_datetime(clock, '-', &datetime);
@@ -156,14 +152,12 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
-        // return MALLOC_ERROR;
     }
     result = get_filename(flag, ext, &file);
     if (result == MALLOC_ERROR){
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
-        // return MALLOC_ERROR;
     }
 
     result = asprintf(&path, "%s/%s", note_stock, file);
@@ -171,7 +165,6 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
-        // return MALLOC_ERROR;
     }
     #ifdef DEBUG
     printf("File name     : %s\n", file);
@@ -185,10 +178,6 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
-        // free(datetime);
-        // free(file);
-        // free(path);
-        // return IO_ERROR;
     }
 
     result = flag_exist_check(list, flag);
@@ -196,19 +185,11 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         fprintf(stderr, "%s: Keyword '%s' already exists\n", PACKAGE_NAME, flag);
         ret = KEY_DUPLICATE;
         goto cleanup;
-        // free(datetime);
-        // free(file);
-        // free(path);
-        // return KEY_DUPLICATE;
     } else if (result == IO_ERROR || result == LIST_FORMAT_ERROR){
-        // free(datetime);
-        // free(file);
-        // free(path);
         if (result == LIST_FORMAT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             ret = LIST_FORMAT_ERROR;
             goto cleanup;
-            // return LIST_FORMAT_ERROR;
         } else if (result == IO_ERROR){
             fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
             ret = IO_ERROR;
@@ -218,25 +199,12 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
         ret = UNKNOWN_ERROR;
         goto cleanup;
-        // return UNKNOWN_ERROR;
     }
     #ifdef DEBUG
     printf("%s: Passed Flag Existence Check\n", flag);
     #endif
 
     result = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
-    // if (result < 0){
-    //     if (result == IO_ERROR){
-    //         fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, path);
-    //     } else if (result == ACCESS_FAILED_ERROR){
-    //         fprintf(stderr, "%s: Failed to access to %s\n", PACKAGE_NAME, path);
-    //     } else{
-    //         fprintf(stderr, "%s: Undefined Error\n", PACKAGE_NAME);
-    //     }
-    //     free(datetime);
-    //     free(file);
-    //     free(path);
-    //     return IO_ERROR;
     if (result == IO_ERROR || result == ACCESS_FAILED_ERROR){
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
         ret = IO_ERROR;
@@ -245,40 +213,25 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         fprintf(stderr, "%s: %s already exists\n", PACKAGE_NAME, path);
         ret = PATH_EXIST;
         goto cleanup;
-        // free(datetime);
-        // free(file);
-        // free(path);
-        // return PATH_EXIST;
     }
 
     XFREE(datetime);
-    // datetime = NULL;
 
     result = get_datetime(clock, '\0', &datetime);
     if (result == MALLOC_ERROR){
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
-        // return MALLOC_ERROR;
     }
     if (write_new_content_to_list(list, flag, datetime, path) == IO_ERROR){
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
-        // free(datetime);
-        // free(path);
-        // free(file);
-        // return IO_ERROR;
     }
 
     printf("%s: Create new note: '%s'\n", PACKAGE_NAME, flag);
     ret = 0;
     goto cleanup;
-    // free(datetime);
-    // free(path);
-    // free(file);
-
-    // return 0;
 
 
 cleanup:
