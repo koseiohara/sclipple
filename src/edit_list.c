@@ -26,14 +26,14 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
 
     fp = fopen(list, "a");
     if (fp == NULL){
-        perror(list);
+        // perror(list);
         ret = IO_ERROR;
 
         goto cleanup;
     }
 
     if (fprintf(fp, "%s%s%s%s%s\n", flag, DELIM, datetime, DELIM, file) < 0){
-        perror(list);
+        // perror(list);
         ret = IO_ERROR;
 
         goto cleanup;
@@ -94,7 +94,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
         // snprintf(result, result_len, "%s", flag);
         *result = strdup(flag);
         if (*result == NULL){
-            perror("strdup");
+            // perror("strdup");
             ret = MALLOC_ERROR;
             goto cleanup;
         }
@@ -129,7 +129,7 @@ int flag_exist_check(const char* list, char* flag){
 
     fp = fopen(list, "r");
     if (fp == NULL){
-        perror(list);
+        // perror(list);
         ret = IO_ERROR;
         goto cleanup;
     }
@@ -174,7 +174,7 @@ int get_datetime_by_key(const char* list, char* flag, char** datetime){
 
     fp = fopen(list, "r");
     if (fp == NULL){
-        perror(list);
+        // perror(list);
         ret = IO_ERROR;
         goto cleanup;
         // return IO_ERROR;
@@ -214,7 +214,7 @@ int get_filename_by_key(const char* list, char* flag, char** filename){
 
     fp = fopen(list, "r");
     if (fp == NULL){
-        perror(list);
+        // perror(list);
         ret = IO_ERROR;
         goto cleanup;
         // return IO_ERROR;
@@ -274,7 +274,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     changed = false;
 
     if (stat(list, &st) != 0){
-        perror(list);
+        // perror(list);
         ret = IO_ERROR;
         goto cleanup;
         // return IO_ERROR;
@@ -283,7 +283,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
     result = asprintf(&tmpfile, "%s.XXXXXX", list);
     if (result < 0){
-        perror("asprintf");
+        // perror("asprintf");
         ret = MALLOC_ERROR;
         goto cleanup;
         // return MALLOC_ERROR;
@@ -291,7 +291,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
     fd = mkstemp(tmpfile);
     if (fd == -1){
-        perror(tmpfile);
+        // perror(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
         // free(tmpfile);
@@ -300,7 +300,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
     fpw = fdopen(fd, "w");
     if (fpw == NULL){
-        perror(tmpfile);
+        // perror(tmpfile);
         unlink(tmpfile);
         close(fd);
         ret = IO_ERROR;
@@ -310,7 +310,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     }
 
     if (fchmod(fd, st.st_mode) != 0){
-        perror(tmpfile);
+        // perror(tmpfile);
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
@@ -321,7 +321,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
     fpr = fopen(list, "r");
     if (fpr == NULL){
-        perror(list);
+        // perror(list);
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
@@ -413,7 +413,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
             // snprintf(out_notename, sizeof(out_notename), "%s", new_notename);
             out_flag = strdup(new_flag);
             if (out_flag == NULL){
-                perror("strdup");
+                // perror("strdup");
                 unlink(tmpfile);
                 ret = MALLOC_ERROR;
                 goto cleanup;
@@ -432,7 +432,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
             out_flag     = strdup(flag);
             out_notename = strdup(notename);
             if (out_flag == NULL || out_notename == NULL){
-                perror("strdup");
+                // perror("strdup");
                 unlink(tmpfile);
                 ret = MALLOC_ERROR;
                 goto cleanup;
@@ -445,7 +445,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         // snprintf(out_datetime, sizeof(out_datetime), "%s", datetime);
         out_datetime = strdup(datetime);
         if (out_datetime == NULL){
-            perror("strdup");
+            // perror("strdup");
             unlink(tmpfile);
             ret = MALLOC_ERROR;
             goto cleanup;
@@ -461,7 +461,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
         // snprintf(line, sizeof(line), "%s,%s,%s\n", out_flag, out_datetime, out_notename);
         // if (fputs(line, fpw) == EOF){
         if (fprintf(fpw, "%s%s%s%s%s\n", out_flag, DELIM, out_datetime, DELIM, out_notename) < 0){
-            perror(tmpfile);
+            // perror(tmpfile);
             unlink(tmpfile);
             ret = IO_ERROR;
             goto cleanup;
@@ -491,7 +491,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     XFREE(out_datetime);
 
     if (ferror(fpr)){
-        perror(list);
+        // perror(list);
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
@@ -502,7 +502,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     }
 
     if (xfclose(&fpr)){
-        perror(list);
+        // perror(list);
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
@@ -512,7 +512,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     }
 
     if (xfclose(&fpw)){
-        perror(tmpfile);
+        // perror(tmpfile);
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
@@ -521,7 +521,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
     }
 
     if (rename(tmpfile, list) != 0){
-        perror("list rename");
+        // perror("list rename");
         unlink(tmpfile);
         ret = RENAME_ERROR;
         goto cleanup;
@@ -580,7 +580,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     removed = false;
 
     if (stat(list, &st) != 0){
-        perror(list);
+        // perror(list);
         ret = IO_ERROR;
         goto cleanup;
         // return IO_ERROR;
@@ -588,7 +588,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
 
     result = asprintf(&tmpfile, "%s.XXXXXX", list);
     if (result < 0){
-        perror("asprintf");
+        // perror("asprintf");
         ret = MALLOC_ERROR;
         goto cleanup;
         // return MALLOC_ERROR;
@@ -596,7 +596,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
 
     fd = mkstemp(tmpfile);
     if (fd == -1){
-        perror(tmpfile);
+        // perror(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
         // free(tmpfile);
@@ -604,7 +604,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     }
 
     if (fchmod(fd, st.st_mode) != 0){
-        perror(tmpfile);
+        // perror(tmpfile);
         close(fd);
         unlink(tmpfile);
         ret = IO_ERROR;
@@ -615,7 +615,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
 
     fpw = fdopen(fd, "w");
     if (fpw == NULL){
-        perror(tmpfile);
+        // perror(tmpfile);
         close(fd);
         unlink(tmpfile);
         ret = IO_ERROR;
@@ -626,7 +626,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
 
     fpr = fopen(list, "r");
     if (fpr == NULL){
-        perror(list);
+        // perror(list);
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
@@ -674,7 +674,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
 
         // snprintf(out_line, sizeof(out_line), "%s,%s,%s\n", flag, datetime, notename);
         if (fprintf(fpw, "%s%s%s%s%s\n", flag, DELIM, datetime, DELIM, notename) < 0){
-            perror(tmpfile);
+            // perror(tmpfile);
             unlink(tmpfile);
             ret = IO_ERROR;
             goto cleanup;
@@ -689,7 +689,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     XFREE(line);
 
     if (ferror(fpr)){
-        perror(list);
+        // perror(list);
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
@@ -700,7 +700,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     }
 
     if (xfclose(&fpr)){
-        perror(list);
+        // perror(list);
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
@@ -710,7 +710,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     }
 
     if (xfclose(&fpw)){
-        perror(tmpfile);
+        // perror(tmpfile);
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
@@ -719,7 +719,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     }
 
     if (rename(tmpfile, list) != 0){
-        perror("list rename");
+        // perror("list rename");
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;

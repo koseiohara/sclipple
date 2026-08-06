@@ -24,7 +24,7 @@ int show_one_file(char* flag, char* file){
 
     fp = fopen(file, "r");
     if (fp == NULL){
-        perror(file);
+        // perror(file);
         ret = IO_ERROR;
         goto cleanup;
         // return IO_ERROR;
@@ -99,7 +99,7 @@ int show(char* list, int flag_num, char** flag_list){
     if (flag_num > 0){
         notename_list = malloc((size_t)flag_num * sizeof(char*));
         if (notename_list == NULL){
-            perror("malloc");
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             return MALLOC_ERROR;
         }
 
@@ -110,7 +110,7 @@ int show(char* list, int flag_num, char** flag_list){
 
     fp = fopen(list, "r");
     if (fp == NULL){
-        perror(list);
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
         // for (j = 0; j < flag_num; j = j + 1){
@@ -147,7 +147,7 @@ int show(char* list, int flag_num, char** flag_list){
                 ret = IO_ERROR;
                 goto cleanup;
             } else if (result == MALLOC_ERROR){
-                fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+                fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
                 ret = MALLOC_ERROR;
                 goto cleanup;
             }
@@ -168,7 +168,7 @@ int show(char* list, int flag_num, char** flag_list){
                     }
                     notename_list[j] = strdup(notename);
                     if (notename_list[j] == NULL){
-                        fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+                        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }

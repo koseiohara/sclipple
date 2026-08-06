@@ -34,7 +34,7 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
         #ifdef DEBUG
         printf("<DEBUG> get_first_line() failed to open file\n");
         #endif
-        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
+        // fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
         return IO_ERROR;
     }
 
@@ -68,7 +68,6 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
     }
 
     if (ferror(fp)){
-        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
         xfclose(&fp);
         return IO_ERROR;
     }
@@ -132,7 +131,7 @@ int ls(const char* list, int flag_num, char** flag_list){
     } else if (flag_num > 0){
         lines = malloc((size_t)flag_num * sizeof(char*));
         if (lines == NULL){
-            perror("malloc");
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
             goto cleanup;
             // return MALLOC_ERROR;
@@ -145,7 +144,7 @@ int ls(const char* list, int flag_num, char** flag_list){
 
     fp = fopen(list, "r");
     if (fp == NULL){
-        perror(list);
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
         // free(lines);
@@ -181,7 +180,7 @@ int ls(const char* list, int flag_num, char** flag_list){
             ret = IO_ERROR;
             goto cleanup;
         } else if (result == MALLOC_ERROR){
-            fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
             goto cleanup;
         }
@@ -204,10 +203,12 @@ int ls(const char* list, int flag_num, char** flag_list){
                         // free(datetime);
                         // free(notename);
                         if (result == IO_ERROR){
+                            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                             ret = IO_ERROR;
                             goto cleanup;
                             // return IO_ERROR;
                         } else{
+                            fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
                             ret = UNKNOWN_ERROR;
                             goto cleanup;
                             // return UNKNOWN_ERROR;
@@ -219,7 +220,7 @@ int ls(const char* list, int flag_num, char** flag_list){
                         result = asprintf(&lines[j], OUTPUT_NTTY, flag, datetime, notename, first_line);
                     }
                     if (result < 0){
-                        perror("asprintf");
+                        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
                         ret = MALLOC_ERROR;
                         goto cleanup;
                         // for (j = 0; j < flag_num; j = j + 1){
@@ -243,6 +244,7 @@ int ls(const char* list, int flag_num, char** flag_list){
                 // free(datetime);
                 // free(notename);
                 if (result == IO_ERROR){
+                    fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                     ret = IO_ERROR;
                     goto cleanup;
                     // return IO_ERROR;

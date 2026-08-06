@@ -24,19 +24,19 @@ int init_config(Config* config, char* home){
 
     config->editor = strdup("vim -p");
     if (config->editor == NULL){
-        perror("strdup");
+        // perror("strdup");
         return MALLOC_ERROR;
     }
 
     config->ext = strdup("txt");
     if (config->ext == NULL){
-        perror("strdup");
+        // perror("strdup");
         return MALLOC_ERROR;
     }
 
     result = asprintf(&(config->dir), "%s/%s", home, DIR);
     if (result < 0){
-        perror("asprintf");
+        // perror("asprintf");
         return MALLOC_ERROR;
     }
     return 0;
@@ -72,6 +72,7 @@ int init(Config* config, RcEntry* entry, char* home){
     result = init_config(config, home);
 
     if (result == MALLOC_ERROR){
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         free_config(config);
         return result;
     }
@@ -102,7 +103,8 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
 
     fp = fopen(rc, "r");
     if (fp == NULL){
-        perror(rc);
+        // perror(rc);
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, rc, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
         // return IO_ERROR;
@@ -128,7 +130,8 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                 // *(entry[i].value) = NULL;
                 *(entry[i].value) = strdup(in_value);
                 if (*(entry[i].value) == NULL){
-                    perror("strdup");
+                    // perror("strdup");
+                    fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
                     ret = MALLOC_ERROR;
                     goto cleanup;
                     // return MALLOC_ERROR;
@@ -163,6 +166,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                             goto cleanup;
                             // return RC_ERROR;
                         } else if (result == MALLOC_ERROR){
+                            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
                             ret = MALLOC_ERROR;
                             goto cleanup;
                             // return MALLOC_ERROR;

@@ -40,7 +40,7 @@ int get_datetime(struct tm* clock, char delim, char** datetime){
     #endif
 
     if (result < 0){
-        perror("asprintf");
+        // perror("asprintf");
         return MALLOC_ERROR;
     } else{
         return 0;

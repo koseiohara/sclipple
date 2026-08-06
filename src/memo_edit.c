@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -71,6 +73,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
 
     files = malloc(flag_num * sizeof(char*));
     if (files == NULL){
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
         // return MALLOC_ERROR;
@@ -82,7 +85,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
 
     fp = fopen(list, "r");
     if (fp == NULL){
-        perror(list);
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
         // return IO_ERROR;
@@ -90,9 +93,26 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
     for (i = 0; i < flag_num; i = i + 1){
         rewind(fp);
         result = read_list_by_key(fp, flags[i], 2, &files[i]);
-        if (result < 0){
-            fprintf(stderr, "%s: list file is broken\n", PACKAGE_NAME);
-            ret = LIST_FORMAT_ERROR;
+        if (result != 0){
+            if (result == KEY_NOT_FOUND){
+                fprintf(stderr, "%s: No such key: '%s'\nRun '%s add %s'\n", PACKAGE_NAME, flags[i], PACKAGE_NAME, flags[i]);
+                ret = KEY_NOT_FOUND;
+                goto cleanup;
+            } else if (result == LIST_FORMAT_ERROR){
+                fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
+                ret = LIST_FORMAT_ERROR;
+                goto cleanup;
+            } else if (result == MALLOC_ERROR){
+                fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+                ret = MALLOC_ERROR;
+                goto cleanup;
+            } else if (result == INPUT_ERROR){
+                fprintf(stderr, "%s: Bug: Invalid col\n", PACKAGE_NAME);
+                ret = INPUT_ERROR;
+                goto cleanup;
+            }
+            fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
+            ret = UNKNOWN_ERROR;
             goto cleanup;
             // for (j = 0; j < flag_num; j = j + 1){
             //     free(files[j]);
@@ -100,16 +120,6 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
             // free(files);
             // fclose(fp);
             // return LIST_FORMAT_ERROR;
-        } else if (result == KEY_NOT_FOUND){
-            fprintf(stderr, "%s: No such key: '%s'\nRun '%s add %s'\n", PACKAGE_NAME, flags[i], PACKAGE_NAME, flags[i]);
-            ret = KEY_NOT_FOUND;
-            goto cleanup;
-            // for (j = 0; j < flag_num; j = j + 1){
-            //     free(files[j]);
-            // }
-            // free(files);
-            // fclose(fp);
-            // return KEY_NOT_FOUND;
         }
         #ifdef DEBUG
         printf("Checked existence of %s\n", files[i]);
@@ -120,7 +130,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
     pid = fork();
     if (pid == 0){
         if (chdir(dir) != 0){
-            perror(editor);
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, editor, strerror(errno));
             // for (j = 0; j < flag_num; j = j + 1){
             //     free(files[j]);
             // }
@@ -130,7 +140,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
 
         result = asprintf(&tmp_editor, "%s \"$@\"", editor);
         if (result < 0){
-            perror("asprintf");
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             // for (j = 0; j < flag_num; j = j + 1){
             //     free(files[j]);
             // }
@@ -140,7 +150,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
         command_len = 4+flag_num+1;
         command = malloc(command_len * sizeof(char*));   // sh -c "rc input" sh file1 file2 ... NULL
         if (command == NULL){
-            perror("malloc");
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             // free(command);
             // for (j = 0; j < flag_num; j = j + 1){
             //     free(files[j]);
@@ -155,7 +165,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
         execvp("sh", command);
 
         // if execvp() successed, the following processes never be executed
-        perror(editor);
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, editor, strerror(errno));
 
         // free(command);
         // for (j = 0; j < flag_num; j = j + 1){
@@ -165,7 +175,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
         // free(tmp_editor);
         _exit(1);
     } else if (pid < 0){
-        perror("fork");
+        fprintf(stderr, "%s: fork: %s\n", PACKAGE_NAME, strerror(errno));
         ret = PROCESS_ERROR;
         goto cleanup;
         // for (j = 0; j < flag_num; j = j + 1){

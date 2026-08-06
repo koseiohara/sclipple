@@ -25,7 +25,7 @@ int get_env(const char* env, char** output){
     printf("<DEBUG> Expand %s: %s\n", env, *output);
     #endif
     if (*output == NULL){
-        perror(env);
+        // perror(env);
         return INPUT_ERROR;
     }
     return 0;
@@ -167,7 +167,6 @@ int parse_directory(const char* input_dir, char** output_dir){
     tmp = strdup(we.we_wordv[0]);
     wordfree(&we);
     if (tmp == NULL){
-        perror("strdup");
         return MALLOC_ERROR;
     }
 
@@ -181,7 +180,6 @@ int parse_directory(const char* input_dir, char** output_dir){
     *output_dir = strdup(tmp_trim);
     XFREE(tmp);
     if (*output_dir == NULL){
-        perror("strdup");
         return MALLOC_ERROR;
     }
 
@@ -202,7 +200,6 @@ int get_filename(const char* flag, char* ext, char** output){
 
     result = asprintf(output,  "%s.%s", flag, ext);
     if (result < 0){
-        perror("asprintf");
         return MALLOC_ERROR;
     }
     return 0;
@@ -224,7 +221,6 @@ int mv_filename(char* old_file, const char* new_flag, char** output){
     // snprintf(tmp_old_file, sizeof(tmp_old_file), "%s", old_file);
     tmp_old_file = strdup(old_file);
     if (tmp_old_file == NULL){
-        perror("strdup");
         return MALLOC_ERROR;
     }
     cp    = tmp_old_file;
@@ -271,7 +267,6 @@ int mv_filename(char* old_file, const char* new_flag, char** output){
         result = asprintf(output, "%s%s%s", prefix, new_flag, last);
         XFREE(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
         if (result < 0){
-            perror("asprintf");
             return MALLOC_ERROR;
         } else{
             return 0;
@@ -295,7 +290,6 @@ int path_status(const char* path, struct stat* st){
         return PATH_NOT_EXIST;
     }
 
-    perror(path);
     return ACCESS_FAILED_ERROR;
 }
 

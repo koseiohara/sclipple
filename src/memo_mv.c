@@ -1,6 +1,8 @@
 
 
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -58,7 +60,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
     result = get_filename_by_key(list, old_flag, &old_file);
     if (result != 0){
         if (result == IO_ERROR){
-            fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, list);
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
             goto cleanup;
             // free(old_file);
@@ -70,7 +72,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
             // free(old_file);
             // return LIST_FORMAT_ERROR;
         } else if (result == MALLOC_ERROR){
-            fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
             goto cleanup;
             // free(old_file);
@@ -92,12 +94,12 @@ int mv(const char* list, char* old_flag, char* new_flag){
     if (result != 0){
         // XFREE(old_file);
         if (result == IO_ERROR || result == RENAME_ERROR){
-            fprintf(stderr, "%s: Failed to update list file\n", PACKAGE_NAME);
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
             goto cleanup;
             // return IO_ERROR;
         } else if (result == MALLOC_ERROR){
-            fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
             goto cleanup;
             // return MALLOC_ERROR;
@@ -142,6 +144,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
             // free(old_file);
             // return FILE_FORMAT_ERROR;
         } else if (result == MALLOC_ERROR){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
             goto cleanup;
             // free(new_file);
@@ -172,7 +175,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
         // return 0;
     }
 
-    fprintf(stderr, "%s: Failed to rename %s\n", PACKAGE_NAME, old_flag);
+    fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, old_flag, strerror(errno));
     // perror(new_file);
     ret = RENAME_ERROR;
     goto cleanup;

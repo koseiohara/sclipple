@@ -1,5 +1,7 @@
 
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
@@ -21,10 +23,11 @@ int git_run(const char* dir, char* const* git_cmmd){
         }
 
         execvp("git", git_cmmd);
-        perror("git error");
+
+        fprintf(stderr, "%s: git: %s\n", PACKAGE_NAME, strerror(errno));
         _exit(1);
     } else if (pid < 0){
-        perror("fork");
+        fprintf(stderr, "%s: fork: %s\n", PACKAGE_NAME, strerror(errno));
         return PROCESS_ERROR;
     }
 

@@ -1,6 +1,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -118,7 +120,7 @@ int rm(const char* list, char* flag){
         // return 0;
     }
 
-    fprintf(stderr, "%s: Failed to remove %s\n", PACKAGE_NAME, filename);
+    fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, filename, strerror(errno));
     ret = UNLINK_ERROR;
     goto cleanup;
     // perror(flag);

@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <unistd.h>
 #include <time.h>
 #include "globals.h"
@@ -51,7 +52,7 @@ int make_dir(const char* dir){
         printf("mkdir %s\n", dir);
         #endif
         if (mkdir(dir, 0755) == -1){
-            perror(dir);
+            // perror(dir);
             return MKDIR_ERROR;
         }
         return 0;
@@ -77,7 +78,6 @@ int make_file(const char* path, const int cond){
     if (result == PATH_NOT_EXIST){
         fd = open(path, cond, 0644);
         if (fd == -1){
-            perror(path);
             return IO_ERROR;
         }
         close(fd);
@@ -85,7 +85,6 @@ int make_file(const char* path, const int cond){
     } else if (result == PATH_EXIST){
         return PATH_EXIST;
     } else{
-        fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, path);
         return ACCESS_FAILED_ERROR;
     }
 }
@@ -133,7 +132,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         if (result == IS_NOT_DIRECTORY_ERROR){
             fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, dir);
         } else if (result == MKDIR_ERROR){
-            fprintf(stderr, "%s: Failed to make directory '%s'\n", PACKAGE_NAME, dir);
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, dir, strerror(errno));
         }
         ret = IO_ERROR;
         goto cleanup;
@@ -145,7 +144,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         if (result == IS_NOT_DIRECTORY_ERROR){
             fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, dir);
         } else if (result == MKDIR_ERROR){
-            fprintf(stderr, "%s: Failed to make directory '%s'\n", PACKAGE_NAME, dir);
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, dir, strerror(errno));
         }
         ret = IO_ERROR;
         goto cleanup;
@@ -154,12 +153,14 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
 
     result = get_datetime(clock, '-', &datetime);
     if (result == MALLOC_ERROR){
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
         // return MALLOC_ERROR;
     }
     result = get_filename(flag, ext, &file);
     if (result == MALLOC_ERROR){
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
         // return MALLOC_ERROR;
@@ -167,7 +168,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
 
     result = asprintf(&path, "%s/%s", note_stock, file);
     if (result < 0){
-        perror("asprintf");
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
         // return MALLOC_ERROR;
@@ -181,7 +182,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
 
     result = make_file(list, O_CREAT | O_WRONLY);
     if (result == IO_ERROR || result == ACCESS_FAILED_ERROR){
-        // fprintf(stderr, "%s Error: Failed to make list file\n", PACKAGE_NAME);
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
         // free(datetime);
@@ -209,7 +210,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
             goto cleanup;
             // return LIST_FORMAT_ERROR;
         } else if (result == IO_ERROR){
-            fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, path);
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
             ret = IO_ERROR;
             goto cleanup;
         }
@@ -236,12 +237,8 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     //     free(file);
     //     free(path);
     //     return IO_ERROR;
-    if (result == IO_ERROR){
-        fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, path);
-        ret = IO_ERROR;
-        goto cleanup;
-    } else if (result == ACCESS_FAILED_ERROR){
-        fprintf(stderr, "%s: Failed to access to %s\n", PACKAGE_NAME, path);
+    if (result == IO_ERROR || result == ACCESS_FAILED_ERROR){
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
     } else if (result == PATH_EXIST){
@@ -259,11 +256,13 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
 
     result = get_datetime(clock, '\0', &datetime);
     if (result == MALLOC_ERROR){
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
         // return MALLOC_ERROR;
     }
     if (write_new_content_to_list(list, flag, datetime, path) == IO_ERROR){
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
         // free(datetime);
