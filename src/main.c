@@ -131,9 +131,6 @@ int main(int argc, char** argv){
         }
     }
 
-    now = time(NULL);
-    lt  = localtime(&now);
-
     if (strcmp(argv[1], "add") == 0){
         if (argc == 2){
             show_help_add(subdir, list);
@@ -143,6 +140,9 @@ int main(int argc, char** argv){
             free(list);
             return 0;
         } else{
+            now = time(NULL);
+            lt  = localtime(&now);
+
             for (i = 2; i < argc; i = i + 1){
                 result = add(list, config.dir, subdir, argv[i], config.ext, lt);
                 if (result >= 0 || result == INVALID_KEY_ERROR){

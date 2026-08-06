@@ -113,7 +113,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     #endif
 
     result = flag_validation(flag);
-    if (result < 0){
+    if (result != 0){
         if (result == INPUT_ERROR){
             fprintf(stderr, "%s: Keyword is empty\n", PACKAGE_NAME);
         } else if (result == CHARACTER_NOT_ALLOWED_ERROR){
@@ -126,7 +126,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     }
 
     result = make_dir(dir);
-    if (result < 0){
+    if (result != 0 && result != IS_DIRECTORY){
         if (result == IS_NOT_DIRECTORY_ERROR){
             fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, dir);
         } else if (result == MKDIR_ERROR){
@@ -137,7 +137,7 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     }
 
     result = make_dir(note_stock);
-    if (result < 0){
+    if (result != 0 && result != IS_DIRECTORY){
         if (result == IS_NOT_DIRECTORY_ERROR){
             fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, dir);
         } else if (result == MKDIR_ERROR){
