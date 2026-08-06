@@ -144,7 +144,7 @@ int main(int argc, char** argv){
             lt  = localtime(&now);
 
             for (i = 2; i < argc; i = i + 1){
-                result = add(list, config.dir, subdir, argv[i], config.ext, lt);
+                result = add(list, config.dir, subdir, 1, &argv[i], config.ext, lt);
                 if (result >= 0 || result == INVALID_KEY_ERROR){
                     continue;
                 }
