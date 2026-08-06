@@ -3,10 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
 #include "globals.h"
+#include "ptrutils.h"
 #include "names.h"
 #include "edit_list.h"
 
@@ -14,15 +16,18 @@
 // return IO_ERROR if failed to open note
 // return 0 otherwise
 int show_one_file(char* flag, char* file){
-    FILE*  fp;
+    FILE*  fp = NULL;
     char*  line = NULL;
     int    atty;
+    int    ret;
     size_t size = 0;
 
     fp = fopen(file, "r");
     if (fp == NULL){
         perror(file);
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
+        // return IO_ERROR;
     }
 
     size = 0;
@@ -40,10 +45,24 @@ int show_one_file(char* flag, char* file){
         printf("%s", line);
     }
 
+    if (ferror(fp)){
+        ret = IO_ERROR;
+        goto cleanup;
+    }
+
     printf("\n");
-    fclose(fp);
+    ret = 0;
+    goto cleanup;
+    // fclose(fp);
+    // free(line);
+    // return 0;
+
+
+cleanup:
+    xfclose(&fp);
     free(line);
-    return 0;
+
+    return ret;
 }
 
 
@@ -55,12 +74,13 @@ int show_one_file(char* flag, char* file){
 // return 0 otherwise
 int show(char* list, int flag_num, char** flag_list){
     struct stat st;
-    FILE*  fp;
+    FILE*  fp = NULL;
     char*  flag     = NULL;
     char*  datetime = NULL;
     char*  notename = NULL;
     char** notename_list = NULL;
     int    result;
+    int    ret;
     int    i;
     int    j;
 
@@ -71,7 +91,9 @@ int show(char* list, int flag_num, char** flag_list){
         } else if (result == ACCESS_FAILED_ERROR){
             fprintf(stderr, "%s: Failed to access %s\n", PACKAGE_NAME, list);
         }
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
+        // return IO_ERROR;
     } 
 
     if (flag_num > 0){
@@ -82,29 +104,20 @@ int show(char* list, int flag_num, char** flag_list){
         }
 
         for (j = 0; j < flag_num; j = j + 1){
-            notename_list[j] = malloc(1);
-            if (notename_list[j] == NULL){
-                perror("malloc");
-
-                for (i = 0; i < j; i = i + 1){
-                    free(notename_list[i]);
-                }
-                free(notename_list);
-                return MALLOC_ERROR;
-            }
-
-            notename_list[j][0] = '\0';
+            notename_list[j] = NULL;
         }
     }
 
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
-        for (j = 0; j < flag_num; j = j + 1){
-            free(notename_list[j]);
-        }
-        free(notename_list);
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
+        // for (j = 0; j < flag_num; j = j + 1){
+        //     free(notename_list[j]);
+        // }
+        // free(notename_list);
+        // return IO_ERROR;
     }
 
     i = 0;
@@ -115,90 +128,140 @@ int show(char* list, int flag_num, char** flag_list){
             break;
         } else if (result == LIST_WHITE_SPACE){
             continue;
-        } else if (result < 0){
-            fclose(fp);
-            for (j = 0; j < flag_num; j = j + 1){
-                free(notename_list[j]);
-            }
-            free(notename_list);
-            free(flag);
-            free(datetime);
-            free(notename);
+        } else if (result != 0){
+            // fclose(fp);
+            // for (j = 0; j < flag_num; j = j + 1){
+            //     free(notename_list[j]);
+            // }
+            // free(notename_list);
+            // free(flag);
+            // free(datetime);
+            // free(notename);
             if (result == LIST_FORMAT_ERROR){
                 fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
-                return LIST_FORMAT_ERROR;
+                ret = LIST_FORMAT_ERROR;
+                goto cleanup;
+                // return LIST_FORMAT_ERROR;
+            } else if (result == IO_ERROR){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+                ret = IO_ERROR;
+                goto cleanup;
+            } else if (result == MALLOC_ERROR){
+                fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+                ret = MALLOC_ERROR;
+                goto cleanup;
             }
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-            return UNKNOWN_ERROR;
+            ret = UNKNOWN_ERROR;
+            goto cleanup;
+            // return UNKNOWN_ERROR;
         }
 
         if (flag_num > 0){
             for (j = 0; j <  flag_num; j = j + 1){
                 if (strcmp(flag, flag_list[j]) == 0){
-                    free(notename_list[j]);
+                    // free(notename_list[j]);
+                    if (notename_list[j] != NULL){
+                        fprintf(stderr, "%s: Key '%s' found twice\n", PACKAGE_NAME, flag);
+                        ret = LIST_FORMAT_ERROR;
+                        goto cleanup;
+                    }
                     notename_list[j] = strdup(notename);
+                    if (notename_list[j] == NULL){
+                        fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+                        ret = MALLOC_ERROR;
+                        goto cleanup;
+                    }
                 }
             }
         } else{
             if (show_one_file(flag, notename) == IO_ERROR){
-                fclose(fp);
-                for (j = 0; j < flag_num; j = j + 1){
-                    free(notename_list[j]);
-                }
-                free(notename_list);
-                free(flag);
-                free(notename);
-                return IO_ERROR;
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
+                ret = IO_ERROR;
+                goto cleanup;
+                // fclose(fp);
+                // for (j = 0; j < flag_num; j = j + 1){
+                //     free(notename_list[j]);
+                // }
+                // free(notename_list);
+                // free(flag);
+                // free(notename);
+                // return IO_ERROR;
             }
         }
-        free(flag);
-        free(datetime);
-        free(notename);
+        XFREE(flag);
+        XFREE(datetime);
+        XFREE(notename);
 
-        flag     = NULL;
-        datetime = NULL;
-        notename = NULL;
+        // flag     = NULL;
+        // datetime = NULL;
+        // notename = NULL;
     }
 
     if (flag_num > 0){
         for (j = 0; j <  flag_num; j = j + 1){
-            if (notename_list[j][0] == '\0'){
+            if (notename_list[j] == NULL){
                 fprintf(stderr, "%s: No such note: '%s'\n", PACKAGE_NAME, flag_list[j]);
-                fclose(fp);
-                for (j = 0; j < flag_num; j = j + 1){
-                    free(notename_list[j]);
-                }
-                free(notename_list);
-                return KEY_NOT_FOUND;
+                ret = KEY_NOT_FOUND;
+                goto cleanup;
+                // fclose(fp);
+                // for (j = 0; j < flag_num; j = j + 1){
+                //     free(notename_list[j]);
+                // }
+                // free(notename_list);
+                // return KEY_NOT_FOUND;
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
             result = show_one_file(flag_list[j], notename_list[j]);
             if (result != 0){
-                fclose(fp);
+                // fclose(fp);
                 if (result == IO_ERROR){
-                    // fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename_list[j]);
-                    for (i = 0; i < flag_num; i = i + 1){
-                        free(notename_list[i]);
-                    }
-                    free(notename_list);
-                    return IO_ERROR;
+                    fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename_list[j], strerror(errno));
+                    ret = IO_ERROR;
+                    goto cleanup;
+                    // for (i = 0; i < flag_num; i = i + 1){
+                    //     free(notename_list[i]);
+                    // }
+                    // free(notename_list);
+                    // return IO_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-                for (i = 0; i < flag_num; i = i + 1){
-                    free(notename_list[i]);
-                }
-                free(notename_list);
-                return UNKNOWN_ERROR;
+                ret = UNKNOWN_ERROR;
+                goto cleanup;
+                // for (i = 0; i < flag_num; i = i + 1){
+                //     free(notename_list[i]);
+                // }
+                // free(notename_list);
+                // return UNKNOWN_ERROR;
             }
         }
     }
-    for (j = 0; j < flag_num; j = j + 1){
-        free(notename_list[j]);
+    ret = 0;
+    goto cleanup;
+    // for (j = 0; j < flag_num; j = j + 1){
+    //     free(notename_list[j]);
+    // }
+    // free(notename_list);
+    // fclose(fp);
+    // return 0;
+
+
+cleanup:
+    xfclose(&fp);
+
+    if (notename_list != NULL){
+        for (j = 0; j < flag_num; j = j + 1){
+            free(notename_list[j]);
+        }
     }
+
+    free(flag);
+    free(datetime);
+    free(notename);
     free(notename_list);
-    fclose(fp);
-    return 0;
+
+    return ret;
 }
 
 

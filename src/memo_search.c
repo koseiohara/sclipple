@@ -3,11 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <regex.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
 #include "globals.h"
+#include "ptrutils.h"
 #include "names.h"
 #include "edit_list.h"
 
@@ -24,14 +26,17 @@ int search_one_file(regex_t* regex, char* flag, char* file){
     int    say_name;
     int    matched;
     int    ln;
-    FILE*  fp;
+    int    ret;
+    FILE*  fp = NULL;
     size_t size = 0;
     regmatch_t match[1];
 
     fp = fopen(file, "r");
     if (fp == NULL){
         perror(file);
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
+        // return IO_ERROR;
     }
 
     atty = isatty(fileno(stdout));
@@ -102,13 +107,27 @@ int search_one_file(regex_t* regex, char* flag, char* file){
         }
     }
 
+    if (ferror(fp)){
+        ret = IO_ERROR;
+        goto cleanup;
+    }
+
     if (say_name){
         printf("\n");
     }
 
-    fclose(fp);
+    ret = 0;
+    goto cleanup;
+    // fclose(fp);
+    // free(line);
+    // return 0;
+
+
+cleanup:
+    xfclose(&fp);
     free(line);
-    return 0;
+
+    return ret;
 }
 
 
@@ -122,7 +141,7 @@ int search_one_file(regex_t* regex, char* flag, char* file){
 int search(char* list, char* word, int flag_num, char** flag_list){
     struct  stat st;
     regex_t regex;
-    FILE*  fp;
+    FILE*  fp = NULL;
     char*  flag = NULL;
     char*  datetime = NULL;
     char*  notename = NULL;
@@ -130,6 +149,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
     char   errbuf[256];
     int    errcode;
     int    result;
+    int    ret;
     int    i;
     int    j;
 
@@ -140,39 +160,48 @@ int search(char* list, char* word, int flag_num, char** flag_list){
         } else if (result == ACCESS_FAILED_ERROR){
             fprintf(stderr, "%s: Failed to access list file\n", PACKAGE_NAME);
         }
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
+        // return IO_ERROR;
     } 
 
     if (flag_num > 0){
         notename_list = malloc((size_t)flag_num * sizeof(char*));
         if (notename_list == NULL){
-            perror("malloc");
-            return MALLOC_ERROR;
+            fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+            ret = MALLOC_ERROR;
+            goto cleanup;
+            // return MALLOC_ERROR;
         }
 
         for (j = 0; j < flag_num; j = j + 1){
-            notename_list[j] = malloc(sizeof(char));
-            notename_list[j][0] = '\0';
+            notename_list[j] = NULL;
+            // notename_list[j] = malloc(sizeof(char));
+            // notename_list[j][0] = '\0';
         }
     }
 
     fp = fopen(list, "r");
     if (fp == NULL){
         perror(list);
-        for (j = 0; j < flag_num; j = j + 1){
-            free(notename_list[j]);
-        }
-        free(notename_list);
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
+        // for (j = 0; j < flag_num; j = j + 1){
+        //     free(notename_list[j]);
+        // }
+        // free(notename_list);
+        // return IO_ERROR;
     }
 
     errcode = regcomp(&regex, word, REG_EXTENDED | REG_ICASE);
     if (errcode != 0){
         regerror(errcode, &regex, errbuf, sizeof(errbuf));
         // regfree(&regex);
-        fclose(fp);
         fprintf(stderr, "%s: regcomp failed\n", PACKAGE_NAME);
-        return REGEX_ERROR;
+        // fclose(fp);
+        ret = REGEX_ERROR;
+        goto cleanup;
+        // return REGEX_ERROR;
     }
 
     i = 0;
@@ -183,102 +212,152 @@ int search(char* list, char* word, int flag_num, char** flag_list){
             break;
         } else if (result == LIST_WHITE_SPACE){
             continue;
-        } else if (result < 0){
-            fclose(fp);
-            for (j = 0; j < flag_num; j = j + 1){
-                free(notename_list[j]);
-            }
-            free(notename_list);
-            free(flag);
-            free(datetime);
-            free(notename);
+        } else if (result != 0){
             regfree(&regex);
+            // fclose(fp);
+            // for (j = 0; j < flag_num; j = j + 1){
+            //     free(notename_list[j]);
+            // }
+            // free(notename_list);
+            // free(flag);
+            // free(datetime);
+            // free(notename);
             if (result == LIST_FORMAT_ERROR){
                 fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
-                return LIST_FORMAT_ERROR;
+                ret = LIST_FORMAT_ERROR;
+                goto cleanup;
+                // return LIST_FORMAT_ERROR;
+            } else if (result == IO_ERROR){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+                ret = IO_ERROR;
+                goto cleanup;
+            } else if (result == MALLOC_ERROR){
+                fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+                ret = MALLOC_ERROR;
+                goto cleanup;
             }
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-            return UNKNOWN_ERROR;
+            ret = UNKNOWN_ERROR;
+            goto cleanup;
+            // return UNKNOWN_ERROR;
         }
 
         if (flag_num > 0){
             for (j = 0; j <  flag_num; j = j + 1){
                 if (strcmp(flag, flag_list[j]) == 0){
-                    free(notename_list[j]);
+                    // free(notename_list[j]);
+                    if (notename_list[j] != NULL){
+                        fprintf(stderr, "%s: Key '%s' found twice\n", PACKAGE_NAME, flag);
+                        regfree(&regex);
+                        ret = LIST_FORMAT_ERROR;
+                        goto cleanup;
+                    }
                     notename_list[j] = strdup(notename);
+                    if (notename_list[j] == NULL){
+                        fprintf(stderr, "%s: Cannot allocate memory\n", PACKAGE_NAME);
+                        ret = MALLOC_ERROR;
+                        goto cleanup;
+                    }
                 }
             }
         } else{
             result = search_one_file(&regex, flag, notename);
             if (result != 0){
-                fclose(fp);
-                for (j = 0; j < flag_num; j = j + 1){
-                    free(notename_list[j]);
-                }
-                free(notename_list);
-                free(flag);
-                free(datetime);
-                free(notename);
                 regfree(&regex);
+                // fclose(fp);
+                // for (j = 0; j < flag_num; j = j + 1){
+                //     free(notename_list[j]);
+                // }
+                // free(notename_list);
+                // free(flag);
+                // free(datetime);
+                // free(notename);
                 if (result == IO_ERROR){
-                    // fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename);
-                    return IO_ERROR;
+                    fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
+                    ret = IO_ERROR;
+                    goto cleanup;
+                    // return IO_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-                return UNKNOWN_ERROR;
+                ret = UNKNOWN_ERROR;
+                goto cleanup;
+                // return UNKNOWN_ERROR;
             }
         }
-        free(flag);
-        free(datetime);
-        free(notename);
+        XFREE(flag);
+        XFREE(datetime);
+        XFREE(notename);
 
-        flag     = NULL;
-        datetime = NULL;
-        notename = NULL;
+        // flag     = NULL;
+        // datetime = NULL;
+        // notename = NULL;
     }
 
     if (flag_num > 0){
         for (j = 0; j <  flag_num; j = j + 1){
-            if (notename_list[j][0] == '\0'){
+            if (notename_list[j] == NULL){
                 fprintf(stderr, "%s: No such note: '%s'\n", PACKAGE_NAME, flag_list[j]);
-                fclose(fp);
-                for (i = 0; i < flag_num; i = i + 1){
-                    free(notename_list[i]);
-                }
-                free(notename_list);
                 regfree(&regex);
-                return KEY_NOT_FOUND;
+                ret = KEY_NOT_FOUND;
+                goto cleanup;
+                // fclose(fp);
+                // for (i = 0; i < flag_num; i = i + 1){
+                //     free(notename_list[i]);
+                // }
+                // free(notename_list);
+                // return KEY_NOT_FOUND;
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
             result = search_one_file(&regex, flag_list[j], notename_list[j]);
             if (result != 0){
-                fclose(fp);
                 regfree(&regex);
+                // fclose(fp);
                 if (result == IO_ERROR){
-                    // fprintf(stderr, "%s: Failed to open %s\n", PACKAGE_NAME, notename_list[j]);
-                    for (i = 0; i < flag_num; i = i + 1){
-                        free(notename_list[i]);
-                    }
-                    free(notename_list);
-                    return IO_ERROR;
+                    fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename_list[j], strerror(errno));
+                    ret = IO_ERROR;
+                    goto cleanup;
+                    // for (i = 0; i < flag_num; i = i + 1){
+                    //     free(notename_list[i]);
+                    // }
+                    // free(notename_list);
+                    // return IO_ERROR;
                 }
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-                for (i = 0; i < flag_num; i = i + 1){
-                    free(notename_list[i]);
-                }
-                free(notename_list);
-                return UNKNOWN_ERROR;
+                ret = UNKNOWN_ERROR;
+                goto cleanup;
+                // for (i = 0; i < flag_num; i = i + 1){
+                //     free(notename_list[i]);
+                // }
+                // free(notename_list);
+                // return UNKNOWN_ERROR;
             }
         }
     }
-    fclose(fp);
-    for (j = 0; j < flag_num; j = j + 1){
-        free(notename_list[j]);
-    }
-    free(notename_list);
     regfree(&regex);
-    return 0;
+    ret = 0;
+    goto cleanup;
+    // fclose(fp);
+    // for (j = 0; j < flag_num; j = j + 1){
+    //     free(notename_list[j]);
+    // }
+    // free(notename_list);
+    // return 0;
+
+
+cleanup:
+    xfclose(&fp);
+    if (notename_list != NULL){
+        for (j = 0; j < flag_num; j = j + 1){
+            free(notename_list[j]);
+        }
+    }
+    free(flag);
+    free(datetime);
+    free(notename);
+    free(notename_list);
+
+    return ret;
 }
 
 

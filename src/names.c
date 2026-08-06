@@ -12,6 +12,7 @@
 
 #include "globals.h"
 #include "strutils.h"
+#include "ptrutils.h"
 #include "datetime.h"
 
 
@@ -173,12 +174,12 @@ int parse_directory(const char* input_dir, char** output_dir){
     tmp_trim = trim(tmp);
 
     if (tmp_trim[0] != '/'){
-        free(tmp);
+        XFREE(tmp);
         return RC_ERROR;
     }
 
     *output_dir = strdup(tmp_trim);
-    free(tmp);
+    XFREE(tmp);
     if (*output_dir == NULL){
         perror("strdup");
         return MALLOC_ERROR;
@@ -222,6 +223,10 @@ int mv_filename(char* old_file, const char* new_flag, char** output){
     // strcpy(tmp_old_file, old_file);
     // snprintf(tmp_old_file, sizeof(tmp_old_file), "%s", old_file);
     tmp_old_file = strdup(old_file);
+    if (tmp_old_file == NULL){
+        perror("strdup");
+        return MALLOC_ERROR;
+    }
     cp    = tmp_old_file;
     fname = tmp_old_file;
 
@@ -264,7 +269,7 @@ int mv_filename(char* old_file, const char* new_flag, char** output){
 
     if (last != NULL){
         result = asprintf(output, "%s%s%s", prefix, new_flag, last);
-        free(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
+        XFREE(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
         if (result < 0){
             perror("asprintf");
             return MALLOC_ERROR;
@@ -272,7 +277,7 @@ int mv_filename(char* old_file, const char* new_flag, char** output){
             return 0;
         }
     } else{
-        free(tmp_old_file);
+        XFREE(tmp_old_file);
         return FILE_FORMAT_ERROR;
     }
 }
