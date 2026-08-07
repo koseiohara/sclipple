@@ -18,10 +18,6 @@
 #include "edit_list.h"
 
 
-#define IS_NOT_DIRECTORY_ERROR -1
-#define MKDIR_ERROR -2
-#define IS_DIRECTORY 1
-
 // if directory does not exist, run mkdir()
 // return IS_DIRECTORY if dir already exist and is a directory
 // return IS_NOT_DIRECTORY_ERROR if dir already exist and is not a directory

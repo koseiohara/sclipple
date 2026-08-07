@@ -43,7 +43,10 @@
 #define EXECVP_ERROR 16
 #define CHILD_ERROR 17
 #define WAIT_ERROR 18
+#define IS_NOT_DIRECTORY_ERROR 19
+#define MKDIR_ERROR 20
 #define UNKNOWN_ERROR 100
+
 
 #define false -1
 #define true  -2
@@ -53,4 +56,6 @@
 #define PATH_EXIST -6
 #define PATH_NOT_EXIST -7
 #define END_OF_FILE -8
+#define RESULT_EMPTY -9
+#define IS_DIRECTORY -10
 

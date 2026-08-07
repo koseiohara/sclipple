@@ -16,7 +16,7 @@
 
 // return IO_ERROR if failed to open file
 // return 0 otherwise
-int search_one_file(regex_t* regex, char* flag, char* file){
+int search_one_file(regex_t* regex, char* flag, char* file, int first_echo){
     char*  line = NULL;
     char*  lp;
     int    start;
@@ -58,6 +58,9 @@ int search_one_file(regex_t* regex, char* flag, char* file){
             matched = true;
 
             if (say_name == false){
+                if (first_echo != true){
+                    putchar('\n');
+                }
                 if (atty){
                     printf("[\033[34m%s\033[0m]\n", flag);
                 } else{
@@ -111,8 +114,12 @@ int search_one_file(regex_t* regex, char* flag, char* file){
         goto cleanup;
     }
 
-    if (say_name == true){
-        printf("\n");
+    // if (say_name == true){
+    //     printf("\n");
+    // }
+    if (say_name == false){
+        ret = RESULT_EMPTY;
+        goto cleanup;
     }
 
     ret = 0;
@@ -146,6 +153,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
     int    errcode;
     int    result;
     int    ret = 0;
+    int    first_echo = true;
     int    i;
     int    j;
 
@@ -236,8 +244,10 @@ int search(char* list, char* word, int flag_num, char** flag_list){
                 }
             }
         } else{
-            result = search_one_file(&regex, flag, notename);
-            if (result != 0){
+            result = search_one_file(&regex, flag, notename, first_echo);
+            if (result == 0){
+                first_echo = false;
+            } else if (result != RESULT_EMPTY){
                 regfree(&regex);
                 if (result == IO_ERROR){
                     fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
@@ -265,8 +275,10 @@ int search(char* list, char* word, int flag_num, char** flag_list){
         }
         for (j = 0; j <  flag_num; j = j + 1){
             if (notename_list[j] != NULL){
-                result = search_one_file(&regex, flag_list[j], notename_list[j]);
-                if (result != 0){
+                result = search_one_file(&regex, flag_list[j], notename_list[j], first_echo);
+                if (result == 0){
+                    first_echo = false;
+                } else if (result != RESULT_EMPTY){
                     regfree(&regex);
                     if (result == IO_ERROR){
                         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename_list[j], strerror(errno));

@@ -17,13 +17,12 @@
 #include "edit_list.h"
 
 
-#define NOTE_EMPTY 1
 // #define OUTPUT_TTY  "[\033[34m%s\033[0m]\ncreated: %s\nfile   : %s\n%s\n\n"
-#define OUTPUT_TTY  "[\033[34m%s\033[0m]\n\033[36mcreated\033[0m: %s\n\033[36mfile\033[0m   : %s\n%s\n\n"
-#define OUTPUT_NTTY "[%s]\ncreated: %s\nfile   : %s\n%s\n\n"
+#define OUTPUT_TTY  "[\033[34m%s\033[0m]\n\033[36mcreated\033[0m: %s\n\033[36mfile\033[0m   : %s\n%s\n"
+#define OUTPUT_NTTY "[%s]\ncreated: %s\nfile   : %s\n%s\n"
 
 // return IO_ERROR if failed to open note
-// return NOTE_EMPTY if note is empty
+// return RESULT_EMPTY if note is empty
 // return 0 otherwise
 int get_first_line(const char* notename, const int first_line_len, char* first_line){
     FILE* fp = NULL;
@@ -77,7 +76,7 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
 
     first_line[0] = '\0';
     xfclose(&fp);
-    return NOTE_EMPTY;
+    return RESULT_EMPTY;
 }
 
 
@@ -97,6 +96,7 @@ int ls(const char* list, int flag_num, char** flag_list){
     char** lines    = NULL;
     char   first_line[LS_LINE_LEN];
     int    atty;
+    int    first_echo = true;
     int    result;
     int    ret = 0;
     int    i;
@@ -178,7 +178,7 @@ int ls(const char* list, int flag_num, char** flag_list){
             for (j = 0; j < flag_num; j = j + 1){
                 if (strcmp(flag_list[j], flag) == 0){
                     result = get_first_line(notename, LS_LINE_LEN, first_line);
-                    if (result != 0 && result != NOTE_EMPTY){
+                    if (result != 0 && result != RESULT_EMPTY){
                         if (result == IO_ERROR){
                             fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                             ret = IO_ERROR;
@@ -189,6 +189,7 @@ int ls(const char* list, int flag_num, char** flag_list){
                             goto cleanup;
                         }
                     }
+
                     if (atty){
                         result = asprintf(&lines[j], OUTPUT_TTY , flag, datetime, notename, first_line);
                     } else{
@@ -203,7 +204,7 @@ int ls(const char* list, int flag_num, char** flag_list){
             }
         } else{
             result = get_first_line(notename, LS_LINE_LEN, first_line);
-            if (result != 0 && result != NOTE_EMPTY){
+            if (result != 0 && result != RESULT_EMPTY){
                 if (result == IO_ERROR){
                     fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                     ret = IO_ERROR;
@@ -212,6 +213,11 @@ int ls(const char* list, int flag_num, char** flag_list){
                     ret = UNKNOWN_ERROR;
                     goto cleanup;
                 }
+            }
+            if (first_echo == false){
+                putchar('\n');
+            } else{
+                first_echo = false;
             }
             if (atty){
                 result = printf(OUTPUT_TTY , flag, datetime, notename, first_line);
@@ -239,6 +245,11 @@ int ls(const char* list, int flag_num, char** flag_list){
 
         for (i = 0; i < flag_num; i = i + 1){
             if (lines[i] != NULL){
+                if (first_echo == false){
+                    putchar('\n');
+                } else{
+                    first_echo = false;
+                }
                 printf("%s", lines[i]);
             }
         }

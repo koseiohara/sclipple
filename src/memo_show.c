@@ -48,7 +48,7 @@ int show_one_file(char* flag, char* file){
         goto cleanup;
     }
 
-    printf("\n");
+    // printf("\n");
     ret = 0;
     goto cleanup;
 
@@ -76,6 +76,7 @@ int show(char* list, int flag_num, char** flag_list){
     char** notename_list = NULL;
     int    result;
     int    ret = 0;
+    int    first_echo;
     int    i;
     int    j;
 
@@ -111,7 +112,6 @@ int show(char* list, int flag_num, char** flag_list){
 
     i = 0;
     while (1){
-        i = i + 1;
         result = get_content_line(fp, &flag, &datetime, &notename);
         if (result == END_OF_FILE){
             break;
@@ -154,7 +154,12 @@ int show(char* list, int flag_num, char** flag_list){
                 }
             }
         } else{
-            if (show_one_file(flag, notename) == IO_ERROR){
+            i = i + 1;
+            if (i > 1){
+                putchar('\n');
+            }
+            result = show_one_file(flag, notename);
+            if (result == IO_ERROR){
                 fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                 ret = IO_ERROR;
                 goto cleanup;
@@ -173,8 +178,12 @@ int show(char* list, int flag_num, char** flag_list){
                 // goto cleanup;
             }
         }
-        for (j = 0; j <  flag_num; j = j + 1){
+        first_echo = true;
+        for (j = 0; j < flag_num; j = j + 1){
             if (notename_list[j] != NULL){
+                if (first_echo == false){
+                    putchar('\n');
+                }
                 result = show_one_file(flag_list[j], notename_list[j]);
                 if (result != 0){
                     // fclose(fp);
@@ -187,6 +196,7 @@ int show(char* list, int flag_num, char** flag_list){
                     ret = UNKNOWN_ERROR;
                     goto cleanup;
                 }
+                first_echo = false;
             }
         }
     }
