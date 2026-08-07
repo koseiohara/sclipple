@@ -113,7 +113,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
             line[0] = '\0';
         }
 
-        if (line_to_dict(line, &in_key, &in_value) < 0){
+        if (line_to_dict(line, &in_key, &in_value) != 0){
             continue;
         }
 
