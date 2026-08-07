@@ -39,10 +39,16 @@ void get_command(char* editor, const int file_num, char* file[], char** command)
 }
 
 
-// return IO_ERROR if failed to open list file
-// return LIST_FORMAT_ERROR if list file is broken
-// return KEY_NOT_FOUND if keyword is not found in the list file
-// return PROCESS_ERROR if failed to make a child process
+// return IO_ERROR if the list file or working directory cannot be accessed
+// return MALLOC_ERROR if memory required for the command cannot be allocated
+// return LIST_FORMAT_ERROR if the list file contains an invalid entry
+// return KEY_NOT_FOUND if a requested key does not exist in the list file
+// return INPUT_ERROR if an invalid column is passed to the list reader
+// return UNKNOWN_ERROR if the list reader returns an unexpected error
+// return FORK_ERROR if the operating system cannot create a child process
+// return WAIT_ERROR if the child process's termination status cannot be obtained
+// return EXECVP_ERROR if the shell executable cannot be found or executed
+// return CHILD_ERROR if the editor command does not complete successfully
 // return 0 otherwise
 int memo_edit(const char* list, const char* dir, char* editor, const int flag_num, char** flags){
     struct stat st;
@@ -56,6 +62,8 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
     int command_len;
     int result;
     int ret = 0;
+    int stat;
+    int exit_stat;
 
     result = path_status(list, &st);
     if (result != PATH_EXIST){
@@ -122,38 +130,71 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
     if (pid == 0){
         if (chdir(dir) != 0){
             fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, editor, strerror(errno));
-            _exit(1);
+            _exit(IO_ERROR);
         }
 
         result = asprintf(&tmp_editor, "%s \"$@\"", editor);
         if (result < 0){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-            _exit(1);
+            _exit(MALLOC_ERROR);
         }
         command_len = 4+flag_num+1;
         command = malloc(command_len * sizeof(char*));   // sh -c "rc input" sh file1 file2 ... NULL
         if (command == NULL){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-            _exit(1);
+            _exit(MALLOC_ERROR);
         }
         get_command(tmp_editor, flag_num, files, command);
 
         // If this shell command successfully executed, the following lines never be executed
         execvp("sh", command);
-
-        // if execvp() successed, the following processes never be executed
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, editor, strerror(errno));
-
-        _exit(1);
+        _exit(EXECVP_ERROR);
     } else if (pid < 0){
         fprintf(stderr, "%s: fork: %s\n", PACKAGE_NAME, strerror(errno));
-        ret = PROCESS_ERROR;
+        ret = FORK_ERROR;
         goto cleanup;
     }
 
-    wait(NULL);
+    while (waitpid(pid, &stat, 0) < 0) {
+        if (errno == EINTR){
+            continue;
+        }
 
-    ret = 0;
+        fprintf(stderr, "%s: waitpid: %s\n", PACKAGE_NAME, strerror(errno));
+        ret = WAIT_ERROR;
+        goto cleanup;
+    }
+
+    if (!WIFEXITED(stat)){
+        fprintf(stderr, "%s: %s: terminated\n", PACKAGE_NAME, editor);
+        ret = CHILD_ERROR;
+        goto cleanup;
+    }
+
+    exit_stat = WEXITSTATUS(stat);
+
+    if (exit_stat == 0){
+        goto cleanup;
+    }
+
+    if (exit_stat == IO_ERROR){
+        ret = exit_stat;
+        goto cleanup;
+    }
+
+    if (exit_stat == MALLOC_ERROR){
+        ret = exit_stat;
+        goto cleanup;
+    }
+
+    if (exit_stat == EXECVP_ERROR){
+        ret = exit_stat;
+        goto cleanup;
+    }
+
+    fprintf(stderr, "%s: %s: exited with status %d\n", PACKAGE_NAME, editor, exit_stat);
+    ret = CHILD_ERROR;
     goto cleanup;
 
 

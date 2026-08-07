@@ -60,7 +60,11 @@ int main(int argc, char** argv){
     if (path_status(rc, &st) == PATH_EXIST){
         result = read_rc(rc, entry, sizeof(entry) / sizeof(entry[0]));
         if (result != 0){
-            ret = ERROR_STOP;
+            if (result == UNKNOWN_ERROR){
+                ret = BUG_STOP;
+            } else{
+                ret = ERROR_STOP;
+            }
             goto cleanup;
         }
     }
@@ -111,6 +115,8 @@ int main(int argc, char** argv){
             ret = NEGATIVE_STOP;
         } else if (result == 0){
             ret = STOP;
+        } else if (result == UNKNOWN_ERROR){
+            ret = BUG_STOP;
         } else{
             ret = ERROR_STOP;
         }
@@ -133,6 +139,8 @@ int main(int argc, char** argv){
             ret = STOP;
         } else if (result == KEY_DUPLICATE){
             ret = NEGATIVE_STOP;
+        } else if (result == UNKNOWN_ERROR){
+            ret = BUG_STOP;
         } else{
             ret = ERROR_STOP;
         }
@@ -151,6 +159,8 @@ int main(int argc, char** argv){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
             ret = NEGATIVE_STOP;
+        } else if (result == UNKNOWN_ERROR){
+            ret = BUG_STOP;
         } else{
             ret = ERROR_STOP;
         }
@@ -169,6 +179,8 @@ int main(int argc, char** argv){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND || result == KEY_DUPLICATE){
             ret = NEGATIVE_STOP;
+        } else if (result == UNKNOWN_ERROR){
+            ret = BUG_STOP;
         } else{
             ret = ERROR_STOP;
         }
@@ -181,6 +193,8 @@ int main(int argc, char** argv){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
             ret = NEGATIVE_STOP;
+        } else if (result == UNKNOWN_ERROR){
+            ret = BUG_STOP;
         } else{
             ret = ERROR_STOP;
         }
@@ -198,6 +212,8 @@ int main(int argc, char** argv){
                 ret = STOP;
             } else if (result == KEY_NOT_FOUND){
                 ret = NEGATIVE_STOP;
+            } else if (result == UNKNOWN_ERROR){
+                ret = BUG_STOP;
             } else{
                 ret = ERROR_STOP;
             }
@@ -211,6 +227,8 @@ int main(int argc, char** argv){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
             ret = NEGATIVE_STOP;
+        } else if (result == UNKNOWN_ERROR){
+            ret = BUG_STOP;
         } else{
             ret = ERROR_STOP;
         }
@@ -222,6 +240,8 @@ int main(int argc, char** argv){
         ret = STOP;
     } else if (result == KEY_NOT_FOUND){
         ret = NEGATIVE_STOP;
+    } else if (result == UNKNOWN_ERROR){
+        ret = BUG_STOP;
     } else{
         ret = ERROR_STOP;
     }
