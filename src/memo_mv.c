@@ -127,31 +127,24 @@ int mv(const char* list, char* old_flag, char* new_flag){
         if (result == IO_ERROR || result == RENAME_ERROR){
             fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
-            // goto cleanup;
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
-            // goto cleanup;
         } else if (result == LIST_FORMAT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             ret = LIST_FORMAT_ERROR;
-            // goto cleanup;
         } else if (result == FILE_FORMAT_ERROR){
             fprintf(stderr, "%s: Invalid filename format: %s\n", PACKAGE_NAME, old_file);
             ret = LIST_FORMAT_ERROR;
-            // goto cleanup;
         } else if (result == KEY_NOT_FOUND){
             fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, old_flag);
             ret = KEY_NOT_FOUND;
-            // goto cleanup;
         } else if (result == KEY_DUPLICATE){
             fprintf(stderr, "%s: New keyword '%s' already exists\n", PACKAGE_NAME, new_flag);
             ret = KEY_DUPLICATE;
-            // goto cleanup;
         } else{
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;
-            // goto cleanup;
         }
         if (unlink(new_file) != 0){
             fprintf(stderr, "%s: rollback failed: %s: %s\n", PACKAGE_NAME, new_file, strerror(errno));
@@ -165,42 +158,14 @@ int mv(const char* list, char* old_flag, char* new_flag){
         goto cleanup;
     }
 
-    // // get new file name
-    // result = mv_filename(old_file, new_flag, &new_file);
-    // if (result != 0){
-    //     if (result == FILE_FORMAT_ERROR){
-    //         fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
-    //         ret = FILE_FORMAT_ERROR;
-    //         goto cleanup;
-    //     } else if (result == MALLOC_ERROR){
-    //         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-    //         ret = MALLOC_ERROR;
-    //         goto cleanup;
-    //     } else{
-    //         fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-    //         ret = UNKNOWN_ERROR;
-    //         goto cleanup;
-    //     }
-    // }
-
     #ifdef DEBUG
     printf("<DEBUG> Rename %s to %s\n", old_file, new_file);
     // return 0;
     #endif
 
-    // rename file
-    // if (rename(old_file, new_file) == 0){
-    //     printf("%s: RENAME %s -> %s\n", PACKAGE_NAME, old_flag, new_flag);
-    //     ret = 0;
-    //     goto cleanup;
-    // }
-
     printf("%s: RENAME %s -> %s\n", PACKAGE_NAME, old_flag, new_flag);
     ret = 0;
     goto cleanup;
-    // fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, old_flag, strerror(errno));
-    // ret = RENAME_ERROR;
-    // goto cleanup;
 
 
 cleanup:

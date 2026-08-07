@@ -345,12 +345,6 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char*
 
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
-            // result = mv_filename(notename, new_flag, &out_notename);
-            if (result != 0){
-                unlink(tmpfile);
-                ret = result;
-                goto cleanup;
-            }
             out_flag     = strdup(new_flag);
             out_notename = strdup(new_file);
             if (out_flag == NULL || out_notename == NULL){
