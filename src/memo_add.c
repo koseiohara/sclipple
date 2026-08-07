@@ -240,6 +240,9 @@ int add(const char* list, const char* dir, const char* note_stock, int nflag, ch
         }
 
         printf("%s: Create new note: '%s'\n", PACKAGE_NAME, flag[i]);
+
+        XFREE(file);
+        XFREE(path);
     }
     // ret = 0;
     goto cleanup;

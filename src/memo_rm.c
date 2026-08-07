@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 
 #include "globals.h"
+#include "ptrutils.h"
 #include "names.h"
 #include "edit_list.h"
 
@@ -107,6 +108,8 @@ int rm(const char* list, int nflag, char** flag){
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, filename, strerror(errno));
         ret = UNLINK_ERROR;
         goto cleanup;
+
+        XFREE(filename);
     }
 
     goto cleanup;
