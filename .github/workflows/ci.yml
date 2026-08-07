@@ -37,7 +37,7 @@ jobs:
       - name: Normal configure build
         if: matrix.mode == 'normal'
         run: |
-          ./configure
+          ./configure CFLAGS="-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address,undefined"
           make -j"$(nproc)"
           bash tests/cli.sh
           make clean
@@ -47,7 +47,7 @@ jobs:
         if: matrix.mode == 'bootstrap'
         run: |
           autoreconf -fi
-          ./configure
+          ./configure CFLAGS="-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address,undefined"
           make -j"$(nproc)"
           bash tests/cli.sh
           make clean
@@ -58,7 +58,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          ../configure
+          ../configure CFLAGS="-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address,undefined"
           make -j"$(nproc)"
           bash ../tests/cli.sh ../build/src/sclipple
           make clean
@@ -79,5 +79,5 @@ jobs:
       - name: Distcheck
         run: |
           autoreconf -fi
-          ./configure
+          ./configure CFLAGS="-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address,undefined"
           make distcheck
