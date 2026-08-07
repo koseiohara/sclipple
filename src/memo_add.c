@@ -93,14 +93,17 @@ int make_file(const char* path, const int cond){
 // return IO_ERROR if make directory and make file failed
 // return MALLOC_ERROR if malloc failed
 // return KEY_DUPLICATE if keyword already exist
+// return LIST_FORMAT_ERROR if list file is broken
 // return PATH_EXIST if note file already exist
+// return UNKONWN_ERROR when bug
 // return 0 otherwise
-int add(const char* list, const char* dir, const char* note_stock, char* flag, char* ext, struct tm* clock){
+int add(const char* list, const char* dir, const char* note_stock, int nflag, char** flag, char* ext, struct tm* clock){
     char* file     = NULL;
     char* path     = NULL;
     char* datetime = NULL;
     int   result;
     int   ret;
+    int   i;
     // int   len;
 
     #ifdef DEBUG
@@ -112,17 +115,19 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
     printf("<DEBUG> Length of file: %lu\n", strlen(file));
     #endif
 
-    result = flag_validation(flag);
-    if (result != 0){
-        if (result == INPUT_ERROR){
-            fprintf(stderr, "%s: Keyword is empty\n", PACKAGE_NAME);
-        } else if (result == CHARACTER_NOT_ALLOWED_ERROR){
-            fprintf(stderr, "%s: Invalid character is included in '%s'. Keywords can include alphabets, numbers, '_', and '-'\n", PACKAGE_NAME, flag);
-        } else if (result == RESERVED_WORD_ERROR){
-            fprintf(stderr, "%s: '%s' is a reserved word.\n", PACKAGE_NAME, flag);
+    for (i = 0; i < nflag; i = i + 1){
+        result = flag_validation(flag[i]);
+        if (result != 0){
+            if (result == INPUT_ERROR){
+                fprintf(stderr, "%s: Keyword is empty\n", PACKAGE_NAME);
+            } else if (result == CHARACTER_NOT_ALLOWED_ERROR){
+                fprintf(stderr, "%s: Invalid character is included in '%s'. Keywords can include alphabets, numbers, '_', and '-'\n", PACKAGE_NAME, flag[i]);
+            } else if (result == RESERVED_WORD_ERROR){
+                fprintf(stderr, "%s: '%s' is a reserved word.\n", PACKAGE_NAME, flag[i]);
+            }
+            ret = INVALID_KEY_ERROR;
+            goto cleanup;
         }
-        ret = INVALID_KEY_ERROR;
-        goto cleanup;
     }
 
     result = make_dir(dir);
@@ -147,32 +152,6 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         goto cleanup;
     }
 
-    result = get_datetime(clock, '-', &datetime);
-    if (result == MALLOC_ERROR){
-        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-        ret = MALLOC_ERROR;
-        goto cleanup;
-    }
-    result = get_filename(flag, ext, &file);
-    if (result == MALLOC_ERROR){
-        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-        ret = MALLOC_ERROR;
-        goto cleanup;
-    }
-
-    result = asprintf(&path, "%s/%s", note_stock, file);
-    if (result < 0){
-        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-        ret = MALLOC_ERROR;
-        goto cleanup;
-    }
-    #ifdef DEBUG
-    printf("File name     : %s\n", file);
-    printf("Note file name: %s\n", path);
-    printf("List file name: %s\n", list);
-    printf("Length of file: %lu\n", strlen(file));
-    #endif
-
     result = make_file(list, O_CREAT | O_WRONLY);
     if (result == IO_ERROR || result == ACCESS_FAILED_ERROR){
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
@@ -180,57 +159,89 @@ int add(const char* list, const char* dir, const char* note_stock, char* flag, c
         goto cleanup;
     }
 
-    result = flag_exist_check(list, flag);
-    if (result == true){
-        fprintf(stderr, "%s: Keyword '%s' already exists\n", PACKAGE_NAME, flag);
-        ret = KEY_DUPLICATE;
-        goto cleanup;
-    } else if (result == IO_ERROR || result == LIST_FORMAT_ERROR){
-        if (result == LIST_FORMAT_ERROR){
-            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
-            ret = LIST_FORMAT_ERROR;
-            goto cleanup;
-        } else if (result == IO_ERROR){
-            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
-            ret = IO_ERROR;
-            goto cleanup;
-        }
-    } else if (result != false){
-        fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
-        ret = UNKNOWN_ERROR;
-        goto cleanup;
-    }
-    #ifdef DEBUG
-    printf("%s: Passed Flag Existence Check\n", flag);
-    #endif
-
-    result = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
-    if (result == IO_ERROR || result == ACCESS_FAILED_ERROR){
-        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
-        ret = IO_ERROR;
-        goto cleanup;
-    } else if (result == PATH_EXIST){
-        fprintf(stderr, "%s: %s already exists\n", PACKAGE_NAME, path);
-        ret = PATH_EXIST;
-        goto cleanup;
-    }
-
-    XFREE(datetime);
-
+    // result = get_datetime(clock, '-', &datetime);
+    // if (result == MALLOC_ERROR){
+    //     fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+    //     ret = MALLOC_ERROR;
+    //     goto cleanup;
+    // }
     result = get_datetime(clock, '\0', &datetime);
     if (result == MALLOC_ERROR){
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
     }
-    if (write_new_content_to_list(list, flag, datetime, path) == IO_ERROR){
-        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
-        ret = IO_ERROR;
-        goto cleanup;
-    }
 
-    printf("%s: Create new note: '%s'\n", PACKAGE_NAME, flag);
     ret = 0;
+
+    for (i = 0; i < nflag; i = i + 1){
+        result = get_filename(flag[i], ext, &file);
+        if (result == MALLOC_ERROR){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+
+        result = asprintf(&path, "%s/%s", note_stock, file);
+        if (result < 0){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+        #ifdef DEBUG
+        printf("File name     : %s\n", file);
+        printf("Note file name: %s\n", path);
+        printf("List file name: %s\n", list);
+        printf("Length of file: %lu\n", strlen(file));
+        #endif
+
+        result = flag_exist_check(list, flag[i]);
+        if (result == true){
+            fprintf(stderr, "%s: Keyword '%s' already exists\n", PACKAGE_NAME, flag[i]);
+            if (ret == 0){
+                ret = KEY_DUPLICATE;
+            }
+            continue;
+            // goto cleanup;
+        } else if (result == IO_ERROR || result == LIST_FORMAT_ERROR){
+            if (result == LIST_FORMAT_ERROR){
+                fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
+                ret = LIST_FORMAT_ERROR;
+                goto cleanup;
+            } else if (result == IO_ERROR){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
+                ret = IO_ERROR;
+                goto cleanup;
+            }
+        } else if (result != false){
+            fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
+            ret = UNKNOWN_ERROR;
+            goto cleanup;
+        }
+        #ifdef DEBUG
+        printf("%s: Passed Flag Existence Check\n", flag);
+        #endif
+
+        result = make_file(path, O_CREAT | O_EXCL | O_WRONLY);
+        if (result == IO_ERROR || result == ACCESS_FAILED_ERROR){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
+            ret = IO_ERROR;
+            goto cleanup;
+        } else if (result == PATH_EXIST){
+            fprintf(stderr, "%s: %s already exists\n", PACKAGE_NAME, path);
+            ret = PATH_EXIST;
+            goto cleanup;
+        }
+
+        if (write_new_content_to_list(list, flag[i], datetime, path) == IO_ERROR){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+            goto cleanup;
+        }
+
+        printf("%s: Create new note: '%s'\n", PACKAGE_NAME, flag[i]);
+    }
+    // ret = 0;
     goto cleanup;
 
 

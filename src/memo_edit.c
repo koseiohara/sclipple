@@ -17,6 +17,7 @@
 
 void get_command(char* editor, const int file_num, char* file[], char** command){
     int i;
+    int corrector;
     int base_idx;
 
     command[0] = "sh";
@@ -24,12 +25,17 @@ void get_command(char* editor, const int file_num, char* file[], char** command)
     command[2] = editor;
     command[3] = "sh";
 
-    base_idx = 4;
+    base_idx  = 4;
+    corrector = 0;
     for (i = 0; i < file_num; i = i + 1){
-        command[i+base_idx] = file[i];
+        if (file[i] != NULL){
+            command[i+base_idx-corrector] = file[i];
+        } else{
+            corrector = corrector + 1;
+        }
     }
 
-    command[4+file_num] = NULL;
+    command[4+file_num-corrector] = NULL;
 }
 
 
@@ -49,7 +55,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
     int j;
     int command_len;
     int result;
-    int ret;
+    int ret = 0;
 
     result = path_status(list, &st);
     if (result != PATH_EXIST){
@@ -86,7 +92,8 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
             if (result == KEY_NOT_FOUND){
                 fprintf(stderr, "%s: No such key: '%s'\nRun '%s add %s'\n", PACKAGE_NAME, flags[i], PACKAGE_NAME, flags[i]);
                 ret = KEY_NOT_FOUND;
-                goto cleanup;
+                files[i] = NULL;
+                // goto cleanup;
             } else if (result == LIST_FORMAT_ERROR){
                 fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
                 ret = LIST_FORMAT_ERROR;
@@ -99,10 +106,11 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
                 fprintf(stderr, "%s: Bug: Invalid col\n", PACKAGE_NAME);
                 ret = INPUT_ERROR;
                 goto cleanup;
+            } else{
+                fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
+                ret = UNKNOWN_ERROR;
+                goto cleanup;
             }
-            fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-            ret = UNKNOWN_ERROR;
-            goto cleanup;
         }
         #ifdef DEBUG
         printf("Checked existence of %s\n", files[i]);

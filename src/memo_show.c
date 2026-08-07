@@ -75,7 +75,7 @@ int show(char* list, int flag_num, char** flag_list){
     char*  notename = NULL;
     char** notename_list = NULL;
     int    result;
-    int    ret;
+    int    ret = 0;
     int    i;
     int    j;
 
@@ -170,25 +170,27 @@ int show(char* list, int flag_num, char** flag_list){
             if (notename_list[j] == NULL){
                 fprintf(stderr, "%s: No such note: '%s'\n", PACKAGE_NAME, flag_list[j]);
                 ret = KEY_NOT_FOUND;
-                goto cleanup;
+                // goto cleanup;
             }
         }
         for (j = 0; j <  flag_num; j = j + 1){
-            result = show_one_file(flag_list[j], notename_list[j]);
-            if (result != 0){
-                // fclose(fp);
-                if (result == IO_ERROR){
-                    fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename_list[j], strerror(errno));
-                    ret = IO_ERROR;
+            if (notename_list[j] != NULL){
+                result = show_one_file(flag_list[j], notename_list[j]);
+                if (result != 0){
+                    // fclose(fp);
+                    if (result == IO_ERROR){
+                        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename_list[j], strerror(errno));
+                        ret = IO_ERROR;
+                        goto cleanup;
+                    }
+                    fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
+                    ret = UNKNOWN_ERROR;
                     goto cleanup;
                 }
-                fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-                ret = UNKNOWN_ERROR;
-                goto cleanup;
             }
         }
     }
-    ret = 0;
+    // ret will be KEY_NOT_FOUND if one or more specified keys do not exist. otherwise, ret will be 0
     goto cleanup;
 
 
