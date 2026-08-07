@@ -114,6 +114,10 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
                 fprintf(stderr, "%s: Bug: Invalid col\n", PACKAGE_NAME);
                 ret = INPUT_ERROR;
                 goto cleanup;
+            } else if (result == IO_ERROR){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+                ret = IO_ERROR;
+                goto cleanup;
             } else{
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
                 ret = UNKNOWN_ERROR;

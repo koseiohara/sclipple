@@ -7,6 +7,7 @@ BIN="${1:-$ROOT/src/sclipple}"
 STDOUT=""
 STDERR=""
 STATUS=0
+BUG_STOP_STATUS=3
 TEST_HOME=""
 
 fail() {
@@ -38,6 +39,11 @@ run_cmd() {
   STDERR="$(cat "$err")"
 
   rm -f "$out" "$err"
+
+  if [ "$STATUS" -eq "$BUG_STOP_STATUS" ]; then
+    dump_last_command_output
+    fail "BUG_STOP detected while running: $*"
+  fi
 }
 
 assert_success() {
@@ -572,3 +578,6 @@ assert_status 2
 assert_diagnostic
 
 echo "All CLI tests passed."
+
+
+

@@ -49,6 +49,7 @@ cleanup:
 // return LIST_FORMAT_ERROR if a line does not include comma
 // return INPUT_ERROR if col is too large
 // return KEY_NOT_FOUND if target_flag does not exist
+// return IO_ERROR if getline failed
 // return MALLOC_ERROR if strdup failed
 // return 0 otherwise
 int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
@@ -142,6 +143,9 @@ int flag_exist_check(const char* list, char* flag){
     } else if (stat == LIST_FORMAT_ERROR || stat == INPUT_ERROR){
         ret = LIST_FORMAT_ERROR;
         goto cleanup;
+    } else if (stat == IO_ERROR){
+        ret = IO_ERROR;
+        goto cleanup;
     }
     fprintf(stderr, "%s: Unknown Error in flag_exist_check()\n", PACKAGE_NAME);
     ret = UNKNOWN_ERROR;
@@ -175,7 +179,7 @@ int get_datetime_by_key(const char* list, char* flag, char** datetime){
     if (stat == 0){
         ret = 0;
         goto cleanup;
-    } else if (stat == KEY_NOT_FOUND || stat == LIST_FORMAT_ERROR || stat == INPUT_ERROR || stat == MALLOC_ERROR){
+    } else if (stat == KEY_NOT_FOUND || stat == LIST_FORMAT_ERROR || stat == INPUT_ERROR || stat == IO_ERROR || stat == MALLOC_ERROR){
         ret = stat;
         goto cleanup;
     }
@@ -210,7 +214,7 @@ int get_filename_by_key(const char* list, char* flag, char** filename){
     if (stat == 0){
         ret = 0;
         goto cleanup;
-    } else if (stat == KEY_NOT_FOUND || stat == LIST_FORMAT_ERROR || stat == INPUT_ERROR || stat == MALLOC_ERROR){
+    } else if (stat == KEY_NOT_FOUND || stat == LIST_FORMAT_ERROR || stat == INPUT_ERROR || stat == IO_ERROR || stat == MALLOC_ERROR){
         ret = stat;
         goto cleanup;
     }
