@@ -93,7 +93,9 @@ int make_file(const char* path, const int cond){
 // return IO_ERROR if make directory and make file failed
 // return MALLOC_ERROR if malloc failed
 // return KEY_DUPLICATE if keyword already exist
+// return LIST_FORMAT_ERROR if list file is broken
 // return PATH_EXIST if note file already exist
+// return UNKONWN_ERROR when bug
 // return 0 otherwise
 int add(const char* list, const char* dir, const char* note_stock, int nflag, char** flag, char* ext, struct tm* clock){
     char* file     = NULL;
@@ -170,6 +172,8 @@ int add(const char* list, const char* dir, const char* note_stock, int nflag, ch
         goto cleanup;
     }
 
+    ret = 0;
+
     for (i = 0; i < nflag; i = i + 1){
         result = get_filename(flag[i], ext, &file);
         if (result == MALLOC_ERROR){
@@ -194,8 +198,11 @@ int add(const char* list, const char* dir, const char* note_stock, int nflag, ch
         result = flag_exist_check(list, flag[i]);
         if (result == true){
             fprintf(stderr, "%s: Keyword '%s' already exists\n", PACKAGE_NAME, flag[i]);
-            ret = KEY_DUPLICATE;
-            goto cleanup;
+            if (ret == 0){
+                ret = KEY_DUPLICATE;
+            }
+            continue;
+            // goto cleanup;
         } else if (result == IO_ERROR || result == LIST_FORMAT_ERROR){
             if (result == LIST_FORMAT_ERROR){
                 fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
@@ -234,7 +241,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nflag, ch
 
         printf("%s: Create new note: '%s'\n", PACKAGE_NAME, flag[i]);
     }
-    ret = 0;
+    // ret = 0;
     goto cleanup;
 
 

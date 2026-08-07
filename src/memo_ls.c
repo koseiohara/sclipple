@@ -62,7 +62,7 @@ int get_first_line(const char* notename, const int first_line_len, char* first_l
             *enter = '\0';
         }
 
-        fclose(fp);
+        xfclose(&fp);
         return 0;
     }
 
@@ -98,7 +98,7 @@ int ls(const char* list, int flag_num, char** flag_list){
     char   first_line[LS_LINE_LEN];
     int    atty;
     int    result;
-    int    ret;
+    int    ret = 0;
     int    i;
     int    j;
 
@@ -178,7 +178,7 @@ int ls(const char* list, int flag_num, char** flag_list){
             for (j = 0; j < flag_num; j = j + 1){
                 if (strcmp(flag_list[j], flag) == 0){
                     result = get_first_line(notename, LS_LINE_LEN, first_line);
-                    if (result != 0){
+                    if (result != 0 && result != NOTE_EMPTY){
                         if (result == IO_ERROR){
                             fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                             ret = IO_ERROR;
@@ -203,7 +203,7 @@ int ls(const char* list, int flag_num, char** flag_list){
             }
         } else{
             result = get_first_line(notename, LS_LINE_LEN, first_line);
-            if (result < 0){
+            if (result != 0 && result != NOTE_EMPTY){
                 if (result == IO_ERROR){
                     fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, notename, strerror(errno));
                     ret = IO_ERROR;
@@ -233,16 +233,18 @@ int ls(const char* list, int flag_num, char** flag_list){
             if (lines[i] == NULL){
                 fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag_list[i]);
                 ret = KEY_NOT_FOUND;
-                goto cleanup;
+                // goto cleanup;
             }
         }
 
         for (i = 0; i < flag_num; i = i + 1){
-            printf("%s", lines[i]);
+            if (lines[i] != NULL){
+                printf("%s", lines[i]);
+            }
         }
     }
 
-    ret = 0;
+    // ret will be KEY_NOT_FOUND if one or more specified keys do not exist. otherwise, ret will be 0
     goto cleanup;
 
 

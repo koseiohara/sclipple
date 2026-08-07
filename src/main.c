@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <strings.h>
 #include <string.h>
+#include <errno.h>
 #include <time.h>
 #include <sys/stat.h>
 
@@ -25,12 +26,13 @@
 int main(int argc, char** argv){
     Config  config;
     RcEntry entry[N_ENTRY];
-    char** editor_commands=NULL;
+    // char** editor_commands = NULL;
     char*  home;
-    char*  subdir;
-    char*  rc;
-    char*  list;
+    char*  subdir = NULL;
+    char*  rc     = NULL;
+    char*  list   = NULL;
     int    result;
+    int    ret;
     int    i;
     time_t now;
     struct tm* lt;
@@ -38,64 +40,51 @@ int main(int argc, char** argv){
 
 
     if (get_env("HOME", &home) < 0){
-        return 1;
+        ret = ERROR_STOP;
+        goto cleanup;
     }
-    #ifdef DEBUG
-    printf("$HOME = %s\n", home);
-    #endif
 
     result = asprintf(&rc, "%s/%s", home, RCNAME);
     if (result < 0){
-        perror("asprintf");
-        return 1;
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+        ret = ERROR_STOP;
+        goto cleanup;
     }
 
     result = init(&config, entry, home);
-    if (result < 0){
-        return 1;
+    if (result != 0){
+        ret = ERROR_STOP;
+        goto cleanup;
     }
 
     if (path_status(rc, &st) == PATH_EXIST){
         result = read_rc(rc, entry, sizeof(entry) / sizeof(entry[0]));
-        if (result < 0){
-            free_config(&config);
-            free(rc);
-            return 1;
+        if (result != 0){
+            ret = ERROR_STOP;
+            goto cleanup;
         }
     }
 
     result = asprintf(&subdir, "%s/%s", config.dir, SUBDIR);
     if (result < 0){
-        perror("asprintf");
-        free(rc);
-        free_config(&config);
-        return 1;
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+        ret = ERROR_STOP;
+        goto cleanup;
     }
     result = asprintf(&list, "%s/%s", config.dir, LISTNAME);
     if (result < 0){
-        perror("asprintf");
-        free(rc);
-        free(subdir);
-        free_config(&config);
-        return 1;
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+        ret = ERROR_STOP;
+        goto cleanup;
     }
-    #ifdef DEBUG
-    printf("dir   = %s\n", dir);
-    printf("subdir= %s\n", subdir);
-    printf("rc    = %s\n", rc);
-    printf("list  = %s\n", list);
-    printf("ext   = %s\n", config.ext);
-    #endif
-
 
     if (argc == 1){
         show_help_all(config.dir, subdir, list, rc);
-        free_config(&config);
-        free(rc);
-        free(subdir);
-        free(list);
-        return 0;
-    } else if (strcmp(argv[1], "help") == 0 || strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0){
+        ret = STOP;
+        goto cleanup;
+    }
+
+    if (strcmp(argv[1], "help") == 0 || strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0){
         if (argc == 2){
             show_help_all(config.dir, subdir, list, rc);
         } else{
@@ -106,151 +95,146 @@ int main(int argc, char** argv){
                 }
             }
         }
-        free_config(&config);
-        free(rc);
-        free(subdir);
-        free(list);
-        return 0;
-    } else if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0){
+        ret = STOP;
+        goto cleanup;
+    }
+
+    if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0){
         printf("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
-        free_config(&config);
-        free(rc);
-        free(subdir);
-        free(list);
-        return 0;
-    } else if (strcmp(argv[1], "git") == 0){
+        ret = STOP;
+        goto cleanup;
+    }
+
+    if (strcmp(argv[1], "git") == 0){
         result = git_run(config.dir, &argv[1]);
-        free_config(&config);
-        free(rc);
-        free(subdir);
-        free(list);
-        if (result < 0){
-            return 1;
+        if (argc == 2){
+            ret = NEGATIVE_STOP;
+        } else if (result == 0){
+            ret = STOP;
         } else{
-            return 0;
+            ret = ERROR_STOP;
         }
+        goto cleanup;
     }
 
     if (strcmp(argv[1], "add") == 0){
         if (argc == 2){
             show_help_add(subdir, list);
-            free_config(&config);
-            free(rc);
-            free(subdir);
-            free(list);
-            return 0;
-        } else{
-            now = time(NULL);
-            lt  = localtime(&now);
-
-            for (i = 2; i < argc; i = i + 1){
-                result = add(list, config.dir, subdir, 1, &argv[i], config.ext, lt);
-                if (result >= 0 || result == INVALID_KEY_ERROR){
-                    continue;
-                }
-                if (result < 0){
-                    free_config(&config);
-                    free(rc);
-                    free(subdir);
-                    free(list);
-                    return 1;
-                }
-            }
+            ret = NEGATIVE_STOP;
+            goto cleanup;
         }
 
-    } else if (strcmp(argv[1], "rm") == 0){
+        now = time(NULL);
+        lt  = localtime(&now);
+
+        result = add(list, config.dir, subdir, argc-2, &argv[2], config.ext, lt);
+
+        if (result == 0){
+            ret = STOP;
+        } else if (result == KEY_DUPLICATE){
+            ret = NEGATIVE_STOP;
+        } else{
+            ret = ERROR_STOP;
+        }
+        goto cleanup;
+    }
+
+    if (strcmp(argv[1], "rm") == 0){
         if (argc == 2){
             show_help_rm();
-            free_config(&config);
-            free(rc);
-            free(subdir);
-            free(list);
-            return 0;
-        } else{
-            for (i = 2; i < argc; i = i + 1){
-                result = rm(list, argv[i]);
-                if (result < 0 || result == KEY_NOT_FOUND){
-                    free_config(&config);
-                    free(rc);
-                    free(subdir);
-                    free(list);
-                    return 1;
-                }
-            }
+            ret = NEGATIVE_STOP;
+            goto cleanup;
         }
 
-    } else if (strcmp(argv[1], "mv") == 0){
+        result = rm(list, argc-2, &argv[2]);
+        if (result == 0){
+            ret = STOP;
+        } else if (result == KEY_NOT_FOUND){
+            ret = NEGATIVE_STOP;
+        } else{
+            ret = ERROR_STOP;
+        }
+        goto cleanup;
+    }
+
+    if (strcmp(argv[1], "mv") == 0){
         if (argc != 4){
             show_help_mv();
-            free_config(&config);
-            free(rc);
-            free(subdir);
-            free(list);
-            return 0;
-        } else{
-            result = mv(list, argv[2], argv[3]);
-            if (result < 0 || result == KEY_NOT_FOUND || result == KEY_DUPLICATE){
-                free_config(&config);
-                free(rc);
-                free(subdir);
-                free(list);
-                return 1;
-            }
+            ret = NEGATIVE_STOP;
+            goto cleanup;
         }
 
-    } else if (strcmp(argv[1], "ls") == 0){
-        result = ls(list, argc-2, &argv[2]);
-        if (result < 0 || result == KEY_NOT_FOUND){
-            free_config(&config);
-            free(rc);
-            free(subdir);
-            free(list);
-            return 1;
+        result = mv(list, argv[2], argv[3]);
+        if (result == 0){
+            ret = STOP;
+        } else if (result == KEY_NOT_FOUND || result == KEY_DUPLICATE){
+            ret = NEGATIVE_STOP;
+        } else{
+            ret = ERROR_STOP;
         }
-    } else if (strcmp(argv[1], "search") == 0){
+        goto cleanup;
+    }
+
+    if (strcmp(argv[1], "ls") == 0){
+        result = ls(list, argc-2, &argv[2]);
+        if (result == 0){
+            ret = STOP;
+        } else if (result == KEY_NOT_FOUND){
+            ret = NEGATIVE_STOP;
+        } else{
+            ret = ERROR_STOP;
+        }
+        goto cleanup;
+    }
+
+    if (strcmp(argv[1], "search") == 0){
         if (argc == 2){
             show_help_search();
-            free_config(&config);
-            free(rc);
-            free(subdir);
-            free(list);
-            return 0;
+            ret = NEGATIVE_STOP;
+            goto cleanup;
         } else{
             result = search(list, argv[2], argc-3, &argv[3]);
-            if (result < 0 || result == KEY_NOT_FOUND){
-                free_config(&config);
-                free(rc);
-                free(subdir);
-                free(list);
-                return 1;
+            if (result == 0){
+                ret = STOP;
+            } else if (result == KEY_NOT_FOUND){
+                ret = NEGATIVE_STOP;
+            } else{
+                ret = ERROR_STOP;
             }
-        }
-    } else if (strcmp(argv[1], "show") == 0){
-        result = show(list, argc-2, &argv[2]);
-        if (result < 0 || result == KEY_NOT_FOUND){
-            free_config(&config);
-            free(rc);
-            free(subdir);
-            free(list);
-            return 1;
-        }
-    } else {
-        result = memo_edit(list, subdir, config.editor, argc-1, &argv[1]);
-        if (result < 0 || result == KEY_NOT_FOUND){
-            free(editor_commands);
-            free_config(&config);
-            free(rc);
-            free(subdir);
-            free(list);
-            return 1;
+            goto cleanup;
         }
     }
 
-    free(editor_commands);
+    if (strcmp(argv[1], "show") == 0){
+        result = show(list, argc-2, &argv[2]);
+        if (result == 0){
+            ret = STOP;
+        } else if (result == KEY_NOT_FOUND){
+            ret = NEGATIVE_STOP;
+        } else{
+            ret = ERROR_STOP;
+        }
+        goto cleanup;
+    }
+
+    result = memo_edit(list, subdir, config.editor, argc-1, &argv[1]);
+    if (result == 0){
+        ret = STOP;
+    } else if (result == KEY_NOT_FOUND){
+        ret = NEGATIVE_STOP;
+    } else{
+        ret = ERROR_STOP;
+    }
+    goto cleanup;
+
+
+cleanup:
     free_config(&config);
-    free(rc);
+    // free(editor_commands);
     free(subdir);
+    free(rc);
     free(list);
-    return 0;
+
+    return ret;
 }
 

@@ -1,3 +1,3 @@
 
-int rm(const char* list, char* flag);
+int rm(const char* list, int nflag, char** flag);
 
