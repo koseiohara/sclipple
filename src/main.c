@@ -39,7 +39,7 @@ int main(int argc, char** argv){
     struct stat st;
 
 
-    if (get_env("HOME", &home) < 0){
+    if (get_env("HOME", &home) != 0){
         ret = ERROR_STOP;
         goto cleanup;
     }
