@@ -197,7 +197,7 @@ assert_note_count 1
 echo "3. duplicate add is a non-fatal warning/no-op"
 
 run_cmd "$BIN" add alpha
-assert_success
+assert_status 1
 assert_diagnostic
 assert_note_count 1
 
@@ -454,7 +454,7 @@ assert_storage_intact_for_new_other
 echo "21. mv invalid new key fails and preserves existing note"
 
 run_cmd "$BIN" mv new ..
-assert_status 1
+assert_status 2
 assert_diagnostic
 
 assert_file_exists "$new_path"
