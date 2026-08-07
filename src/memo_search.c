@@ -192,7 +192,7 @@ int search(char* list, char* word, int flag_num, char** flag_list){
     errcode = regcomp(&regex, word, REG_EXTENDED | REG_ICASE);
     if (errcode != 0){
         regerror(errcode, &regex, errbuf, sizeof(errbuf));
-        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, errbuf);
         ret = REGEX_ERROR;
         goto cleanup;
     }

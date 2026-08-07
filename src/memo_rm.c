@@ -102,14 +102,13 @@ int rm(const char* list, int nflag, char** flag){
 
         if (unlink(filename) == 0){
             printf("%s: removed '%s'\n", PACKAGE_NAME, flag[i]);
+            XFREE(filename);
             continue;
         }
 
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, filename, strerror(errno));
         ret = UNLINK_ERROR;
         goto cleanup;
-
-        XFREE(filename);
     }
 
     goto cleanup;

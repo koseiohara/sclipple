@@ -140,9 +140,9 @@ int add(const char* list, const char* dir, const char* note_stock, int nflag, ch
     result = make_dir(note_stock);
     if (result != 0 && result != IS_DIRECTORY){
         if (result == IS_NOT_DIRECTORY_ERROR){
-            fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, dir);
+            fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, note_stock);
         } else if (result == MKDIR_ERROR){
-            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, dir, strerror(errno));
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, note_stock, strerror(errno));
         }
         ret = IO_ERROR;
         goto cleanup;
@@ -150,7 +150,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nflag, ch
 
     result = make_file(list, O_CREAT | O_WRONLY);
     if (result == IO_ERROR || result == ACCESS_FAILED_ERROR){
-        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
     }
@@ -229,8 +229,12 @@ int add(const char* list, const char* dir, const char* note_stock, int nflag, ch
             goto cleanup;
         }
 
-        if (write_new_content_to_list(list, flag[i], datetime, path) == IO_ERROR){
+        result = write_new_content_to_list(list, flag[i], datetime, path);
+        if (result == IO_ERROR){
             fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            if (unlink(path) != 0){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
+            }
             ret = IO_ERROR;
             goto cleanup;
         }

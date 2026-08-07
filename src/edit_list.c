@@ -234,7 +234,7 @@ cleanup:
 // return FILE_FORMAT_ERROR if file name is not include "--"
 // return RENAME_ERROR if failed to rename tmpfile to list file
 // return 0, otherwise
-int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
+int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char* new_file){
     FILE* fpr  = NULL;
     FILE* fpw  = NULL;
     char* line = NULL;
@@ -345,14 +345,15 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag){
 
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
-            result = mv_filename(notename, new_flag, &out_notename);
-            if (result < 0){
+            // result = mv_filename(notename, new_flag, &out_notename);
+            if (result != 0){
                 unlink(tmpfile);
                 ret = result;
                 goto cleanup;
             }
-            out_flag = strdup(new_flag);
-            if (out_flag == NULL){
+            out_flag     = strdup(new_flag);
+            out_notename = strdup(new_file);
+            if (out_flag == NULL || out_notename == NULL){
                 unlink(tmpfile);
                 ret = MALLOC_ERROR;
                 goto cleanup;

@@ -24,7 +24,7 @@
 #include "memo_show.h"
 
 int main(int argc, char** argv){
-    Config  config;
+    Config  config = {0};
     RcEntry entry[N_ENTRY];
     // char** editor_commands = NULL;
     char*  home;
@@ -104,7 +104,7 @@ int main(int argc, char** argv){
     }
 
     if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0){
-        printf("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
+        printf("%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
         ret = STOP;
         goto cleanup;
     }
