@@ -568,7 +568,7 @@ reset_home
 setup_rc
 
 run_cmd "$BIN" git status
-assert_success
+assert_status 2
 assert_diagnostic
 
 echo "All CLI tests passed."
