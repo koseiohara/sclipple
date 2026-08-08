@@ -48,14 +48,14 @@
 #define UNKNOWN_ERROR 100
 
 
-#define false -1
-#define true  -2
-#define KEY_NOT_FOUND -3
-#define KEY_DUPLICATE -4
-#define LIST_WHITE_SPACE -5
-#define PATH_EXIST -6
-#define PATH_NOT_EXIST -7
-#define END_OF_FILE -8
-#define RESULT_EMPTY -9
-#define IS_DIRECTORY -10
+#define false 64
+#define true  65
+#define KEY_NOT_FOUND 66
+#define KEY_DUPLICATE 67
+#define LIST_WHITE_SPACE 68
+#define PATH_EXIST 69
+#define PATH_NOT_EXIST 70
+#define END_OF_FILE 71
+#define RESULT_EMPTY 72
+#define IS_DIRECTORY 73
 
