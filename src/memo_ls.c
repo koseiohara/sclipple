@@ -190,6 +190,8 @@ int ls(const char* list, int flag_num, char** flag_list){
                         }
                     }
 
+                    XFREE(lines[j]);
+
                     if (atty){
                         result = asprintf(&lines[j], OUTPUT_TTY , flag, datetime, notename, first_line);
                     } else{
