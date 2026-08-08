@@ -163,6 +163,11 @@ jobs:
       contents: write
 
     steps:
+      - name: Check out release commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.validate.outputs.commit }}
+
       - name: Download packages
         uses: actions/download-artifact@v8
         with:
@@ -175,6 +180,16 @@ jobs:
         run: |
           set -euo pipefail
           sha256sum sclipple-*.tar.gz > SHA256SUMS
+
+      - name: Prepare release introduction
+        shell: bash
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          set -euo pipefail
+          sed "s/@VERSION@/$VERSION/g" \
+            .github/release-intro.md \
+            > dist/release-intro.md
 
       - name: Create tag and draft release
         shell: bash
@@ -191,7 +206,5 @@ jobs:
             dist/SHA256SUMS \
             --target "$COMMIT" \
             --generate-notes \
+            --notes "$(cat dist/release-intro.md)" \
             --draft
-
-
-
