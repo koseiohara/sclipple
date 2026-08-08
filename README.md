@@ -286,13 +286,13 @@ Notes are stored as ordinary text files.
 Generated filenames have the form:
 
 ```text
-KEY--YYYY-MM-DD-hh-mm-ss.EXT
+KEY.EXT
 ```
 
 Example:
 
 ```text
-todo--2025-07-01-12-34-56.txt
+todo.txt
 ```
 
 ---
