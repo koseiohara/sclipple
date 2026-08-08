@@ -17,10 +17,28 @@
 #define DELIM ","
 
 
+int write_line(FILE* fp, const char* flag, const char* datetime, const char* file){
+    int flag_len;
+    int datetime_len;
+    int file_len;
+
+    flag_len     = strlen(flag);
+    datetime_len = strlen(datetime);
+    file_len     = strlen(file);
+    if (fprintf(fp, "%d%s%s%s%d%s%s%s%d%s%s\n", flag_len    , DELIM, flag    , DELIM,
+                                                datetime_len, DELIM, datetime, DELIM,
+                                                file_len    , DELIM, file) < 0){
+        return IO_ERROR;
+    }
+    return 0;
+}
+
+
 // return IO_ERROR if failed to open or write to list file
 // return 0 otherwise
 int write_new_content_to_list(const char* list, const char* flag, const char* datetime, const char* file){
     FILE* fp = NULL;
+    int result;
     int ret = 0;
 
     fp = fopen(list, "a");
@@ -30,11 +48,14 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
         goto cleanup;
     }
 
-    if (fprintf(fp, "%s%s%s%s%s\n", flag, DELIM, datetime, DELIM, file) < 0){
-        ret = IO_ERROR;
-
+    result = write_line(fp, flag, datetime, file);
+    if (result == 0){
+        ret = 0;
         goto cleanup;
     }
+
+    ret = IO_ERROR;
+    goto cleanup;
 
 cleanup:
     if (xfclose(&fp) != 0){
@@ -46,6 +67,36 @@ cleanup:
 }
 
 
+char* get_element(char** line, int* ellen){
+    char* len_c;
+    char* next;
+    size_t next_strlen;
+
+    *ellen = -1;
+
+    len_c  = strtok_r(*line, DELIM, &next);
+    if (len_c == NULL || next == NULL){
+        return NULL;
+    }
+    *ellen = atoi(len_c);
+
+    next_strlen = strlen(next);
+
+    if ((size_t)*ellen > next_strlen){
+        return NULL;
+    }
+
+    next[*ellen] = '\0';
+    *line = next + (*ellen) ;
+
+    if ((size_t)*ellen < next_strlen){
+        *line = *line + 1;
+    }
+
+    return next;
+}
+
+
 // return LIST_FORMAT_ERROR if a line does not include comma
 // return INPUT_ERROR if col is too large
 // return KEY_NOT_FOUND if target_flag does not exist
@@ -54,7 +105,9 @@ cleanup:
 // return 0 otherwise
 int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
     char*  line = NULL;
+    char*  work_line;
     char*  flag;
+    int    flag_len;
     int    i;
     int    ret;
     size_t size = 0;
@@ -66,7 +119,9 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
             continue;
         }
 
-        flag = strtok(line, DELIM);
+        work_line = line;
+
+        flag = get_element(&work_line, &flag_len);
         if (flag == NULL){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             ret = LIST_FORMAT_ERROR;
@@ -82,7 +137,7 @@ int read_list_by_key(FILE* fp, char* target_flag, const int col, char** result){
             goto cleanup;
         }
         for (i = 1; i <= col; i = i + 1){
-            flag = strtok(NULL, DELIM);
+            flag = get_element(&work_line, &flag_len);
             if (flag == NULL){
                 fprintf(stderr, "%s: Invalid col. col exceeds the number of actual columns\n", PACKAGE_NAME);
                 ret = INPUT_ERROR;
@@ -243,6 +298,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char*
     char* out_datetime = NULL;
     char* out_notename = NULL;
     char* dummy = NULL;
+    char* work_line;
     char* flag;
     char* datetime;
     char* notename;
@@ -250,6 +306,7 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char*
     int    changed;
     int    result;
     int    ret;
+    int    work_len;
     size_t size = 0;
     struct stat st;
 
@@ -326,10 +383,12 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char*
             continue;
         }
 
+        work_line = line;
+
         // find the first delimiter
-        flag     = strtok(line, DELIM);
-        datetime = strtok(NULL, DELIM);
-        notename = strtok(NULL, DELIM);
+        flag     = get_element(&work_line, &work_len);
+        datetime = get_element(&work_line, &work_len);
+        notename = get_element(&work_line, &work_len);
         #ifdef DEBUG
         printf("<DEBUG> FLAG    : %s\n", flag);
         printf("<DEBUG> DATETIME: %s\n", datetime);
@@ -369,9 +428,14 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char*
             goto cleanup;
         }
 
-        if (fprintf(fpw, "%s%s%s%s%s\n", out_flag, DELIM, out_datetime, DELIM, out_notename) < 0){
+        result = write_line(fpw, out_flag, out_datetime, out_notename);
+        if (result != 0){
             unlink(tmpfile);
-            ret = IO_ERROR;
+            if (result == IO_ERROR){
+                ret = IO_ERROR;
+            } else{
+                ret = UNKNOWN_ERROR;
+            }
             goto cleanup;
         }
         XFREE(out_flag);
@@ -444,6 +508,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     FILE* fpw     = NULL;
     char* line    = NULL;
     char* tmpfile = NULL;
+    char* work_line;
     char* flag;
     char* datetime;
     char* notename;
@@ -451,6 +516,7 @@ int rm_key_in_list(const char* list, const char* target_flag){
     int   removed;
     int   result;
     int   ret;
+    int   work_len;
     struct stat st;
     size_t size = 0;
 
@@ -504,10 +570,12 @@ int rm_key_in_list(const char* list, const char* target_flag){
             continue;
         }
 
+        work_line = line;
+
         // find the first delimiter
-        flag     = strtok(line, DELIM);
-        datetime = strtok(NULL, DELIM);
-        notename = strtok(NULL, DELIM);
+        flag     = get_element(&work_line, &work_len);
+        datetime = get_element(&work_line, &work_len);
+        notename = get_element(&work_line, &work_len);
         #ifdef DEBUG
         printf("<DEBUG> FLAG : %s\n", flag);
         printf("<DEBUG> DATETIME: %s\n", datetime);
@@ -528,9 +596,14 @@ int rm_key_in_list(const char* list, const char* target_flag){
         }
 
         // snprintf(out_line, sizeof(out_line), "%s,%s,%s\n", flag, datetime, notename);
-        if (fprintf(fpw, "%s%s%s%s%s\n", flag, DELIM, datetime, DELIM, notename) < 0){
+        result = write_line(fpw, flag, datetime, notename);
+        if (result != 0){
             unlink(tmpfile);
-            ret = IO_ERROR;
+            if (result == IO_ERROR){
+                ret = IO_ERROR;
+            } else{
+                ret = UNKNOWN_ERROR;
+            }
             goto cleanup;
         }
     }
@@ -591,10 +664,12 @@ cleanup:
 int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
     char*  line = NULL;
     char*  dummy = NULL;
+    char*  work_line;
     char*  in_flag;
     char*  in_datetime;
     char*  in_notename;
     int    ret;
+    int    work_len;
     size_t size  = 0;
 
     *flag     = NULL;
@@ -617,10 +692,12 @@ int get_content_line(FILE* fp, char** flag, char** datetime, char** notename){
 
     line[strcspn(line, "\n")] = '\0';
 
-    in_flag     = strtok(line, DELIM);
-    in_datetime = strtok(NULL, DELIM);
-    in_notename = strtok(NULL, DELIM);
-    dummy       = strtok(NULL, DELIM);
+    work_line = line;
+
+    in_flag     = get_element(&work_line, &work_len);
+    in_datetime = get_element(&work_line, &work_len);
+    in_notename = get_element(&work_line, &work_len);
+    dummy       = get_element(&work_line, &work_len);
 
     if (in_flag == NULL || in_datetime == NULL || in_notename == NULL || dummy != NULL){
         ret = LIST_FORMAT_ERROR;
