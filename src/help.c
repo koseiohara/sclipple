@@ -25,7 +25,7 @@ void show_help_add(char* subdir, char* list){
     printf("  Files:\n");
     printf("    - Notes are stored under %s.\n", subdir);
     printf("    - The note index is stored at %s.\n", list);
-    printf("    - The created filename has the form KEY--YYYY-MM-DD-hh-mm-ss.EXT.\n");
+    printf("    - The created filename has the form KEY.EXT.\n");
     printf("\n");
     printf("  Examples:\n");
     printf("    %s add <KEY>\n", PACKAGE_NAME);
@@ -227,7 +227,7 @@ void show_help_all(char* dir, char* subdir, char* list, char* rc){
     show_help_config(rc);
 }
 
-void show_help_command(const char* command, char* dir, char* subdir, char* list, char* rc){
+int show_help_command(const char* command, char* dir, char* subdir, char* list, char* rc){
     if (command == NULL || strcmp(command, "all") == 0){
         show_help_all(dir, subdir, list, rc);
     } else if (strcmp(command, "add") == 0){
@@ -251,7 +251,9 @@ void show_help_command(const char* command, char* dir, char* subdir, char* list,
     } else{
         fprintf(stderr, "%s Error: Unknown help topic: %s\n", PACKAGE_NAME, command);
         fprintf(stderr, "Available topics: add, rm, mv, ls, search, show, edit, git, config, all\n");
+        return KEY_NOT_FOUND;
     }
+    return 0;
 }
 
 void show_help(char* dir, char* subdir, char* list, char* rc){

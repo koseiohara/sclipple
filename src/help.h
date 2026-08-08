@@ -11,7 +11,7 @@ void show_help_edit(char* rc);
 void show_help_git(void);
 void show_help_config(char* rc);
 void show_help_all(char* dir, char* subdir, char* list, char* rc);
-void show_help_command(const char* command, char* dir, char* subdir, char* list, char* rc);
+int show_help_command(const char* command, char* dir, char* subdir, char* list, char* rc);
 void show_help(char* dir, char* subdir, char* list, char* rc);
 
 #endif

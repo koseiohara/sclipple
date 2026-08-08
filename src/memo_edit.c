@@ -149,6 +149,10 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
             _exit(MALLOC_ERROR);
         }
         get_command(tmp_editor, flag_num, files, command);
+        if (command[4] == NULL){
+            fprintf(stderr, "%s: No available key\n", PACKAGE_NAME);
+            _exit(KEY_NOT_FOUND);
+        }
 
         // If this shell command successfully executed, the following lines never be executed
         execvp("sh", command);
@@ -179,6 +183,11 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
     exit_stat = WEXITSTATUS(stat);
 
     if (exit_stat == 0){
+        goto cleanup;
+    }
+
+    if (exit_stat == KEY_NOT_FOUND){
+        ret = exit_stat;
         goto cleanup;
     }
 

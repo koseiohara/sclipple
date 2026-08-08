@@ -93,9 +93,13 @@ int main(int argc, char** argv){
             show_help_all(config.dir, subdir, list, rc);
         } else{
             for (i = 2; i < argc; i = i + 1){
-                show_help_command(argv[i], config.dir, subdir, list, rc);
+                result = show_help_command(argv[i], config.dir, subdir, list, rc);
                 if (i + 1 < argc){
                     printf("\n");
+                }
+                if (result == KEY_NOT_FOUND){
+                    ret = NEGATIVE_STOP;
+                    goto cleanup;
                 }
             }
         }
