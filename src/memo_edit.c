@@ -64,6 +64,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
     int ret = 0;
     int stat;
     int exit_stat;
+    int available_count = 0;
 
     result = path_status(list, &st);
     if (result != PATH_EXIST){
@@ -123,12 +124,20 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
                 ret = UNKNOWN_ERROR;
                 goto cleanup;
             }
+        } else{
+            available_count = available_count + 1;
         }
         #ifdef DEBUG
         printf("Checked existence of %s\n", files[i]);
         #endif
     }
     xfclose(&fp);
+
+    if (available_count == 0){
+        fprintf(stderr, "%s: No available key\n", PACKAGE_NAME);
+        ret = KEY_NOT_FOUND;
+        goto cleanup;
+    }
 
     pid = fork();
     if (pid == 0){
@@ -150,8 +159,8 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
         }
         get_command(tmp_editor, flag_num, files, command);
         if (command[4] == NULL){
-            fprintf(stderr, "%s: No available key\n", PACKAGE_NAME);
-            _exit(KEY_NOT_FOUND);
+            fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
+            _exit(UNKNOWN_ERROR);
         }
 
         // If this shell command successfully executed, the following lines never be executed

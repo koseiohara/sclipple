@@ -153,7 +153,7 @@ int mv(const char* list, char* old_flag, char* new_flag){
     }
 
     if (unlink(old_file) != 0){
-        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, new_file, strerror(errno));
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, old_file, strerror(errno));
         ret = RENAME_ERROR;
         goto cleanup;
     }
