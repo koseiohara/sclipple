@@ -197,6 +197,8 @@ int add(const char* list, const char* dir, const char* note_stock, int nflag, ch
             if (ret == 0){
                 ret = KEY_DUPLICATE;
             }
+            XFREE(file);
+            XFREE(path);
             continue;
             // goto cleanup;
         } else if (result == IO_ERROR || result == LIST_FORMAT_ERROR){
