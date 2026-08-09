@@ -184,7 +184,11 @@ run_cmd "$BIN"
 assert_success
 assert_contains "$STDOUT$STDERR" "sclipple"
 
-run_cmd "$BIN" help add
+run_cmd "$BIN" --help
+assert_success
+assert_contains "$STDOUT$STDERR" "sclipple"
+
+run_cmd "$BIN" add --help
 assert_success
 assert_contains "$STDOUT$STDERR" "add"
 
@@ -227,7 +231,7 @@ echo "6. invalid and reserved keys do not create notes"
 
 before_count="$(note_count)"
 
-for key in "." ".." "bad/key" "bad,key" "bad key" "git" "help" "add" "rm" "mv" "ls" "search" "show"; do
+for key in "." ".." "bad/key" "bad,key" "bad key" "git" "add" "tag" "rm" "mv" "ls" "search" "show"; do
   run_cmd "$BIN" add "$key"
   assert_diagnostic
 
@@ -259,7 +263,7 @@ run_cmd "$BIN" ls beta alpha
 assert_success
 assert_contains "$STDOUT" "beta"
 assert_contains "$STDOUT" "alpha"
-assert_not_contains "$STDOUT" "gamma:"
+assert_not_contains "$STDOUT" "[gamma]"
 
 echo "9. ls abbreviates long first lines"
 
@@ -568,7 +572,7 @@ run_cmd "$BIN" git status --short
 assert_success
 assert_contains "$STDOUT$STDERR" ".list.csv"
 
-echo "28. git before storage reports diagnostic and returns success in the uploaded source"
+echo "28. git before storage reports diagnostic and exits with status 2"
 
 reset_home
 setup_rc

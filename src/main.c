@@ -98,11 +98,19 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    // if (argc == 1){
-    //     show_help_all(config.dir, subdir, list, rc);
-    //     ret = STOP;
-    //     goto cleanup;
-    // }
+    if (strcmp(argv[1], "git") == 0){
+        result = git_run(config.dir, &argv[1]);
+        if (argc == 2){
+            ret = NEGATIVE_STOP;
+        } else if (result == 0){
+            ret = STOP;
+        } else if (result == UNKNOWN_ERROR){
+            ret = BUG_STOP;
+        } else{
+            ret = ERROR_STOP;
+        }
+        goto cleanup;
+    }
 
     nonoptsc = 0;
     tagc     = 0;
@@ -139,55 +147,6 @@ int main(int argc, char** argv){
     if (nonoptsc == 0){
         show_help_all(config.dir, subdir, list, rc);
         ret = STOP;
-        goto cleanup;
-    }
-
-    // if (strcmp(nonopts[1], "help") == 0 || strcmp(nonopts[1], "--help") == 0 || strcmp(nonopts[1], "-h") == 0){
-    //     if (nonoptsc == 2){
-    //         show_help_all(config.dir, subdir, list, rc);
-    //     } else{
-    //         for (i = 2; i < nonoptsc; i = i + 1){
-    //             result = show_help_command(nonopts[i], config.dir, subdir, list, rc);
-    //             if (i + 1 < nonoptsc){
-    //                 printf("\n");
-    //             }
-    //             if (result == KEY_NOT_FOUND){
-    //                 ret = NEGATIVE_STOP;
-    //                 goto cleanup;
-    //             }
-    //         }
-    //     }
-    //     ret = STOP;
-    //     goto cleanup;
-    // }
-
-    // if (strcmp(nonopts[1], "--version") == 0 || strcmp(nonopts[1], "-v") == 0){
-    //     printf("%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
-    //     ret = STOP;
-    //     goto cleanup;
-    // }
-
-    if (strcmp(nonopts[0], "git") == 0){
-        if (has_help == true || nonoptsc == 1){
-            show_help_git();
-            if (has_help == true && nonoptsc == 1){
-                ret = STOP;
-            } else{
-                ret = NEGATIVE_STOP;
-            }
-            goto cleanup;
-        }
-
-        result = git_run(config.dir, &nonopts[1]);
-        // if (nonoptsc == 1){
-        //     ret = NEGATIVE_STOP;
-        if (result == 0){
-            ret = STOP;
-        } else if (result == UNKNOWN_ERROR){
-            ret = BUG_STOP;
-        } else{
-            ret = ERROR_STOP;
-        }
         goto cleanup;
     }
 
