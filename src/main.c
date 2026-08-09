@@ -292,7 +292,7 @@ int main(int argc, char** argv){
     }
 
     if (strcmp(nonopts[0], "search") == 0){
-        if (has_help == true || nonoptsc <= 2){
+        if (has_help == true || nonoptsc == 1){
             show_help_search();
             if (has_help == true && nonoptsc == 1){
                 ret = STOP;
@@ -326,7 +326,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = show(list, nonoptsc-2, &nonopts[2]);
+        result = show(list, nonoptsc-1, &nonopts[1]);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
