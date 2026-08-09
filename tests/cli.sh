@@ -173,6 +173,15 @@ assert_storage_intact_for_new_other() {
   assert_contains "$STDOUT" "content for other"
 }
 
+assert_command_help() {
+  local heading="$1"
+  shift
+
+  run_cmd "$BIN" "$@" --help
+  assert_success
+  assert_contains "$STDOUT$STDERR" "$heading"
+}
+
 [ -x "$BIN" ] || fail "sclipple binary is not executable: $BIN"
 
 new_home
@@ -184,9 +193,36 @@ run_cmd "$BIN"
 assert_success
 assert_contains "$STDOUT$STDERR" "sclipple"
 
-run_cmd "$BIN" help add
+run_cmd "$BIN" --help
 assert_success
-assert_contains "$STDOUT$STDERR" "add"
+assert_contains "$STDOUT$STDERR" "sclipple"
+long_help_status="$STATUS"
+long_help_stdout="$STDOUT"
+long_help_stderr="$STDERR"
+
+run_cmd "$BIN" -h
+assert_success
+
+[ "$STATUS" -eq "$long_help_status" ] \
+  || fail "-h and --help returned different statuses"
+
+[ "$STDOUT" = "$long_help_stdout" ] \
+  || fail "-h and --help produced different stdout"
+
+[ "$STDERR" = "$long_help_stderr" ] \
+  || fail "-h and --help produced different stderr"
+
+before_count="$(note_count)"
+
+assert_command_help "ADD" add foo
+assert_note_count "$before_count"
+assert_file_not_exists "$HOME/.sclipple"
+
+assert_command_help "RM" rm foo
+assert_command_help "MV" mv old new
+assert_command_help "LS" ls foo
+assert_command_help "SEARCH" search pattern foo
+assert_command_help "SHOW" show foo
 
 echo "2. add initializes storage"
 
@@ -227,7 +263,7 @@ echo "6. invalid and reserved keys do not create notes"
 
 before_count="$(note_count)"
 
-for key in "." ".." "bad/key" "bad,key" "bad key" "git" "help" "add" "rm" "mv" "ls" "search" "show"; do
+for key in "." ".." "bad/key" "bad,key" "bad key" "git" "add" "tag" "rm" "mv" "ls" "search" "show"; do
   run_cmd "$BIN" add "$key"
   assert_diagnostic
 
@@ -259,7 +295,7 @@ run_cmd "$BIN" ls beta alpha
 assert_success
 assert_contains "$STDOUT" "beta"
 assert_contains "$STDOUT" "alpha"
-assert_not_contains "$STDOUT" "gamma:"
+assert_not_contains "$STDOUT" "[gamma]"
 
 echo "9. ls abbreviates long first lines"
 
@@ -441,7 +477,7 @@ run_cmd "$BIN" ls
 assert_success
 assert_contains "$STDOUT" "new"
 assert_contains "$STDOUT" "other"
-assert_not_contains "$STDOUT" "old:"
+assert_not_contains "$STDOUT" "[old]"
 
 echo "19. mv missing old key fails with status 1 and preserves existing notes"
 
@@ -568,7 +604,7 @@ run_cmd "$BIN" git status --short
 assert_success
 assert_contains "$STDOUT$STDERR" ".list.csv"
 
-echo "28. git before storage reports diagnostic and returns success in the uploaded source"
+echo "28. git before storage reports diagnostic and exits with status 2"
 
 reset_home
 setup_rc
@@ -578,6 +614,5 @@ assert_status 2
 assert_diagnostic
 
 echo "All CLI tests passed."
-
 
 

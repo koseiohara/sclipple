@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <getopt.h>
 
 #include "globals.h"
 #include "help.h"
@@ -33,10 +34,25 @@ int main(int argc, char** argv){
     char*  list   = NULL;
     int    result;
     int    ret;
-    int    i;
+
     time_t now;
     struct tm* lt;
     struct stat st;
+
+    int    option;
+    int    has_help = false;
+    int    has_tag  = false;
+    int    nonoptsc;
+    int    tagc;
+    char** nonopts = NULL;
+    char** tags    = NULL;
+
+    static const struct option opt_list[] = {
+                                             {"help"   , no_argument      , NULL, 'h'},
+                                             {"version", no_argument      , NULL, 'v'},
+                                             {"tag"    , required_argument, NULL, 't'},
+                                             {NULL     , 0                , NULL,  0 },
+                                            };
 
 
     if (get_env("HOME", &home) != 0){
@@ -88,31 +104,6 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    if (strcmp(argv[1], "help") == 0 || strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0){
-        if (argc == 2){
-            show_help_all(config.dir, subdir, list, rc);
-        } else{
-            for (i = 2; i < argc; i = i + 1){
-                result = show_help_command(argv[i], config.dir, subdir, list, rc);
-                if (i + 1 < argc){
-                    printf("\n");
-                }
-                if (result == KEY_NOT_FOUND){
-                    ret = NEGATIVE_STOP;
-                    goto cleanup;
-                }
-            }
-        }
-        ret = STOP;
-        goto cleanup;
-    }
-
-    if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0){
-        printf("%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
-        ret = STOP;
-        goto cleanup;
-    }
-
     if (strcmp(argv[1], "git") == 0){
         result = git_run(config.dir, &argv[1]);
         if (argc == 2){
@@ -127,17 +118,59 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    if (strcmp(argv[1], "add") == 0){
-        if (argc == 2){
+    nonoptsc = 0;
+    tagc     = 0;
+    nonopts  = malloc(argc * sizeof(char*));
+    tags     = malloc(argc * sizeof(char*));
+    while ((option = getopt_long(argc, argv, "-hvt:", opt_list, NULL)) != -1){
+        switch (option){
+            case 'h':
+                has_help = true;
+                break;
+            case 'v':
+                // has_version = true;
+                printf("%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
+                ret = STOP;
+                goto cleanup;
+                // break;
+            case 't':
+                has_tag = true;
+                tags[tagc] = optarg;
+                tagc = tagc + 1;
+                break;
+            case 1:
+                nonopts[nonoptsc] = optarg;
+                nonoptsc = nonoptsc + 1;
+                break;
+            case '?':
+                ret = ERROR_STOP;
+                goto cleanup;
+        }
+    }
+    nonopts[nonoptsc] = NULL;
+    tags[tagc]        = NULL;
+
+    if (nonoptsc == 0){
+        show_help_all(config.dir, subdir, list, rc);
+        ret = STOP;
+        goto cleanup;
+    }
+
+    if (strcmp(nonopts[0], "add") == 0){
+        if (has_help == true || nonoptsc == 1){
             show_help_add(subdir, list);
-            ret = NEGATIVE_STOP;
+            if (has_help == true){
+                ret = STOP;
+            } else{
+                ret = NEGATIVE_STOP;
+            }
             goto cleanup;
         }
 
         now = time(NULL);
         lt  = localtime(&now);
 
-        result = add(list, config.dir, subdir, argc-2, &argv[2], config.ext, lt);
+        result = add(list, config.dir, subdir, nonoptsc-1, &nonopts[1], config.ext, lt);
 
         if (result == 0){
             ret = STOP;
@@ -151,14 +184,18 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    if (strcmp(argv[1], "rm") == 0){
-        if (argc == 2){
+    if (strcmp(nonopts[0], "rm") == 0){
+        if (has_help == true || nonoptsc == 1){
             show_help_rm();
-            ret = NEGATIVE_STOP;
+            if (has_help == true){
+                ret = STOP;
+            } else{
+                ret = NEGATIVE_STOP;
+            }
             goto cleanup;
         }
 
-        result = rm(list, argc-2, &argv[2]);
+        result = rm(list, nonoptsc-1, &nonopts[1]);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -171,14 +208,18 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    if (strcmp(argv[1], "mv") == 0){
-        if (argc != 4){
+    if (strcmp(nonopts[0], "mv") == 0){
+        if (has_help == true || nonoptsc != 3){
             show_help_mv();
-            ret = NEGATIVE_STOP;
+            if (has_help == true){
+                ret = STOP;
+            } else{
+                ret = NEGATIVE_STOP;
+            }
             goto cleanup;
         }
 
-        result = mv(list, argv[2], argv[3]);
+        result = mv(list, nonopts[1], nonopts[2]);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND || result == KEY_DUPLICATE){
@@ -191,8 +232,14 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    if (strcmp(argv[1], "ls") == 0){
-        result = ls(list, argc-2, &argv[2]);
+    if (strcmp(nonopts[0], "ls") == 0){
+        if (has_help == true){
+            show_help_ls();
+            ret = STOP;
+            goto cleanup;
+        }
+
+        result = ls(list, nonoptsc-1, &nonopts[1]);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -205,28 +252,18 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    if (strcmp(argv[1], "search") == 0){
-        if (argc == 2){
+    if (strcmp(nonopts[0], "search") == 0){
+        if (has_help == true || nonoptsc == 1){
             show_help_search();
-            ret = NEGATIVE_STOP;
-            goto cleanup;
-        } else{
-            result = search(list, argv[2], argc-3, &argv[3]);
-            if (result == 0){
+            if (has_help == true){
                 ret = STOP;
-            } else if (result == KEY_NOT_FOUND){
-                ret = NEGATIVE_STOP;
-            } else if (result == UNKNOWN_ERROR){
-                ret = BUG_STOP;
             } else{
-                ret = ERROR_STOP;
+                ret = NEGATIVE_STOP;
             }
             goto cleanup;
         }
-    }
 
-    if (strcmp(argv[1], "show") == 0){
-        result = show(list, argc-2, &argv[2]);
+        result = search(list, nonopts[1], nonoptsc-2, &nonopts[2]);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -239,7 +276,33 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    result = memo_edit(list, subdir, config.editor, argc-1, &argv[1]);
+    if (strcmp(nonopts[0], "show") == 0){
+        if (has_help == true){
+            show_help_show();
+            ret = STOP;
+            goto cleanup;
+        }
+
+        result = show(list, nonoptsc-1, &nonopts[1]);
+        if (result == 0){
+            ret = STOP;
+        } else if (result == KEY_NOT_FOUND){
+            ret = NEGATIVE_STOP;
+        } else if (result == UNKNOWN_ERROR){
+            ret = BUG_STOP;
+        } else{
+            ret = ERROR_STOP;
+        }
+        goto cleanup;
+    }
+
+    if (has_help == true){
+        show_help_all(config.dir, subdir, list, rc);
+        ret = NEGATIVE_STOP;
+        goto cleanup;
+    }
+
+    result = memo_edit(list, subdir, config.editor, nonoptsc, nonopts);
     if (result == 0){
         ret = STOP;
     } else if (result == KEY_NOT_FOUND){
@@ -258,6 +321,8 @@ cleanup:
     free(subdir);
     free(rc);
     free(list);
+    free(nonopts);
+    free(tags);
 
     return ret;
 }

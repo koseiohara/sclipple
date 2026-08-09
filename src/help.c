@@ -53,8 +53,7 @@ void show_help_mv(void){
     printf("\n");
     printf("  Description:\n");
     printf("    Rename a note keyword. The index entry is updated and the note file is\n");
-    printf("    renamed so that its filename begins with NEW_KEY. The timestamp part is\n");
-    printf("    preserved.\n");
+    printf("    renamed so that its filename begins with NEW_KEY.\n");
     printf("\n");
     printf("  NEW_KEY rules:\n");
     printf("    - NEW_KEY must follow the same validation rules as add KEY.\n");
@@ -75,7 +74,7 @@ void show_help_ls(void){
     printf("\n");
     printf("  Output:\n");
     printf("    For each note, this command prints the keyword, creation timestamp, and\n");
-    printf("    the first non-empty line of the note. Long first lines are shortened.\n");
+    printf("    file path, the first non-empty line of the note. Long first lines are shortened.\n");
     printf("\n");
     printf("  Examples:\n");
     printf("    %s ls\n", PACKAGE_NAME);
@@ -197,7 +196,6 @@ void show_help_all(char* dir, char* subdir, char* list, char* rc){
     printf("  %s show [KEY ...]\n", PACKAGE_NAME);
     printf("  %s git GIT_ARGUMENTS...\n", PACKAGE_NAME);
     printf("  %s KEY [KEY ...]\n", PACKAGE_NAME);
-    printf("  %s help [COMMAND|config|all]\n", PACKAGE_NAME);
     printf("\n");
     printf("STORAGE\n");
     printf("  Directory: %s\n", dir);
@@ -206,7 +204,7 @@ void show_help_all(char* dir, char* subdir, char* list, char* rc){
     printf("  Config:    %s\n", rc);
     printf("\n");
     printf("COMMAND HELP\n");
-    printf("  Use '%s help COMMAND' to show only one help section.\n", PACKAGE_NAME);
+    printf("  Use '%s COMMAND --help' to show only one help section.\n", PACKAGE_NAME);
     printf("\n");
     show_help_add(subdir, list);
     print_separator();
@@ -227,35 +225,5 @@ void show_help_all(char* dir, char* subdir, char* list, char* rc){
     show_help_config(rc);
 }
 
-int show_help_command(const char* command, char* dir, char* subdir, char* list, char* rc){
-    if (command == NULL || strcmp(command, "all") == 0){
-        show_help_all(dir, subdir, list, rc);
-    } else if (strcmp(command, "add") == 0){
-        show_help_add(subdir, list);
-    } else if (strcmp(command, "rm") == 0){
-        show_help_rm();
-    } else if (strcmp(command, "mv") == 0){
-        show_help_mv();
-    } else if (strcmp(command, "ls") == 0){
-        show_help_ls();
-    } else if (strcmp(command, "search") == 0){
-        show_help_search();
-    } else if (strcmp(command, "show") == 0){
-        show_help_show();
-    } else if (strcmp(command, "edit") == 0){
-        show_help_edit(rc);
-    } else if (strcmp(command, "git") == 0){
-        show_help_git();
-    } else if (strcmp(command, "config") == 0 || strcmp(command, "rc") == 0){
-        show_help_config(rc);
-    } else{
-        fprintf(stderr, "%s Error: Unknown help topic: %s\n", PACKAGE_NAME, command);
-        fprintf(stderr, "Available topics: add, rm, mv, ls, search, show, edit, git, config, all\n");
-        return KEY_NOT_FOUND;
-    }
-    return 0;
-}
 
-void show_help(char* dir, char* subdir, char* list, char* rc){
-    show_help_all(dir, subdir, list, rc);
-}
+
