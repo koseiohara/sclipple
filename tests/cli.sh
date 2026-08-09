@@ -445,7 +445,7 @@ run_cmd "$BIN" ls
 assert_success
 assert_contains "$STDOUT" "new"
 assert_contains "$STDOUT" "other"
-assert_not_contains "$STDOUT" "old:"
+assert_not_contains "$STDOUT" "[old]"
 
 echo "19. mv missing old key fails with status 1 and preserves existing notes"
 

@@ -159,7 +159,7 @@ int main(int argc, char** argv){
     if (strcmp(nonopts[0], "add") == 0){
         if (has_help == true || nonoptsc == 1){
             show_help_add(subdir, list);
-            if (has_help == true && nonoptsc == 1){
+            if (has_help == true){
                 ret = STOP;
             } else{
                 ret = NEGATIVE_STOP;
@@ -187,7 +187,7 @@ int main(int argc, char** argv){
     if (strcmp(nonopts[0], "rm") == 0){
         if (has_help == true || nonoptsc == 1){
             show_help_rm();
-            if (has_help == true && nonoptsc == 1){
+            if (has_help == true){
                 ret = STOP;
             } else{
                 ret = NEGATIVE_STOP;
@@ -211,7 +211,7 @@ int main(int argc, char** argv){
     if (strcmp(nonopts[0], "mv") == 0){
         if (has_help == true || nonoptsc != 3){
             show_help_mv();
-            if (has_help == true && nonoptsc == 1){
+            if (has_help == true){
                 ret = STOP;
             } else{
                 ret = NEGATIVE_STOP;
@@ -235,11 +235,7 @@ int main(int argc, char** argv){
     if (strcmp(nonopts[0], "ls") == 0){
         if (has_help == true){
             show_help_ls();
-            if (nonoptsc == 1){
-                ret = STOP;
-            } else{
-                ret = NEGATIVE_STOP;
-            }
+            ret = STOP;
             goto cleanup;
         }
 
@@ -259,7 +255,7 @@ int main(int argc, char** argv){
     if (strcmp(nonopts[0], "search") == 0){
         if (has_help == true || nonoptsc == 1){
             show_help_search();
-            if (has_help == true && nonoptsc == 1){
+            if (has_help == true){
                 ret = STOP;
             } else{
                 ret = NEGATIVE_STOP;
