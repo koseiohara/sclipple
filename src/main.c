@@ -279,11 +279,7 @@ int main(int argc, char** argv){
     if (strcmp(nonopts[0], "show") == 0){
         if (has_help == true){
             show_help_show();
-            if (nonoptsc == 1){
-                ret = STOP;
-            } else{
-                ret = NEGATIVE_STOP;
-            }
+            ret = STOP;
             goto cleanup;
         }
 

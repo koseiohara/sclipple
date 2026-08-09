@@ -173,6 +173,15 @@ assert_storage_intact_for_new_other() {
   assert_contains "$STDOUT" "content for other"
 }
 
+assert_command_help() {
+  local heading="$1"
+  shift
+
+  run_cmd "$BIN" "$@" --help
+  assert_success
+  assert_contains "$STDOUT$STDERR" "$heading"
+}
+
 [ -x "$BIN" ] || fail "sclipple binary is not executable: $BIN"
 
 new_home
@@ -187,10 +196,33 @@ assert_contains "$STDOUT$STDERR" "sclipple"
 run_cmd "$BIN" --help
 assert_success
 assert_contains "$STDOUT$STDERR" "sclipple"
+long_help_status="$STATUS"
+long_help_stdout="$STDOUT"
+long_help_stderr="$STDERR"
 
-run_cmd "$BIN" add --help
+run_cmd "$BIN" -h
 assert_success
-assert_contains "$STDOUT$STDERR" "add"
+
+[ "$STATUS" -eq "$long_help_status" ] \
+  || fail "-h and --help returned different statuses"
+
+[ "$STDOUT" = "$long_help_stdout" ] \
+  || fail "-h and --help produced different stdout"
+
+[ "$STDERR" = "$long_help_stderr" ] \
+  || fail "-h and --help produced different stderr"
+
+before_count="$(note_count)"
+
+assert_command_help "ADD" add foo
+assert_note_count "$before_count"
+assert_file_not_exists "$HOME/.sclipple"
+
+assert_command_help "RM" rm foo
+assert_command_help "MV" mv old new
+assert_command_help "LS" ls foo
+assert_command_help "SEARCH" search pattern foo
+assert_command_help "SHOW" show foo
 
 echo "2. add initializes storage"
 
@@ -582,6 +614,5 @@ assert_status 2
 assert_diagnostic
 
 echo "All CLI tests passed."
-
 
 
