@@ -98,6 +98,12 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
+    if (argc == 1){
+        show_help_all(config.dir, subdir, list, rc);
+        ret = STOP;
+        goto cleanup;
+    }
+
     if (strcmp(argv[1], "git") == 0){
         result = git_run(config.dir, &argv[1]);
         if (argc == 2){
