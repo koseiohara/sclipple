@@ -147,6 +147,7 @@ For each note, the output includes:
 
 - KEY
 - creation timestamp
+- note file path
 - first non-empty line
 
 ---

@@ -197,7 +197,6 @@ void show_help_all(char* dir, char* subdir, char* list, char* rc){
     printf("  %s show [KEY ...]\n", PACKAGE_NAME);
     printf("  %s git GIT_ARGUMENTS...\n", PACKAGE_NAME);
     printf("  %s KEY [KEY ...]\n", PACKAGE_NAME);
-    printf("  %s help [COMMAND|config|all]\n", PACKAGE_NAME);
     printf("\n");
     printf("STORAGE\n");
     printf("  Directory: %s\n", dir);
@@ -206,7 +205,7 @@ void show_help_all(char* dir, char* subdir, char* list, char* rc){
     printf("  Config:    %s\n", rc);
     printf("\n");
     printf("COMMAND HELP\n");
-    printf("  Use '%s help COMMAND' to show only one help section.\n", PACKAGE_NAME);
+    printf("  Use '%s COMMAND --help ' to show only one help section.\n", PACKAGE_NAME);
     printf("\n");
     show_help_add(subdir, list);
     print_separator();

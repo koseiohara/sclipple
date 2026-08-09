@@ -98,11 +98,11 @@ int flag_validation(const char* flag){
         return RESERVED_WORD_ERROR;
     }
 
-    if (strcmp(flag, "help") == 0){
+    if (strcmp(flag, "add") == 0){
         return RESERVED_WORD_ERROR;
     }
 
-    if (strcmp(flag, "add") == 0){
+    if (strcmp(flag, "tag") == 0){
         return RESERVED_WORD_ERROR;
     }
 
