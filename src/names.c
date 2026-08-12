@@ -31,105 +31,6 @@ int get_env(const char* env, char** output){
 }
 
 
-// return INPUT_ERROR for invalid character
-// return  0 for valid ext
-int ext_validation(const char* ext){
-    unsigned char c;
-    size_t i;
-    size_t len;
-
-    // check length
-    if (ext == NULL){
-        return INPUT_ERROR;
-    }
-
-    len = strlen(ext);
-
-    for (i = 0; i < len; i = i + 1){
-        c = ext[i];
-        if (isalnum(c) || c == '_' || c == '-' || c == '.'){
-            continue;
-        }
-        return INPUT_ERROR;
-    }
-
-    return 0;
-}
-
-
-// return INPUT_ERROR if input is empty or not allocated
-// return CHARACTER_NOT_ALLOWED_ERROR if flag include invalid character
-// return RESERVED_WORD_ERROR if input word is a reserved word
-// return  0 for valid flag
-int flag_validation(const char* flag){
-    unsigned char c;
-    size_t i;
-    size_t len;
-
-    // check length
-    if (flag == NULL){
-        return INPUT_ERROR;
-    }
-
-    len = strlen(flag);
-
-    if (is_white_space(flag) == true){
-        return INPUT_ERROR;
-    }
-
-    // check banned character
-    if (strcmp(flag, ".") == 0 || strcmp(flag, "..") == 0) {
-        return CHARACTER_NOT_ALLOWED_ERROR;
-    }
-
-    if (flag[0] == '-'){
-        return CHARACTER_NOT_ALLOWED_ERROR;
-    }
-
-    for (i = 0; i < len; i = i + 1){
-        c = flag[i];
-        if (isalnum(c) || c == '_' || c == '-'){
-            continue;
-        }
-        return CHARACTER_NOT_ALLOWED_ERROR;
-    }
-
-    if (strcmp(flag, "git") == 0){
-        return RESERVED_WORD_ERROR;
-    }
-
-    if (strcmp(flag, "add") == 0){
-        return RESERVED_WORD_ERROR;
-    }
-
-    if (strcmp(flag, "tag") == 0){
-        return RESERVED_WORD_ERROR;
-    }
-
-    if (strcmp(flag, "rm") == 0){
-        return RESERVED_WORD_ERROR;
-    }
-
-    if (strcmp(flag, "mv") == 0){
-        return RESERVED_WORD_ERROR;
-    }
-
-    if (strcmp(flag, "ls") == 0){
-        return RESERVED_WORD_ERROR;
-    }
-
-    if (strcmp(flag, "search") == 0){
-        return RESERVED_WORD_ERROR;
-    }
-
-    if (strcmp(flag, "show") == 0){
-        return RESERVED_WORD_ERROR;
-    }
-
-    return 0;
-}
-
-
 // return INPUT_ERROR if arguments are invalid
 // return WORDEXP_ERROR if failed to parse
 // return MALLOC_ERROR if strdup failed
@@ -194,10 +95,10 @@ int parse_directory(const char* input_dir, char** output_dir){
 
 // return MALLOC_ERROR if MALLOC failed
 // return 0 otherwise
-int get_filename(const char* flag, char* ext, char** output){
+int get_filename(const char* key, char* ext, char** output){
     int result;
 
-    result = asprintf(output,  "%s.%s", flag, ext);
+    result = asprintf(output,  "%s.%s", key, ext);
     if (result < 0){
         return MALLOC_ERROR;
     }
@@ -208,7 +109,7 @@ int get_filename(const char* flag, char* ext, char** output){
 // return FILE_FORMAT_ERROR if old file name does not incude "--"
 // return MALLOC_ERROR if asprintf failed
 // return 0 otherwise
-int mv_filename(char* old_file, const char* new_flag, char** output){
+int mv_filename(char* old_file, const char* new_key, char** output){
     char* tmp_old_file = NULL;
     char* cp;
     char* prefix;
@@ -264,7 +165,7 @@ int mv_filename(char* old_file, const char* new_flag, char** output){
 
     last = strchr(cp, '.');
     if (last != NULL){
-        result = asprintf(output, "%s%s%s", prefix, new_flag, last);
+        result = asprintf(output, "%s%s%s", prefix, new_key, last);
         XFREE(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
         if (result < 0){
             return MALLOC_ERROR;

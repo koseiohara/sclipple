@@ -20,10 +20,46 @@
 #define DELIM ','
 
 
+int tags2line(int ntags, char* const* tags, char** line){
+    char* p;
+    int*  lens;
+    int i;
+    size_t len;
+
+    lens = malloc((size_t)ntags * sizeof(int));
+    if (lens == NULL){
+        return MALLOC_ERROR;
+    }
+
+    len = 0;
+    for (i = 0; i < ntags; i = i + 1){
+        lens[i] = strlen(tags[i]);
+        len = len + lens[i] + 2;            // +2 for a comma and a space
+    }
+
+    *line = malloc(len * sizeof(char));
+    if (line == NULL){
+        return MALLOC_ERROR;
+    }
+
+    p = *line;
+    for (i = 0; i < ntags; i = i + 1){
+        memcpy(p, tags[i], lens[i]);
+        p  = p + lens[i];
+        *p = ',';
+        p  = p + 1;
+        *p = ' ';
+        p  = p + 1;
+    }
+
+    return 0;
+}
+
+
 // return INPUT_ERROR if an argument is invalid
 // resutn MALLOC_ERROR if malloc failed
 // resutn 0 otherwise
-int tags_add(int* ntags, char*** updated, char** tags, char** add){
+int tags_add(int* ntags, char*** updated, char* const* tags, char* const* add){
     int tags_len;
     int add_len;
     int malloc_size;
@@ -80,7 +116,7 @@ int tags_add(int* ntags, char*** updated, char** tags, char** add){
 }
 
 
-int tags_del(int* ntags, char*** updated, char** tags, char** del){
+int tags_del(int* ntags, char*** updated, char* const* tags, char* const* del){
     int tags_len;
     int del_len;
     int malloc_size;
@@ -133,25 +169,84 @@ int tags_del(int* ntags, char*** updated, char** tags, char** del){
 }
 
 
+// return INPUT_ERROR if an argument is invalid
+// return MALLOCERROR if malloc failed
+// return 0 otherwise
+int fields_add(int* nfields, ListField** updated, const int fields_len, const ListField* fields, const int add_len, const ListField* add){
+    int malloc_size;
+    int found;
+    int i;
+    int j;
+
+    if (nfields == NULL || updated == NULL){
+        return INPUT_ERROR;
+    }
+    if (fields_len < 0 || add_len < 0){
+        return INPUT_ERROR;
+    }
+    if (fields_len > 0 && fields == NULL){
+        return INPUT_ERROR;
+    }
+    if (add_len > 0 && add == NULL){
+        return INPUT_ERROR;
+    }
+
+    *nfields = 0;
+    *updated = NULL;
+
+    malloc_size = fields_len + add_len;
+    if (malloc_size == 0){
+        return 0;
+    }
+
+    *updated = malloc((size_t)malloc_size * sizeof(ListField));
+    if (*updated == NULL){
+        return MALLOC_ERROR;
+    }
+
+    for (i = 0; i < fields_len; i = i + 1){
+        if (fields[i].key == NULL){
+            continue;
+        }
+
+        (*updated)[*nfields] = fields[i];
+        *nfields = *nfields + 1;
+    }
+
+    for (i = 0; i < add_len; i = i + 1){
+        if (add[i].key == NULL){
+            continue;
+        }
+
+        found = false;
+        for (j = 0; j < *nfields; j = j + 1){
+            if (strcmp(add[i].key, (*updated)[j].key) == 0){
+                found = true;
+                break;
+            }
+        }
+
+        if (found == false){
+            (*updated)[*nfields] = add[i];
+            *nfields = *nfields + 1;
+        }
+    }
+
+    return 0;
+}
+
+
 // return IO_ERROR if IO failed
 // return MALLOC_ERROR if malloc failed
-// return unknown_error if a bug is found
+// return UNKNOWN_ERROR if a bug is found
 // return 0 otherwise
-int add_contents_to_list(FILE* fp, char* key, char* file, char* datetime, char** tags){
+int add_contents_to_list(FILE* fp, char* key, char* file, char* datetime, int ntags, char** tags){
     // FILE* fp   = NULL;
     ListField field = {0};
     char* meta = NULL;
     int   result;
     int   ret;
-    int   ntags;
     int   i;
-
-    ntags = 0;
-    if (tags != NULL){
-        while (tags[ntags] != NULL){
-            ntags = ntags + 1;
-        }
-    }
 
     result = make_meta(&meta, datetime, ntags, tags);
     if (result != 0){
@@ -201,7 +296,7 @@ cleanup:
 // return UNKNOWN_ERROR if a bug is found
 // return KEY_NOT_FOUND if one or more keys were not found
 // return 0 if all keys exist
-int key_exist_check(FILE* fp, int nkeys, char** keys, char** exist, char** nexist){
+int key_exist_check(FILE* fp, const int nkeys, char* const* keys, char** exist, char** nexist){
     // FILE*  fp   = NULL;
     char*  ikey = NULL;
     char*  line = NULL;
@@ -307,7 +402,7 @@ cleanup:
 }
 
 
-// if files == NULL, files will not be read. similarly, meta will not be read if meta == NULL
+// if file == false, files will not be read. similarly, meta will not be read if meta == false
 // value is NULL if the key is not found
 //
 // return IO_ERROR if IO failed
@@ -315,8 +410,7 @@ cleanup:
 // return LIST_FORMAT_ERROR if list file is broken
 // return UNKNOWN_ERROR if a bug is found
 // return 0 otherwise
-int get_content_by_key(char* list, int nkeys, char** keys, ListField** field, int file, int meta){
-    FILE*  fp   = NULL;
+int get_content_by_key(FILE* fp, const int nkeys, char* const* keys, ListField** field, const int file, const int meta){
     char*  line = NULL;
     char*  work_key;
     char*  work_file;
@@ -327,9 +421,8 @@ int get_content_by_key(char* list, int nkeys, char** keys, ListField** field, in
     int    i;
     size_t size = 0;
 
-    fp = fopen(list, "r");
-    if (fp == NULL){
-        ret = IO_ERROR;
+    if (nkeys == 0){
+        ret = 0;
         goto cleanup;
     }
 
@@ -374,13 +467,18 @@ int get_content_by_key(char* list, int nkeys, char** keys, ListField** field, in
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
+                } else{
+                    (*field)[i].file = NULL;
                 }
+
                 if (meta == true){
                     (*field)[i].meta = strdup(work_meta);
                     if ((*field)[i].meta == NULL){
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
+                } else{
+                    (*field)[i].meta = NULL;
                 }
                 break;
             }
@@ -397,7 +495,6 @@ int get_content_by_key(char* list, int nkeys, char** keys, ListField** field, in
 
 
 cleanup:
-    xfclose(&fp);
     free(line);
     return ret;
 }
@@ -409,9 +506,7 @@ cleanup:
 // return MALLOC_ERROR if malloc_failed
 // return LIST_FORMAT_ERROR if list file is broken
 // return 0 otherwise
-int get_content_by_tag(char* list, int ntags, char** tags, 
-                       int* nlines, ListField** field){
-    FILE*      fp   = NULL;
+int get_content_by_tag(FILE* fp, const int ntags, char* const* tags, int* nlines, ListField** field){
     ListField* p    = NULL;
     char*      line = NULL;
     char*  work_line;
@@ -430,9 +525,8 @@ int get_content_by_tag(char* list, int ntags, char** tags,
     int    capacity;
     size_t size = 0;
 
-    fp = fopen(list, "r");
-    if (fp == NULL){
-        ret = IO_ERROR;
+    if (ntags == 0){
+        ret = 0;
         goto cleanup;
     }
 
@@ -554,9 +648,98 @@ int get_content_by_tag(char* list, int ntags, char** tags,
     goto cleanup;
 
 cleanup:
-    xfclose(&fp);
     free(line);
     free(work_tags);
+    return ret;
+}
+
+
+// return IO_ERROR if io failed
+// return MALLOC_ERROR if malloc failed
+// return LIST_FORMAT_ERROR if list file is broken
+// return UNKNOWN_ERROR if a bug is found
+// return 0 otherwise
+int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int* found_by_key, char** unfound, const int ntags, char* const* tags, int* found_by_tag, int* found_all, ListField** field, ListField** by_key, ListField** by_tag){
+    int result;
+    int ret;
+    int i;
+    int j;
+    int found;
+
+    result = get_content_by_key(fp, nkeys, keys, by_key, true, true);
+    if (result != 0){
+        if (result == LIST_FORMAT_ERROR){
+            ret = LIST_FORMAT_ERROR;
+        } else if (result == IO_ERROR){
+            ret = IO_ERROR;
+        } else if (result == MALLOC_ERROR){
+            ret = MALLOC_ERROR;
+        } else{
+            ret = UNKNOWN_ERROR;
+        }
+        goto cleanup;
+    }
+
+    *found_by_key = 0;
+    for (i = 0; i < nkeys; i = i + 1){
+        if ((*by_key)[i].key == NULL){
+            unfound[*found_by_key] = keys[i];
+            *found_by_key = *found_by_key + 1;
+        }
+    }
+    for (i = *found_by_key; i < nkeys; i = i + 1){
+        unfound[i] = NULL;
+    }
+
+    if (ntags == 0){
+        *field = malloc((size_t)(*found_by_key) * sizeof(ListField*));
+        *found_all = 0;
+        for (i = 0; i < *found_by_key; i = i + 1){
+            if ((*by_key)[i].key == NULL){
+                continue;
+            }
+
+            (*field)[*found_all] = (*by_key)[i];
+            *found_all = *found_all + 1;
+        }
+        ret = 0;
+        goto cleanup;
+    }
+
+    rewind(fp);
+    result = get_content_by_tag(fp, ntags, tags, found_by_tag, by_tag);
+    if (result != 0){
+        if (result == LIST_FORMAT_ERROR){
+            ret = LIST_FORMAT_ERROR;
+        } else if (result == IO_ERROR){
+            ret = IO_ERROR;
+        } else if (result == MALLOC_ERROR){
+            ret = MALLOC_ERROR;
+        } else if (result == INPUT_ERROR){
+            ret = UNKNOWN_ERROR;
+        } else{
+            ret = UNKNOWN_ERROR;
+        }
+        goto cleanup;
+    }
+
+    result = fields_add(found_all, field, nkeys, *by_key, *found_by_tag, *by_tag);
+    if (result != 0){
+        if (result == MALLOC_ERROR){
+            ret = MALLOC_ERROR;
+        } else if (result == INPUT_ERROR){
+            ret = UNKNOWN_ERROR;
+        } else{
+            ret = UNKNOWN_ERROR;
+        }
+        goto cleanup;
+    }
+
+    return 0;
+    goto cleanup;
+
+
+cleanup:
     return ret;
 }
 
@@ -574,8 +757,9 @@ cleanup:
 // return MALLOC_ERROR malloc failed
 // return LIST_FORMAT_ERROR list file is broken
 // return KEY_DUPLICATE if new_key already exist
+// return KEY_NOT_FOUND if old_key already exist
 // return 0 otherwise
-int edit_list(char* list, char* mode, int nkeys, char** keys, char** info){
+int edit_list(const char* list, const char* mode, const int nkeys, char* const* keys, char* const* info){
     const int mode_rm   = 1;
     const int mode_mv   = 2;
     const int mode_tag  = 3;

@@ -9,7 +9,9 @@
 #include "globals.h"
 #include "ptrutils.h"
 #include "names.h"
-#include "edit_list.h"
+#include "list_formatter.h"
+#include "list_utils.h"
+// #include "edit_list.h"
 
 
 // return IO_ERROR if failed to open list file
@@ -19,12 +21,19 @@
 // return UNLINK_ERROR if unlink failed
 // return KEY_NOT_FOUND if flag does not exist
 // return 0 otherwise
-int rm(const char* list, int nflag, char** flag){
+int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
     struct stat st;
-    int   result;
-    int   ret;
-    int   i;
-    char* filename = NULL;
+    FILE*      fp           = NULL;
+    ListField* field_by_key = NULL;
+    ListField* field_by_tag = NULL;
+    ListField* field_merged = NULL;
+    char**     unfound  = NULL;
+    int        found_by_keys;        // number of contents found by searching with keys
+    int        found_by_tags;        // number of contents found by searching with tags
+    int        available_count;      // total number of contents found by searching with keys and tags
+    int        result;
+    int        ret = 0;
+    int        i;
 
     #ifdef DEBUG
     printf("List file name: %s\n", list);
@@ -42,71 +51,77 @@ int rm(const char* list, int nflag, char** flag){
         goto cleanup;
     } 
 
-    ret = 0;
-
-    for (i = 0; i < nflag; i = i + 1){
-        // get the target filename from list file
-        result = get_filename_by_key(list, flag[i], &filename);
-        if (result != 0){
-            if (result == KEY_NOT_FOUND){
-                fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag[i]);
-                if (ret == 0){
-                    ret = KEY_NOT_FOUND;
-                }
-                continue;
-                // goto cleanup;
-            } else if (result == LIST_FORMAT_ERROR || result == INPUT_ERROR){
-                fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
-                ret = LIST_FORMAT_ERROR;
-                goto cleanup;
-            } else if (result == IO_ERROR){
-                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
-                ret = IO_ERROR;
-                goto cleanup;
-            } else if (result == MALLOC_ERROR){
-                fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-                ret = MALLOC_ERROR;
-                goto cleanup;
-            }
+    fp = fopen(list, "r");
+    if (fp == NULL){
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+        ret = IO_ERROR;
+        goto cleanup;
+    }
+    unfound = malloc((size_t)nkeys * sizeof(char*));
+    result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
+                                        ntags, tags, &found_by_tags, 
+                                        &available_count, &field_merged, &field_by_key, &field_by_tag);
+    if (result != 0){
+        if (result == LIST_FORMAT_ERROR){
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
+            ret = LIST_FORMAT_ERROR;
+        } else if (result == IO_ERROR){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+        } else if (result == MALLOC_ERROR){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+        } else{
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;
-            goto cleanup;
         }
+        goto cleanup;
+    }
 
-        // delete the target flag line from the list file
-        result = rm_key_in_list(list, flag[i]);
+    xfclose(&fp);
+
+    for (i = 0; unfound[i] != NULL && i < nkeys; i = i + 1){
+        fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, keys[i]);
+        ret = KEY_NOT_FOUND;
+    }
+
+    if (available_count == 0){
+        ret = KEY_NOT_FOUND;
+        goto cleanup;
+    }
+
+
+    for (i = 0; i < available_count; i = i + 1){
+        result = edit_list(list, "rm", 1, &(field_merged[i].key), NULL);
         if (result != 0){
-            if (result == KEY_NOT_FOUND){
-                fprintf(stderr, "%s: No such key: '%s'\n", PACKAGE_NAME, flag[i]);
-                ret = KEY_NOT_FOUND;
-                goto cleanup;
-            } else if (result == LIST_FORMAT_ERROR){
+            if (result == LIST_FORMAT_ERROR){
                 fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
                 ret = LIST_FORMAT_ERROR;
-                goto cleanup;
-            } else if (result == IO_ERROR){
+            } else if (result == IO_ERROR || result == RENAME_ERROR){
                 fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
-                // fprintf(stderr, "%s: Failed to update list file\n", PACKAGE_NAME);
                 ret = IO_ERROR;
-                goto cleanup;
             } else if (result == MALLOC_ERROR){
                 fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
                 ret = MALLOC_ERROR;
-                goto cleanup;
+            } else if (result == KEY_DUPLICATE){
+                fprintf(stderr, "%s: Unknown error. Duplication of a key is found in edit_list() while mode is 'rm'\n", PACKAGE_NAME);
+                ret = KEY_DUPLICATE;
+            } else if (result == KEY_NOT_FOUND){
+                fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, field_merged[i].key);
+                ret = KEY_DUPLICATE;
             } else{
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
                 ret = UNKNOWN_ERROR;
-                goto cleanup;
             }
+            goto cleanup;
         }
 
-        if (unlink(filename) == 0){
-            printf("%s: removed '%s'\n", PACKAGE_NAME, flag[i]);
-            XFREE(filename);
+        if (unlink(field_merged[i].file) == 0){
+            printf("%s: removed '%s'\n", PACKAGE_NAME, field_merged[i].file);
             continue;
         }
 
-        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, filename, strerror(errno));
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, field_merged[i].file, strerror(errno));
         ret = UNLINK_ERROR;
         goto cleanup;
     }
@@ -115,7 +130,21 @@ int rm(const char* list, int nflag, char** flag){
 
 
 cleanup:
-    free(filename);
+    xfclose(&fp);
+    if (field_by_key != NULL){
+        for (i = 0; i < nkeys; i = i + 1){
+            free_ListField(&(field_by_key[i]));
+        }
+    }
+    if (field_by_tag != NULL){
+        for (i = 0; i < found_by_tags; i = i + 1){
+            free_ListField(&(field_by_tag[i]));
+        }
+    }
+    free(field_by_key);
+    free(field_by_tag);
+    free(field_merged);
+    free(unfound);
 
     return ret;
 }

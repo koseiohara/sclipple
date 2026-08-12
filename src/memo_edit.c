@@ -12,7 +12,8 @@
 #include "globals.h"
 #include "ptrutils.h"
 #include "names.h"
-#include "edit_list.h"
+#include "list_formatter.h"
+#include "list_utils.h"
 
 
 void get_command(char* editor, const int file_num, char* file[], char** command){
@@ -50,16 +51,22 @@ void get_command(char* editor, const int file_num, char* file[], char** command)
 // return EXECVP_ERROR if the shell executable cannot be found or executed
 // return CHILD_ERROR if the editor command does not complete successfully
 // return 0 otherwise
-int memo_edit(const char* list, const char* dir, char* editor, const int flag_num, char** flags){
+int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, char** keys, const int ntags, char** tags){
     struct stat st;
     pid_t  pid;
-    FILE*  fp = NULL;
+    FILE*  fp               = NULL;
+    ListField* field_by_key = NULL;
+    ListField* field_by_tag = NULL;
+    ListField* field_merged = NULL;
     char** command    = NULL;
     char** files      = NULL;
+    char** unfound    = NULL;
     char*  tmp_editor = NULL;
     int i;
     int j;
     int command_len;
+    int found_by_keys;
+    int found_by_tags;
     int result;
     int ret = 0;
     int stat;
@@ -77,66 +84,53 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
         goto cleanup;
     } 
 
-    files = malloc(flag_num * sizeof(char*));
-    if (files == NULL){
-        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-        ret = MALLOC_ERROR;
-        goto cleanup;
-    }
-
-    for (j = 0; j < flag_num; j = j + 1){
-        files[j] = NULL;
-    }
-
     fp = fopen(list, "r");
     if (fp == NULL){
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
     }
-    for (i = 0; i < flag_num; i = i + 1){
-        rewind(fp);
-        result = read_list_by_key(fp, flags[i], 2, &files[i]);
-        if (result != 0){
-            if (result == KEY_NOT_FOUND){
-                fprintf(stderr, "%s: No such key: '%s'\nRun '%s add %s'\n", PACKAGE_NAME, flags[i], PACKAGE_NAME, flags[i]);
-                ret = KEY_NOT_FOUND;
-                files[i] = NULL;
-                // goto cleanup;
-            } else if (result == LIST_FORMAT_ERROR){
-                fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
-                ret = LIST_FORMAT_ERROR;
-                goto cleanup;
-            } else if (result == MALLOC_ERROR){
-                fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-                ret = MALLOC_ERROR;
-                goto cleanup;
-            } else if (result == INPUT_ERROR){
-                fprintf(stderr, "%s: Bug: Invalid col\n", PACKAGE_NAME);
-                ret = INPUT_ERROR;
-                goto cleanup;
-            } else if (result == IO_ERROR){
-                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
-                ret = IO_ERROR;
-                goto cleanup;
-            } else{
-                fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
-                ret = UNKNOWN_ERROR;
-                goto cleanup;
-            }
+    unfound = malloc((size_t)nkeys * sizeof(char*));
+    result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
+                                        ntags, tags, &found_by_tags, 
+                                        &available_count, &field_merged, &field_by_key, &field_by_tag);
+    if (result != 0){
+        if (result == LIST_FORMAT_ERROR){
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
+            ret = LIST_FORMAT_ERROR;
+        } else if (result == IO_ERROR){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+        } else if (result == MALLOC_ERROR){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
         } else{
-            available_count = available_count + 1;
+            fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
+            ret = UNKNOWN_ERROR;
         }
-        #ifdef DEBUG
-        printf("Checked existence of %s\n", files[i]);
-        #endif
+        goto cleanup;
     }
-    xfclose(&fp);
+
+    for (i = 0; unfound[i] != NULL && i < nkeys; i = i + 1){
+        fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, keys[i]);
+        ret = KEY_NOT_FOUND;
+    }
 
     if (available_count == 0){
         fprintf(stderr, "%s: No available key\n", PACKAGE_NAME);
         ret = KEY_NOT_FOUND;
         goto cleanup;
+    }
+
+    files = malloc((size_t)available_count * sizeof(char*));
+    if (files == NULL){
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+        ret = MALLOC_ERROR;
+        goto cleanup;
+    }
+
+    for (i = 0; i < available_count; i = i + 1){
+        files[i] = field_merged[i].file;
     }
 
     pid = fork();
@@ -151,13 +145,13 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             _exit(MALLOC_ERROR);
         }
-        command_len = 4+flag_num+1;
+        command_len = 4+nkeys+1;
         command = malloc(command_len * sizeof(char*));   // sh -c "rc input" sh file1 file2 ... NULL
         if (command == NULL){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             _exit(MALLOC_ERROR);
         }
-        get_command(tmp_editor, flag_num, files, command);
+        get_command(tmp_editor, nkeys, files, command);
         if (command[4] == NULL){
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             _exit(UNKNOWN_ERROR);
@@ -222,13 +216,27 @@ int memo_edit(const char* list, const char* dir, char* editor, const int flag_nu
 
 cleanup:
     xfclose(&fp);
-    if (files != NULL){
-        for (j = 0; j < flag_num; j = j + 1){
-            free(files[j]);
+    // if (files != NULL){
+    //     for (j = 0; j < nkeys; j = j + 1){
+    //         free(files[j]);
+    //     }
+    // }
+    if (field_by_key != NULL){
+        for (i = 0; i < nkeys; i = i + 1){
+            free_ListField(&(field_by_key[i]));
         }
     }
+    if (field_by_tag != NULL){
+        for (i = 0; i < found_by_tags; i = i + 1){
+            free_ListField(&(field_by_tag[i]));
+        }
+    }
+    free(field_by_key);
+    free(field_by_tag);
+    free(field_merged);
     free(command);
     free(files);
+    free(unfound);
     free(tmp_editor);
 
     return ret;

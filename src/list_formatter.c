@@ -169,7 +169,7 @@ int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
 // return IO_ERROR if io failed
 // return MALLOC_ERROR if malloc failed
 // return 0 otherwise
-int make_meta(char** meta, char* datetime, int ntags, char** tags){
+int make_meta(char** meta, const char* datetime, const int ntags, char* const* tags){
     FILE* fp = NULL;
     int result;
     int ret;

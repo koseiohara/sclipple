@@ -11,7 +11,7 @@
 #include "globals.h"
 #include "ptrutils.h"
 #include "names.h"
-#include "edit_list.h"
+// #include "edit_list.h"
 
 
 // return IO_ERROR if failed to open file
