@@ -15,7 +15,7 @@
 #include "ptrutils.h"
 #include "datetime.h"
 #include "names.h"
-#include "edit_list.h"
+#include "list_utils.h"
 
 
 // if directory does not exist, run mkdir()

@@ -15,153 +15,14 @@
 #include "ptrutils.h"
 #include "strutils.h"
 #include "names.h"
-#include "list_utils.h"
+#include "list_formatter.h"
 
 #define DELIM ','
 
 
-void free_ListField(ListField* field){
-    int i;
-    if (field == NULL){
-        return;
-    }
-
-    if (field->tags != NULL){
-        for (i = 0; i < field->ntags; i = i + 1){
-            free(field->tags[i]);
-        }
-    }
-
-    free(field->key );
-    free(field->file);
-    free(field->meta);
-    free(field->date);
-    free(field->tags);
-
-    field->key   = NULL;
-    field->file  = NULL;
-    field->meta  = NULL;
-    field->date  = NULL;
-    field->tags  = NULL;
-    field->ntags = 0;
-}
-
-
-// return NULL if line is empty or invalid format
-// return 0 otherwise
-char* get_element(size_t* line_len, char** line, size_t* ellen){
-    char*  len_c;
-    char*  delim;
-    char*  next;
-    int    has_line_len;
-    size_t header_len;
-    size_t work_len;
-
-    if (line_len == NULL){
-        has_line_len = false;
-    } else{
-        has_line_len = true;
-    }
-
-    *ellen = -1;
-
-    len_c = *line;
-    delim = strchr(len_c, DELIM);
-    if (delim == NULL){
-        // no delimiter found
-        return NULL;
-    }
-
-    next = delim + 1;
-
-    if (has_line_len == false){
-        work_len = strlen(next);
-    } else{
-        header_len = (size_t)(next - *line);
-        if (*line_len < header_len){
-            // invalid line length
-            return NULL;
-        }
-
-        work_len = *line_len - header_len;
-    }
-
-    *delim = '\0';
-    *ellen = atoi(len_c);
-
-    if (*ellen > work_len){
-        // invalid element length
-        return NULL;
-    }
-
-    next[*ellen] = '\0';
-    *line = next + (*ellen);
-
-    if (*ellen < work_len){
-        // the read is not the last column
-        *line = *line + 1;
-
-        if (has_line_len == true){
-            *line_len = work_len - (1 + (*ellen));
-        }
-    } else{
-        if (has_line_len == true){
-            *line_len = 0;
-        }
-    }
-
-    return next;
-}
-
-
-// return LIST_FORMAT_ERROR if list file is broken
-// return MALLOC_ERROR if malloc failed
-// return 0 otherwise
-int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
-    char*  work_datetime;
-    char*  ntags_c;
-    int    i;
-    size_t line_len;
-    size_t ellen;
-
-    line_len = strlen(meta);
-    work_datetime = get_element(&line_len, &meta, &ellen);
-    if (work_datetime == NULL){
-        return LIST_FORMAT_ERROR;
-    }
-
-    if (datetime != NULL){
-        *datetime = work_datetime;
-    }
-
-    if (tags == NULL){
-        return 0;
-    }
-
-    ntags_c = get_element(&line_len, &meta, &ellen);
-    if (ntags_c == NULL){
-        *ntags = 0;
-        *tags  = NULL;
-        return 0;
-    }
-    *ntags  = atoi(ntags_c);
-
-    *tags = malloc((size_t)(*ntags+1) * sizeof(char*));
-    if (*tags == NULL){
-        return MALLOC_ERROR;
-    }
-    for (i = 0; i < *ntags; i = i + 1){
-        (*tags)[i] = get_element(&line_len, &meta, &ellen);
-        if ((*tags)[i] == NULL){
-            return LIST_FORMAT_ERROR;
-        }
-    }
-    (*tags)[*ntags] = NULL;
-
-    return 0;
-}
-
-
+// return INPUT_ERROR if an argument is invalid
+// resutn MALLOC_ERROR if malloc failed
+// resutn 0 otherwise
 int tags_add(int* ntags, char*** updated, char** tags, char** add){
     int tags_len;
     int add_len;
@@ -175,8 +36,10 @@ int tags_add(int* ntags, char*** updated, char** tags, char** add){
     }
 
     tags_len = 0;
-    while (tags[tags_len] != NULL){
-        tags_len = tags_len + 1;
+    if (tags != NULL){
+        while (tags[tags_len] != NULL){
+            tags_len = tags_len + 1;
+        }
     }
 
     add_len = 0;
@@ -230,8 +93,10 @@ int tags_del(int* ntags, char*** updated, char** tags, char** del){
     }
 
     tags_len = 0;
-    while (tags[tags_len] != NULL){
-        tags_len = tags_len + 1;
+    if (tags != NULL){
+        while (tags[tags_len] != NULL){
+            tags_len = tags_len + 1;
+        }
     }
 
     del_len = 0;
@@ -265,189 +130,6 @@ int tags_del(int* ntags, char*** updated, char** tags, char** del){
     }
 
     return 0;
-}
-
-
-// ntags is ignored if tags == NULL
-//
-// return INPUT_ERROR if one or more arguments are invalid
-// return IO_ERROR if io failed
-// return MALLOC_ERROR if malloc failed
-// return 0 otherwise
-int make_meta(char** meta, char* datetime, int ntags, char** tags){
-    FILE* fp = NULL;
-    int result;
-    int ret;
-    int i;
-    size_t meta_size;
-    size_t datetime_size;
-    size_t ntags_size;
-    size_t tags_size;
-
-    if (meta == NULL || *meta != NULL){
-        ret = INPUT_ERROR;
-        goto cleanup;
-    }
-
-    if (ntags <= 0 && tags != NULL){
-        ret = INPUT_ERROR;
-        goto cleanup;
-    }
-
-    fp = open_memstream(meta, &meta_size);
-    if (fp == NULL){
-        ret = IO_ERROR;
-        goto cleanup;
-    }
-
-    datetime_size = strlen(datetime);
-    result = fprintf(fp, "%zu%c%s", datetime_size, DELIM, datetime);
-    if (result < 0){
-        if (errno == ENOMEM){
-            ret = MALLOC_ERROR;
-        } else{
-            ret = IO_ERROR;
-        }
-        goto cleanup;
-    }
-
-    if (tags != NULL){
-        result = snprintf(NULL, 0, "%d", ntags);
-        if (result < 0){
-            ret = IO_ERROR;
-            goto cleanup;
-        }
-        ntags_size = (size_t)result;
-
-        if (datetime != NULL){
-            result = fputc(',', fp);
-            if (result == EOF){
-                ret = IO_ERROR;
-                goto cleanup;
-            }
-        }
-
-        result = fprintf(fp, "%zu%c%d%c", ntags_size, DELIM, ntags, DELIM);
-        if (result < 0){
-            if (errno == ENOMEM){
-                ret = MALLOC_ERROR;
-            } else{
-                ret = IO_ERROR;
-            }
-            goto cleanup;
-        }
-
-        for (i = 0; i < ntags; i = i + 1){
-            if (tags[i] == NULL){
-                ret = INPUT_ERROR;
-                goto cleanup;
-            }
-            tags_size = strlen(tags[i]);
-            if (i < ntags-1){
-                result = fprintf(fp, "%zu%c%s%c", tags_size, DELIM, tags[i], DELIM);
-            } else{
-                result = fprintf(fp, "%zu%c%s"  , tags_size, DELIM, tags[i]);
-            }
-            if (result < 0){
-                if (errno == ENOMEM){
-                    ret = MALLOC_ERROR;
-                } else{
-                    ret = IO_ERROR;
-                }
-                goto cleanup;
-            }
-        }
-    }
-
-    ret = 0;
-    goto cleanup;
-
-
-cleanup:
-    if (xfclose(&fp) != 0){
-        if (ret == 0){
-            ret = IO_ERROR;
-        }
-    }
-    return ret;
-}
-
-
-// return LIST_FORMAT_ERROR if list file is broken
-// return 0 otherwise
-int parse_line(char** line, char** key, char** file, char** meta){
-    char*  work_file;
-    int    ret;
-    size_t line_len;
-    size_t ellen;
-
-    (*line)[strcspn(*line, "\n")] = '\0';
-
-    line_len = strlen(*line);
-    *key = get_element(&line_len, line, &ellen);
-    if (*key == NULL){
-        ret = LIST_FORMAT_ERROR;
-        goto cleanup;
-    }
-
-    if (file == NULL && meta == NULL){
-        ret = 0;
-        goto cleanup;
-    }
-
-    work_file = get_element(&line_len, line, &ellen);
-    if (work_file == NULL){
-        ret = LIST_FORMAT_ERROR;
-        goto cleanup;
-    }
-    if (file != NULL){
-        *file = work_file;
-    }
-
-    if (meta != NULL){
-        if (line_len == 0){
-            ret = LIST_FORMAT_ERROR;
-            goto cleanup;
-        }
-        *meta = *line;
-        // *meta = get_element(&line_len, line, &ellen);
-        // if (*meta == NULL){
-        //     ret = LIST_FORMAT_ERROR;
-        //     goto cleanup;
-        // }
-    }
-
-    ret = 0;
-    goto cleanup;
-
-
-cleanup:
-    return ret;
-}
-
-
-// date, tags, and ntags are ignored
-//
-// return IO_ERROR if IO failed
-// return 0 otherwise
-int write_one_line(FILE* fp, ListField field){
-    int result;
-    int ret;
-
-    result = fprintf(fp, "%zu%c%s%c%zu%c%s%c%s\n", strlen(field.key) , DELIM, field.key , DELIM, 
-                                                   strlen(field.file), DELIM, field.file, DELIM, 
-                                                   field.meta);
-    if (result < 0){
-        ret = IO_ERROR;
-        goto cleanup;
-    }
-
-    ret = 0;
-    goto cleanup;
-
-
-cleanup:
-    return ret;
 }
 
 
@@ -531,7 +213,7 @@ int key_exist_check(FILE* fp, int nkeys, char** keys, char** exist, char** nexis
     int    exist_count;
     int    nexist_count;
     int    found;
-    size_t size;
+    size_t size = 0;
 
     // fp = fopen(list, "r");
     // if (fp == NULL){
@@ -643,7 +325,7 @@ int get_content_by_key(char* list, int nkeys, char** keys, ListField** field, in
     int    result;
     int    ret;
     int    i;
-    size_t size;
+    size_t size = 0;
 
     fp = fopen(list, "r");
     if (fp == NULL){
@@ -746,7 +428,7 @@ int get_content_by_tag(char* list, int ntags, char** tags,
     int    j;
     int    k;
     int    capacity;
-    size_t size;
+    size_t size = 0;
 
     fp = fopen(list, "r");
     if (fp == NULL){
@@ -795,6 +477,7 @@ int get_content_by_tag(char* list, int ntags, char** tags,
         }
 
         if (work_ntags == 0){
+            XFREE(work_tags);
             continue;
         }
 
@@ -821,26 +504,35 @@ int get_content_by_tag(char* list, int ntags, char** tags,
                         .meta  = NULL,
                         .date  = strdup(work_datetime),
                         .ntags = work_ntags,
-                        .tags  = malloc((size_t)work_ntags * sizeof(char*)),
+                        .tags  = calloc((size_t)work_ntags, sizeof(char*)),
                     };
                     if ((*field)[*nlines].key == NULL){
+                        free_ListField(&(*field)[*nlines]);
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
                     if ((*field)[*nlines].file == NULL){
+                        free_ListField(&(*field)[*nlines]);
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
                     if ((*field)[*nlines].date == NULL){
+                        free_ListField(&(*field)[*nlines]);
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
                     if ((*field)[*nlines].tags == NULL){
+                        free_ListField(&(*field)[*nlines]);
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
                     for (k = 0; k < work_ntags; k = k + 1){
                         (*field)[*nlines].tags[k] = strdup(work_tags[k]);
+                        if ((*field)[*nlines].tags[k] == NULL){
+                            free_ListField(&(*field)[*nlines]);
+                            ret = MALLOC_ERROR;
+                            goto cleanup;
+                        }
                     }
                     *nlines = *nlines + 1;
                     break;
@@ -893,22 +585,27 @@ int edit_list(char* list, char* mode, int nkeys, char** keys, char** info){
     ListField field     = {0};
     char*     line      = NULL;
     char*     tmpfile   = NULL;
-    char*     work_tags = NULL;
     char*     work_line;
     char*     work_key;
     char*     work_file;
     char*     work_meta;
-    char**    work_exist;
-    char**    work_nexist;
+    char*     work_datetime;
+    char**    work_curr_tags = NULL;
+    char**    work_new_tags  = NULL;
+    char*     work_new_meta  = NULL;
+    char**    work_exist     = NULL;
     int*      is_found = NULL;
     int       imode;
     int       fd;
     int       result;
-    int       ret;
+    int       ret = 0;
     int       work_nkeys;
+    int       work_ntags;
     int       changed;
+    int       line_changed;
     int       i;
-    size_t    size;
+    int       count;
+    size_t    size = 0;
     struct stat st;
 
     changed = false;
@@ -920,7 +617,7 @@ int edit_list(char* list, char* mode, int nkeys, char** keys, char** info){
 
     if (strcmp(mode, "mv") == 0){
         imode = mode_mv;
-        if (info != NULL){
+        if (nkeys != 1 || info == NULL || info[0] == NULL || info[1] == NULL){
             ret = INPUT_ERROR;
             goto cleanup;
         }
@@ -962,7 +659,12 @@ int edit_list(char* list, char* mode, int nkeys, char** keys, char** info){
         }
         rewind(fpr);
     } else if (imode == mode_tag || imode == mode_utag){
-        result = key_exist_check(fpr, 1, keys, work_exist, NULL);
+        work_exist = malloc((size_t)nkeys * sizeof(char*));
+        if (work_exist == NULL){
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+        result = key_exist_check(fpr, nkeys, keys, work_exist, NULL);
         if (result == 0){
             work_nkeys = nkeys;
         } else if (result == KEY_NOT_FOUND){
@@ -983,6 +685,10 @@ int edit_list(char* list, char* mode, int nkeys, char** keys, char** info){
         rewind(fpr);
 
         is_found = malloc((size_t)nkeys * sizeof(int));
+        if (is_found == NULL){
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
         for (i = 0; i < nkeys; i = i + 1){
             is_found[i] = false;
         }
@@ -1014,6 +720,7 @@ int edit_list(char* list, char* mode, int nkeys, char** keys, char** info){
         goto cleanup;
     }
 
+    count = 0;
     while (getline(&line, &size, fpr) != -1){
         if (is_white_space(line) == true){
             XFREE(line);
@@ -1089,10 +796,109 @@ int edit_list(char* list, char* mode, int nkeys, char** keys, char** info){
                 goto cleanup;
             }
         } else if (imode == mode_tag || imode == mode_utag){
+            line_changed = false;
             for (i = 0; i < work_nkeys; i = i + 1){
                 if (is_found[i] == false && strcmp(work_key, work_exist[i]) == 0){
-                    is_found[i] = true;
+                    result = parse_meta(work_meta, &work_datetime, &work_ntags, &work_curr_tags);
+                    if (result != 0){
+                        unlink(tmpfile);
+                        if (result == LIST_FORMAT_ERROR){
+                            ret = LIST_FORMAT_ERROR;
+                        } else if (result == MALLOC_ERROR){
+                            ret = MALLOC_ERROR;
+                        } else{
+                            ret = UNKNOWN_ERROR;
+                        }
+                        goto cleanup;
+                    }
+                    if (imode == mode_tag){
+                        result = tags_add(&work_ntags, &work_new_tags, work_curr_tags, info);
+                        if (result != 0){
+                            unlink(tmpfile);
+                            if (result == MALLOC_ERROR){
+                                ret = MALLOC_ERROR;
+                            } else if (result == INPUT_ERROR){
+                                ret = UNKNOWN_ERROR;
+                            } else{
+                                ret = UNKNOWN_ERROR;
+                            }
+                            goto cleanup;
+                        }
+                    } else if (imode == mode_utag){
+                        result = tags_del(&work_ntags, &work_new_tags, work_curr_tags, info);
+                        if (result != 0){
+                            unlink(tmpfile);
+                            if (result == MALLOC_ERROR){
+                                ret = MALLOC_ERROR;
+                            } else if (result == INPUT_ERROR){
+                                ret = UNKNOWN_ERROR;
+                            } else{
+                                ret = UNKNOWN_ERROR;
+                            }
+                            goto cleanup;
+                        }
+                    }
+
+                    result = make_meta(&work_new_meta, work_datetime, work_ntags, work_new_tags);
+                    if (result != 0){
+                        unlink(tmpfile);
+                        if (result == IO_ERROR){
+                            ret = IO_ERROR;
+                        } else if (result == MALLOC_ERROR){
+                            ret = MALLOC_ERROR;
+                        } else{
+                            ret = UNKNOWN_ERROR;
+                        }
+                        goto cleanup;
+                    }
+
+                    field = (ListField){
+                        .key   = work_key,
+                        .file  = work_file,
+                        .meta  = work_new_meta,
+                        .date  = NULL,
+                        .tags  = NULL,
+                        .ntags = 0,
+                    };
+                    result = write_one_line(fpw, field);
+                    if (result != 0){
+                        unlink(tmpfile);
+                        if (result == IO_ERROR){
+                            ret = IO_ERROR;
+                        } else{
+                            ret = UNKNOWN_ERROR;
+                        }
+                        goto cleanup;
+                    }
+
+                    is_found[i]  = true;
+                    line_changed = true;
+                    changed      = true;
+                    count        = count + 1;
+                    XFREE(work_curr_tags);
+                    XFREE(work_new_tags);
+                    XFREE(work_new_meta);
                     break;
+                }
+            }
+            if (line_changed == false){
+                field = (ListField){
+                    .key   = work_key,
+                    .file  = work_file,
+                    .meta  = work_meta,
+                    .date  = NULL,
+                    .tags  = NULL,
+                    .ntags = 0,
+                };
+                result = write_one_line(fpw, field);
+                if (result != 0){
+                    unlink(tmpfile);
+                    if (result == IO_ERROR){
+                        ret = IO_ERROR;
+                    } else{
+                        ret = UNKNOWN_ERROR;
+                    }
+                    goto cleanup;
                 }
             }
         }
@@ -1131,7 +937,12 @@ int edit_list(char* list, char* mode, int nkeys, char** keys, char** info){
     
     XFREE(tmpfile);
 
-    ret = 0;
+    if (imode == mode_tag || imode == mode_utag){
+        if (count < work_nkeys){
+            ret = KEY_NOT_FOUND;
+        }
+    }
+
     goto cleanup;
 
 
@@ -1142,6 +953,10 @@ cleanup:
     free(line);
     free(is_found);
     free(tmpfile);
+    free(work_exist);
+    free(work_curr_tags);
+    free(work_new_tags);
+    free(work_new_meta);
 
     return ret;
 }
