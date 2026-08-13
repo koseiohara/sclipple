@@ -131,6 +131,14 @@ int mv(const char* list, char* old_key, char* new_key){
         }
     }
 
+    // check whether old file is accessible
+    result = path_status(old_file, &st);
+    if (result == ACCESS_FAILED_ERROR){
+        fprintf(stderr, "%s: Failed to access note %s\n", PACKAGE_NAME, old_file);
+        ret = IO_ERROR;
+        goto cleanup;
+    } 
+
     if (link(old_file, new_file) != 0){
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, new_file, strerror(errno));
         ret = RENAME_ERROR;

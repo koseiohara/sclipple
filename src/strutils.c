@@ -165,13 +165,13 @@ int duplication_filter(int* nvals, char** vals){
 
 
 int arr2line(const int narr, char* const* arr, const char delim, const char left, const char right, char** line){
-    char*  p;
-    int*   lens = NULL;
-    int    left_len;
-    int    right_len;
-    int    i;
-    int    ret;
-    size_t len;
+    char*   p;
+    size_t* lens = NULL;
+    int     left_len;
+    int     right_len;
+    int     i;
+    int     ret;
+    size_t  len;
 
     if (narr == 0){
         *line = malloc(sizeof(char));
@@ -187,7 +187,7 @@ int arr2line(const int narr, char* const* arr, const char delim, const char left
         goto cleanup;
     }
 
-    lens = malloc((size_t)narr * sizeof(int));
+    lens = malloc((size_t)narr * sizeof(size_t));
     if (lens == NULL){
         ret = MALLOC_ERROR;
         goto cleanup;

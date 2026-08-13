@@ -138,6 +138,14 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
 
 
     for (i = 0; i < nconts; i = i + 1){
+        // check whether old file is accessible
+        result = path_status(field_merged[i].file, &st);
+        if (result == ACCESS_FAILED_ERROR){
+            fprintf(stderr, "%s: Failed to access note %s\n", PACKAGE_NAME, field_merged[i].file);
+            ret = IO_ERROR;
+            continue;
+        } 
+
         result = edit_list(list, "rm", 1, &(field_merged[i].key), NULL);
         if (result != 0){
             if (result == LIST_FORMAT_ERROR){

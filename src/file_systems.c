@@ -134,7 +134,7 @@ int mv_filename(char* old_file, const char* new_key, char** output){
     printf("<DEBUG> mv_filename: %s\n", cp);
     #endif
 
-    while ((cp = strstr(cp, "/")) != NULL){
+    while ((cp = strrchr(cp, '/')) != NULL){
         cp = cp + 1;
         fname = cp;
 

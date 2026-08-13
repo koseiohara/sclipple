@@ -135,6 +135,12 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
+    if (strcmp(nonopts[0], "git") == 0){
+        fprintf(stderr, "%s: Options must be specified after the git subcommand\n", PACKAGE_NAME);
+        ret = ERROR_STOP;
+        goto cleanup;
+    }
+
     if (strcmp(nonopts[0], "add") == 0){
         if (has_help == true || nonoptsc == 1){
             show_help_add(subdir, list);
