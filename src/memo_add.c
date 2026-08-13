@@ -113,7 +113,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
 
     if (nkeys <= 0 || ntags < 0){
         if (nkeys <= 0){
-            fprintf(stderr, "%s: Unknown error: No keys were speicified to add\n", PACKAGE_NAME);
+            fprintf(stderr, "%s: Unknown error: No keys were specified to add\n", PACKAGE_NAME);
         } else{
             fprintf(stderr, "%s: Unknown error: Number of tags is negative\n", PACKAGE_NAME);
         }
@@ -233,6 +233,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
 
     fp = fopen(list, "a+");
     if (fp == NULL){
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
     }

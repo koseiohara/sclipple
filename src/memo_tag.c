@@ -36,7 +36,11 @@ int tag(const char* list, const char* mode, int nkeys, char** keys, int ntags, c
     int imode;
     int i;
 
-    if (strcmp(mode, "tag") == 0){
+    if (mode == NULL){
+        fprintf(stderr, "%s: Unknown error: mode in tag() is NULL\n", PACKAGE_NAME);
+        ret = INPUT_ERROR;
+        goto cleanup;
+    }else if (strcmp(mode, "tag") == 0){
         imode = mode_tag;
     } else if (strcmp(mode, "utag") == 0){
         imode = mode_utag;
@@ -46,11 +50,15 @@ int tag(const char* list, const char* mode, int nkeys, char** keys, int ntags, c
         goto cleanup;
     }
 
-    if (nkeys <= 0 || ntags < 0){
+    if (nkeys <= 0 || ntags <= 0 || keys == NULL || tags == NULL){
         if (nkeys <= 0){
-            fprintf(stderr, "%s: Unknown error: No keys were speicified to add\n", PACKAGE_NAME);
-        } else{
-            fprintf(stderr, "%s: Unknown error: Number of tags is negative\n", PACKAGE_NAME);
+            fprintf(stderr, "%s: Unknown error: No keys were specified to tag\n", PACKAGE_NAME);
+        } else if (ntags <= 0){
+            fprintf(stderr, "%s: Unknown error: Number of tags is zero or negative\n", PACKAGE_NAME);
+        } else if (keys == NULL){
+            fprintf(stderr, "%s: Unknown error: keys is NULL\n", PACKAGE_NAME);
+        } else if (tags == NULL){
+            fprintf(stderr, "%s: Unknown error: tags is NULL\n", PACKAGE_NAME);
         }
         ret = INPUT_ERROR;
         goto cleanup;
@@ -113,17 +121,19 @@ int tag(const char* list, const char* mode, int nkeys, char** keys, int ntags, c
     }
 
     result = key_exist_check(fp, nkeys, keys, exists, nexists);
-    if (result == KEY_NOT_FOUND || result == 0){
+    if (result == 0){
+        exist_count = nkeys;
+    } else if (result == KEY_NOT_FOUND){
         for (i = 0; i < nkeys && nexists[i] != NULL; i = i + 1){
             fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, nexists[i]);
         }
-        // i = 0;
-        // while (exists[i] != NULL){
-        //     fprintf(stderr, "%s: Key '%s' already exists\n", PACKAGE_NAME, exists[i]);
-        //     i = i + 1;
-        // }
+
+        exist_count = 0;
+        for (i = 0; i < nkeys && exists[i] != NULL; i = i + 1){
+            exist_count = exist_count + 1;
+        }
         ret = KEY_NOT_FOUND;
-        if (exists[0] == NULL){
+        if (exist_count == 0){
             goto cleanup;
         }
     } else{
@@ -140,16 +150,7 @@ int tag(const char* list, const char* mode, int nkeys, char** keys, int ntags, c
         goto cleanup;
     }
 
-    exist_count = 0;
-    if (exists[nkeys-1] != NULL){
-        exist_count = nkeys;
-    } else{
-        for (i = 0; i < nkeys && exists[i] != NULL; i = i + 1){
-            exist_count = exist_count + 1;
-        }
-    }
-
-    result = arr2line(exist_count, exists, &keyline);
+    result = arr2line(exist_count, exists, ',', '\'', '\'', &keyline);
     if (result != 0){
         if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
@@ -160,7 +161,7 @@ int tag(const char* list, const char* mode, int nkeys, char** keys, int ntags, c
         }
         goto cleanup;
     }
-    result = arr2line(ntags, tags, &tagline);
+    result = arr2line(ntags, tags, ',', '\'', '\'', &tagline);
     if (result != 0){
         if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
@@ -188,9 +189,6 @@ int tag(const char* list, const char* mode, int nkeys, char** keys, int ntags, c
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
-        // } else if (result == KEY_DUPLICATE){
-        //     fprintf(stderr, "%s: Unknown error. Duplication of a key is found in edit_list() while mode is 'rm'\n", PACKAGE_NAME);
-        //     ret = KEY_DUPLICATE;
         } else if (result == KEY_NOT_FOUND){
             fprintf(stderr, "%s: Unknown error: One or more keys was not found by edit_list\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;
