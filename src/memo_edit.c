@@ -110,8 +110,8 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
         goto cleanup;
     }
 
-    for (i = 0; unfound[i] != NULL && i < nkeys; i = i + 1){
-        fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, keys[i]);
+    for (i = 0; i < nkeys && unfound[i] != NULL; i = i + 1){
+        fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, unfound[i]);
         ret = KEY_NOT_FOUND;
     }
 
@@ -144,13 +144,13 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             _exit(MALLOC_ERROR);
         }
-        command_len = 4+nkeys+1;
+        command_len = 4+nconts+1;
         command = malloc(command_len * sizeof(char*));   // sh -c "rc input" sh file1 file2 ... NULL
         if (command == NULL){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             _exit(MALLOC_ERROR);
         }
-        get_command(tmp_editor, nkeys, files, command);
+        get_command(tmp_editor, nconts, files, command);
         if (command[4] == NULL){
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             _exit(UNKNOWN_ERROR);

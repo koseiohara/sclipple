@@ -116,8 +116,8 @@ static inline int ls_with_key_tag(const int tty, const char* list, const int nke
         goto cleanup;
     }
 
-    for (i = 0; unfound[i] != NULL && i < nkeys; i = i + 1){
-        fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, keys[i]);
+    for (i = 0; i < nkeys && unfound[i] != NULL; i = i + 1){
+        fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, unfound[i]);
         ret = KEY_NOT_FOUND;
     }
 

@@ -103,8 +103,8 @@ static inline int show_with_key_tag(const int tty, const char* list, const int n
         goto cleanup;
     }
 
-    for (i = 0; unfound[i] != NULL && i < nkeys; i = i + 1){
-        fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, keys[i]);
+    for (i = 0; i < nkeys && unfound[i] != NULL; i = i + 1){
+        fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, unfound[i]);
         ret = KEY_NOT_FOUND;
     }
 
@@ -169,7 +169,7 @@ static inline int show_without_key_tag(const int tty, const char* list){
     char* file;
     int result;
     int ret = 0;
-    int first_echo;
+    int first_echo = true;
     size_t size = 0;
 
     fp = fopen(list, "r");
@@ -262,6 +262,7 @@ int show(char* list, int nkeys, char** keys, int ntags, char** tags){
         result = show_without_key_tag(tty, list);
     }
 
+    ret = result;
     goto cleanup;
 
 

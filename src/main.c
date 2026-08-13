@@ -154,7 +154,7 @@ int main(int argc, char** argv){
             ret = STOP;
         } else if (result == KEY_DUPLICATE){
             ret = NEGATIVE_STOP;
-        } else if (result == UNKNOWN_ERROR){
+        } else if (result == INPUT_ERROR || result == UNKNOWN_ERROR){
             ret = BUG_STOP;
         } else{
             ret = ERROR_STOP;
@@ -163,7 +163,8 @@ int main(int argc, char** argv){
     }
 
     if (strcmp(nonopts[0], "rm") == 0){
-        if (has_help == true || nonoptsc == 1){
+        // if (has_help == true || nonoptsc == 1){
+        if (has_help == true){
             show_help_rm();
             if (has_help == true){
                 ret = STOP;

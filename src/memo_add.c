@@ -186,6 +186,12 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
         goto cleanup;
     }
 
+    if (nkeys <= 0){
+        fprintf(stderr, "%s: Unknown error: No keys were speicified to add\n", PACKAGE_NAME);
+        ret = INPUT_ERROR;
+        goto cleanup;
+    }
+
     result = get_datetime(clock, '\0', &datetime);
     if (result == MALLOC_ERROR){
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
@@ -212,10 +218,14 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
     rewind(fp);
     result = key_exist_check(fp, nkeys, keys, exists, nexists);
     if (result == KEY_NOT_FOUND || result == 0){
-        i = 0;
-        while (exists[i] != NULL){
+        for (i = 0; i < nkeys && exists[i] != NULL; i = i + 1){
             fprintf(stderr, "%s: Key '%s' already exists\n", PACKAGE_NAME, exists[i]);
         }
+        // i = 0;
+        // while (exists[i] != NULL){
+        //     fprintf(stderr, "%s: Key '%s' already exists\n", PACKAGE_NAME, exists[i]);
+        //     i = i + 1;
+        // }
         if (result == 0){
             ret = KEY_DUPLICATE;
             goto cleanup;
@@ -238,7 +248,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
     if (nexists[nkeys-1] != NULL){
         nexist_count = nkeys;
     } else{
-        while (nexists[nexist_count] != NULL){
+        for (i = 0; i < nkeys && nexists[i] != NULL; i = i + 1){
             nexist_count = nexist_count + 1;
         }
     }

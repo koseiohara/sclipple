@@ -175,8 +175,8 @@ static inline int search_with_key_tag(regex_t* regex, const int tty, const char*
         goto cleanup;
     }
 
-    for (i = 0; unfound[i] != NULL && i < nkeys; i = i + 1){
-        fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, keys[i]);
+    for (i = 0; i < nkeys && unfound[i] != NULL; i = i + 1){
+        fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, unfound[i]);
         ret = KEY_NOT_FOUND;
     }
 
@@ -236,7 +236,7 @@ static inline int search_without_key_tag(regex_t* regex, const int tty, const ch
     char* file;
     int result;
     int ret = 0;
-    int first_echo;
+    int first_echo = true;
     size_t size = 0;
 
     fp = fopen(list, "r");
@@ -327,6 +327,8 @@ int search(char* list, char* word, int nkeys, char** keys, int ntags, char** tag
 
     if (nkeys < 0 || ntags < 0){
         fprintf(stderr, "%s: Invalid number of keys or tags: keys=%d, tags=%d\n", PACKAGE_NAME, nkeys, ntags);
+
+        regfree(&regex);
         ret = INPUT_ERROR;
         goto cleanup;
     } else if (nkeys > 0 || ntags > 0){
@@ -335,12 +337,12 @@ int search(char* list, char* word, int nkeys, char** keys, int ntags, char** tag
         result = search_without_key_tag(&regex, tty, list);
     }
 
+    regfree(&regex);
+
     ret = result;
     goto cleanup;
 
 cleanup:
-    regfree(&regex);
-
     return ret;
 }
 

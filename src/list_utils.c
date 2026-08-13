@@ -60,10 +60,14 @@ int tags2line(int ntags, char* const* tags, char** line){
     for (i = 0; i < ntags; i = i + 1){
         memcpy(p, tags[i], lens[i]);
         p  = p + lens[i];
-        *p = ',';
-        p  = p + 1;
-        *p = ' ';
-        p  = p + 1;
+        if (i != ntags-1){
+            *p = ',';
+            p  = p + 1;
+            *p = ' ';
+            p  = p + 1;
+        } else{
+            *p = '\0';
+        }
     }
 
     ret = 0;
@@ -698,7 +702,7 @@ int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int
 
     *found_by_key = 0;
     for (i = 0; i < nkeys; i = i + 1){
-        if ((*by_key)[i].key == NULL){
+        if ((*by_key)[i].key != NULL){
             unfound[*found_by_key] = keys[i];
             *found_by_key = *found_by_key + 1;
         }
@@ -708,7 +712,7 @@ int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int
     }
 
     if (ntags == 0){
-        *field = malloc((size_t)(*found_by_key) * sizeof(ListField*));
+        *field = malloc((size_t)(*found_by_key) * sizeof(ListField));
         *found_all = 0;
         for (i = 0; i < *found_by_key; i = i + 1){
             if ((*by_key)[i].key == NULL){
