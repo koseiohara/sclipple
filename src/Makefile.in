@@ -106,9 +106,9 @@ am_sclipple_OBJECTS = ptrutils.$(OBJEXT) help.$(OBJEXT) \
 	file_systems.$(OBJEXT) validation.$(OBJEXT) \
 	parse_options.$(OBJEXT) list_formatter.$(OBJEXT) \
 	list_utils.$(OBJEXT) git_run.$(OBJEXT) memo_add.$(OBJEXT) \
-	memo_edit.$(OBJEXT) memo_rm.$(OBJEXT) memo_mv.$(OBJEXT) \
-	memo_ls.$(OBJEXT) memo_search.$(OBJEXT) memo_show.$(OBJEXT) \
-	main.$(OBJEXT)
+	memo_rm.$(OBJEXT) memo_mv.$(OBJEXT) memo_ls.$(OBJEXT) \
+	memo_search.$(OBJEXT) memo_show.$(OBJEXT) memo_tag.$(OBJEXT) \
+	memo_edit.$(OBJEXT) main.$(OBJEXT)
 sclipple_OBJECTS = $(am_sclipple_OBJECTS)
 sclipple_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -134,8 +134,9 @@ am__depfiles_remade = ./$(DEPDIR)/datetime.Po \
 	./$(DEPDIR)/memo_edit.Po ./$(DEPDIR)/memo_ls.Po \
 	./$(DEPDIR)/memo_mv.Po ./$(DEPDIR)/memo_rm.Po \
 	./$(DEPDIR)/memo_search.Po ./$(DEPDIR)/memo_show.Po \
-	./$(DEPDIR)/parse_options.Po ./$(DEPDIR)/ptrutils.Po \
-	./$(DEPDIR)/strutils.Po ./$(DEPDIR)/validation.Po
+	./$(DEPDIR)/memo_tag.Po ./$(DEPDIR)/parse_options.Po \
+	./$(DEPDIR)/ptrutils.Po ./$(DEPDIR)/strutils.Po \
+	./$(DEPDIR)/validation.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -281,12 +282,13 @@ sclipple_SOURCES = \
     list_utils.c list_utils.h \
     git_run.c git_run.h \
     memo_add.c memo_add.h \
-    memo_edit.c memo_edit.h \
     memo_rm.c memo_rm.h \
     memo_mv.c memo_mv.h \
     memo_ls.c memo_ls.h \
     memo_search.c memo_search.h \
     memo_show.c memo_show.h \
+    memo_tag.c memo_tag.h \
+    memo_edit.c memo_edit.h \
     main.c
 
 AM_CFLAGS = \
@@ -396,6 +398,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_rm.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_search.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_show.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_tag.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parse_options.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ptrutils.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strutils.Po@am__quote@ # am--include-marker
@@ -563,6 +566,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/memo_rm.Po
 	-rm -f ./$(DEPDIR)/memo_search.Po
 	-rm -f ./$(DEPDIR)/memo_show.Po
+	-rm -f ./$(DEPDIR)/memo_tag.Po
 	-rm -f ./$(DEPDIR)/parse_options.Po
 	-rm -f ./$(DEPDIR)/ptrutils.Po
 	-rm -f ./$(DEPDIR)/strutils.Po
@@ -627,6 +631,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/memo_rm.Po
 	-rm -f ./$(DEPDIR)/memo_search.Po
 	-rm -f ./$(DEPDIR)/memo_show.Po
+	-rm -f ./$(DEPDIR)/memo_tag.Po
 	-rm -f ./$(DEPDIR)/parse_options.Po
 	-rm -f ./$(DEPDIR)/ptrutils.Po
 	-rm -f ./$(DEPDIR)/strutils.Po

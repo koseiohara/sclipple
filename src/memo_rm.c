@@ -149,9 +149,9 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
             } else if (result == MALLOC_ERROR){
                 fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
                 ret = MALLOC_ERROR;
-            } else if (result == KEY_DUPLICATE){
-                fprintf(stderr, "%s: Unknown error. Duplication of a key is found in edit_list() while mode is 'rm'\n", PACKAGE_NAME);
-                ret = KEY_DUPLICATE;
+            // } else if (result == KEY_DUPLICATE){
+            //     fprintf(stderr, "%s: Unknown error. Duplication of a key is found in edit_list() while mode is 'rm'\n", PACKAGE_NAME);
+            //     ret = KEY_DUPLICATE;
             } else if (result == KEY_NOT_FOUND){
                 fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, field_merged[i].key);
                 ret = KEY_NOT_FOUND;

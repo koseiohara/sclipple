@@ -12,6 +12,7 @@
 
 #include "globals.h"
 #include "ptrutils.h"
+#include "strutils.h"
 #include "file_systems.h"
 #include "strutils.h"
 #include "list_utils.h"
@@ -188,7 +189,7 @@ static inline int ls_with_key_tag(const int tty, const char* list, const int nke
             work_tags = work_list->tags;
         }
 
-        result = tags2line(ntags_all, work_tags, &tagline);
+        result = arr2line(ntags_all, work_tags, ',', '\0', '\0', &tagline);
         if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
@@ -294,7 +295,7 @@ static inline int ls_without_key_tag(const int tty, const char* list){
             goto cleanup;
         }
 
-        result = tags2line(ntags_all, tags_all, &tagline);
+        result = arr2line(ntags_all, tags_all, ',', '\0', '\0', &tagline);
         if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;

@@ -90,7 +90,8 @@ int make_file(const char* path, const int cond){
 }
 
 
-// return INVALID_KEY_ERROR if keys is invalid
+// return INVALID_KEY_ERROR if keys are invalid
+// return INVALID_TAG_ERROR if tags are invalid
 // return IO_ERROR if make directory and make file failed
 // return MALLOC_ERROR if malloc failed
 // return KEY_DUPLICATE if keyword already exist
@@ -112,7 +113,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
 
     if (nkeys <= 0 || ntags < 0){
         if (nkeys <= 0){
-            fprintf(stderr, "%s: Unknown error: No keys were speicified to add\n", PACKAGE_NAME);
+            fprintf(stderr, "%s: Unknown error: No keys were specified to add\n", PACKAGE_NAME);
         } else{
             fprintf(stderr, "%s: Unknown error: Number of tags is negative\n", PACKAGE_NAME);
         }
@@ -159,7 +160,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
             } else if (result == RESERVED_WORD_ERROR){
                 fprintf(stderr, "%s: '%s' is a reserved word.\n", PACKAGE_NAME, tags[i]);
             }
-            ret = INVALID_KEY_ERROR;
+            ret = INVALID_TAG_ERROR;
             goto cleanup;
         }
     }
@@ -232,6 +233,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
 
     fp = fopen(list, "a+");
     if (fp == NULL){
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
     }

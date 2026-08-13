@@ -75,7 +75,6 @@ int mv(const char* list, char* old_key, char* new_key){
 
     info[0] = old_key;
     info[1] = new_key;
-    // result = get_filename_by_key(list, old_flag, &old_file);
     result = get_content_by_key(fp, 2, info, &field, true, false);
     if (result != 0){
         if (result == LIST_FORMAT_ERROR){
@@ -152,9 +151,9 @@ int mv(const char* list, char* old_key, char* new_key){
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
-        } else if (result == KEY_DUPLICATE){
-            fprintf(stderr, "%s: New key '%s' already exists\n", PACKAGE_NAME, new_key);
-            ret = KEY_DUPLICATE;
+        // } else if (result == KEY_DUPLICATE){
+        //     fprintf(stderr, "%s: New key '%s' already exists\n", PACKAGE_NAME, new_key);
+        //     ret = KEY_DUPLICATE;
         } else if (result == KEY_NOT_FOUND){
             fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, old_key);
             ret = KEY_NOT_FOUND;

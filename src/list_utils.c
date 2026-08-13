@@ -20,69 +20,6 @@
 #define DELIM ','
 
 
-int tags2line(int ntags, char* const* tags, char** line){
-    char*  p;
-    int*   lens = NULL;
-    int    i;
-    int    ret;
-    size_t len;
-
-    if (ntags == 0){
-        *line = malloc(sizeof(char));
-        if (*line == NULL){
-            ret = MALLOC_ERROR;
-            goto cleanup;
-        }
-        **line = '\0';
-        ret    = 0;
-        goto cleanup;
-    } else if (ntags < 0){
-        ret = INPUT_ERROR;
-        goto cleanup;
-    }
-
-    lens = malloc((size_t)ntags * sizeof(int));
-    if (lens == NULL){
-        ret = MALLOC_ERROR;
-        goto cleanup;
-    }
-
-    len = 0;
-    for (i = 0; i < ntags; i = i + 1){
-        lens[i] = strlen(tags[i]);
-        len = len + lens[i] + 2;            // +2 for a comma and a space
-    }
-
-    *line = malloc(len * sizeof(char));
-    if (*line == NULL){
-        ret = MALLOC_ERROR;
-        goto cleanup;
-    }
-
-    p = *line;
-    for (i = 0; i < ntags; i = i + 1){
-        memcpy(p, tags[i], lens[i]);
-        p  = p + lens[i];
-        if (i != ntags-1){
-            *p = ',';
-            p  = p + 1;
-            *p = ' ';
-            p  = p + 1;
-        } else{
-            *p = '\0';
-        }
-    }
-
-    ret = 0;
-    goto cleanup;
-
-
-cleanup:
-    free(lens);
-    return ret;
-}
-
-
 // return INPUT_ERROR if an argument is invalid
 // resutn MALLOC_ERROR if malloc failed
 // resutn 0 otherwise
@@ -808,7 +745,7 @@ cleanup:
 // return RENAME_ERROR rename failed
 // return MALLOC_ERROR malloc failed
 // return LIST_FORMAT_ERROR list file is broken
-// return KEY_DUPLICATE if new_key already exist
+// // return KEY_DUPLICATE if new_key already exist
 // return KEY_NOT_FOUND if old_key already exist
 // return 0 otherwise
 int edit_list(const char* list, const char* mode, const int nkeys, char* const* keys, char* const* info){
@@ -829,13 +766,13 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
     char**    work_curr_tags = NULL;
     char**    work_new_tags  = NULL;
     char*     work_new_meta  = NULL;
-    char**    work_exist     = NULL;
+    // char**    work_exist     = NULL;
     int*      is_found = NULL;
     int       imode;
     int       fd;
     int       result;
     int       ret = 0;
-    int       work_nkeys;
+    // int       work_nkeys;
     int       work_ntags;
     int       changed;
     int       line_changed;
@@ -851,7 +788,7 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
         goto cleanup;
     }
 
-    if (nkeys <= 0 || keys == NULL){
+    if (nkeys <= 0 || keys == NULL || keys[0] == NULL){
         ret = INPUT_ERROR;
         goto cleanup;
     }
@@ -870,8 +807,16 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
         }
     } else if (strcmp(mode, "tag") == 0){
         imode = mode_tag;
+        if (info == NULL || info[0] == NULL){
+            ret = INPUT_ERROR;
+            goto cleanup;
+        }
     } else if (strcmp(mode, "utag") == 0){
         imode = mode_utag;
+        if (info == NULL || info[0] == NULL){
+            ret = INPUT_ERROR;
+            goto cleanup;
+        }
     } else{
         ret = INPUT_ERROR;
         goto cleanup;
@@ -884,56 +829,56 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
     }
 
     // check existence of the new flag
-    if (imode == mode_mv){
-        result = key_exist_check(fpr, 1, info, NULL, NULL);
-        if (result != KEY_NOT_FOUND){
-            if (result == 0){
-                ret = KEY_DUPLICATE;
-            } else if (result == IO_ERROR){
-                ret = IO_ERROR;
-            } else if (result == MALLOC_ERROR){
-                ret = MALLOC_ERROR;
-            } else{
-                ret = UNKNOWN_ERROR;
-            }
-            goto cleanup;
-        }
-        rewind(fpr);
-    } else if (imode == mode_tag || imode == mode_utag){
-        work_exist = malloc((size_t)nkeys * sizeof(char*));
-        if (work_exist == NULL){
-            ret = MALLOC_ERROR;
-            goto cleanup;
-        }
-        result = key_exist_check(fpr, nkeys, keys, work_exist, NULL);
-        if (result == 0){
-            work_nkeys = nkeys;
-        } else if (result == KEY_NOT_FOUND){
-            work_nkeys = 0;
-            while (work_exist[work_nkeys] != NULL){
-                work_nkeys = work_nkeys + 1;
-            }
-        } else{
-            if (result == IO_ERROR){
-                ret = IO_ERROR;
-            } else if (result == MALLOC_ERROR){
-                ret = MALLOC_ERROR;
-            } else{
-                ret = UNKNOWN_ERROR;
-            }
-            goto cleanup;
-        }
-        rewind(fpr);
+    // if (imode == mode_mv){
+    //     result = key_exist_check(fpr, 1, info, NULL, NULL);
+    //     if (result != KEY_NOT_FOUND){
+    //         if (result == 0){
+    //             ret = KEY_DUPLICATE;
+    //         } else if (result == IO_ERROR){
+    //             ret = IO_ERROR;
+    //         } else if (result == MALLOC_ERROR){
+    //             ret = MALLOC_ERROR;
+    //         } else{
+    //             ret = UNKNOWN_ERROR;
+    //         }
+    //         goto cleanup;
+    //     }
+    //     rewind(fpr);
+    // } else if (imode == mode_tag || imode == mode_utag){
+    //     work_exist = malloc((size_t)nkeys * sizeof(char*));
+    //     if (work_exist == NULL){
+    //         ret = MALLOC_ERROR;
+    //         goto cleanup;
+    //     }
+    //     result = key_exist_check(fpr, nkeys, keys, work_exist, NULL);
+    //     if (result == 0){
+    //         work_nkeys = nkeys;
+    //     } else if (result == KEY_NOT_FOUND){
+    //         work_nkeys = 0;
+    //         while (work_exist[work_nkeys] != NULL){
+    //             work_nkeys = work_nkeys + 1;
+    //         }
+    //     } else{
+    //         if (result == IO_ERROR){
+    //             ret = IO_ERROR;
+    //         } else if (result == MALLOC_ERROR){
+    //             ret = MALLOC_ERROR;
+    //         } else{
+    //             ret = UNKNOWN_ERROR;
+    //         }
+    //         goto cleanup;
+    //     }
+    //     rewind(fpr);
 
-        is_found = malloc((size_t)nkeys * sizeof(int));
-        if (is_found == NULL){
-            ret = MALLOC_ERROR;
-            goto cleanup;
-        }
-        for (i = 0; i < nkeys; i = i + 1){
-            is_found[i] = false;
-        }
+    is_found = malloc((size_t)nkeys * sizeof(int));
+    if (is_found == NULL){
+        ret = MALLOC_ERROR;
+        goto cleanup;
     }
+    for (i = 0; i < nkeys; i = i + 1){
+        is_found[i] = false;
+    }
+    // }
 
     result = asprintf(&tmpfile, "%s.XXXXXX", list);
     if (result < 0){
@@ -1038,8 +983,8 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
             }
         } else if (imode == mode_tag || imode == mode_utag){
             line_changed = false;
-            for (i = 0; i < work_nkeys; i = i + 1){
-                if (is_found[i] == false && strcmp(work_key, work_exist[i]) == 0){
+            for (i = 0; i < nkeys; i = i + 1){
+                if (is_found[i] == false && strcmp(work_key, keys[i]) == 0){
                     result = parse_meta(work_meta, &work_datetime, &work_ntags, &work_curr_tags);
                     if (result != 0){
                         unlink(tmpfile);
@@ -1178,11 +1123,11 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
     
     XFREE(tmpfile);
 
-    if (imode == mode_tag || imode == mode_utag){
-        if (count < work_nkeys){
-            ret = KEY_NOT_FOUND;
-        }
-    }
+    // if (imode == mode_tag || imode == mode_utag){
+    //     if (count < work_nkeys){
+    //         ret = KEY_NOT_FOUND;
+    //     }
+    // }
 
     goto cleanup;
 
@@ -1202,7 +1147,7 @@ cleanup:
     free(line);
     free(is_found);
     free(tmpfile);
-    free(work_exist);
+    // free(work_exist);
     free(work_curr_tags);
     free(work_new_tags);
     free(work_new_meta);
