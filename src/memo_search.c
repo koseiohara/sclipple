@@ -125,7 +125,11 @@ int search_one_file(regex_t* regex, int tty, char* key, char* file, int first_ec
 
 
 cleanup:
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0 || ret == RESULT_EMPTY){
+            ret = IO_ERROR;
+        }
+    }
     free(line);
 
     return ret;
@@ -221,6 +225,7 @@ static inline int search_with_key_tag(regex_t* regex, const int tty, const char*
 cleanup:
     if (xfclose(&fp)){
         if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
         }
     }
@@ -295,6 +300,7 @@ static inline int search_without_key_tag(regex_t* regex, const int tty, const ch
 cleanup:
     if (xfclose(&fp)){
         if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
         }
     }

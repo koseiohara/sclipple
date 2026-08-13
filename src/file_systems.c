@@ -57,6 +57,9 @@ int parse_directory(const char* input_dir, char** output_dir){
 
     result = wordexp(input_dir, &we, WRDE_NOCMD | WRDE_UNDEF);
     if (result != 0){
+        if (result == WRDE_NOSPACE){
+            wordfree(&we);
+        }
         return WORDEXP_ERROR;
     }
     

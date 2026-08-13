@@ -136,6 +136,12 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
         goto cleanup;
     }
 
+    if (xfclose(&fp)){
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+        ret = IO_ERROR;
+        goto cleanup;
+    }
+
     for (i = 0; i < nkeys && unfound[i] != NULL; i = i + 1){
         fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, unfound[i]);
         ret = KEY_NOT_FOUND;
@@ -240,7 +246,13 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
 
 
 cleanup:
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+        }
+    }
+
     // if (files != NULL){
     //     for (j = 0; j < nkeys; j = j + 1){
     //         free(files[j]);

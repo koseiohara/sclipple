@@ -399,7 +399,7 @@ int key_exist_check(FILE* fp, const int nkeys, char* const* keys, char** exist, 
         }
     }
 
-    if (ferror(fp) != 0){
+    if (ferror(fp)){
         ret = IO_ERROR;
         goto cleanup;
     }
@@ -519,7 +519,7 @@ int get_content_by_key(FILE* fp, const int nkeys, char* const* keys, ListField**
         }
     }
 
-    if (ferror(fp) != 0){
+    if (ferror(fp)){
         ret = IO_ERROR;
         goto cleanup;
     }
@@ -673,7 +673,7 @@ int get_content_by_tag(FILE* fp, const int ntags, char* const* tags, int* nlines
         XFREE(work_tags);
     }
 
-    if (ferror(fp) != 0){
+    if (ferror(fp)){
         ret = IO_ERROR;
         goto cleanup;
     }
@@ -1152,7 +1152,7 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
         goto cleanup;
     }
 
-    if (ferror(fpr) != 0){
+    if (ferror(fpr)){
         unlink(tmpfile);
         ret = IO_ERROR;
         goto cleanup;
@@ -1188,8 +1188,16 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
 
 
 cleanup:
-    xfclose(&fpr);
-    xfclose(&fpw);
+    if (xfclose(&fpr)){
+        if (ret == 0){
+            ret = IO_ERROR;
+        }
+    }
+    if (xfclose(&fpw)){
+        if (ret == 0){
+            ret = IO_ERROR;
+        }
+    }
 
     free(line);
     free(is_found);

@@ -78,7 +78,9 @@ int make_file(const char* path, const int cond){
         if (fd == -1){
             return IO_ERROR;
         }
-        close(fd);
+        if (close(fd) != 0){
+            return IO_ERROR;
+        }
         return 0;
     } else if (result == PATH_EXIST){
         return PATH_EXIST;
@@ -334,6 +336,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
 cleanup:
     if (xfclose(&fp)){
         if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
         }
     };

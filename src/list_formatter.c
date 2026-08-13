@@ -264,7 +264,7 @@ int make_meta(char** meta, const char* datetime, const int ntags, char* const* t
 
 
 cleanup:
-    if (xfclose(&fp) != 0){
+    if (xfclose(&fp)){
         if (ret == 0){
             ret = IO_ERROR;
         }

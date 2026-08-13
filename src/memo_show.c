@@ -53,7 +53,11 @@ int show_one_file(int tty, char* key, char* file){
 
 
 cleanup:
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0){
+            ret = IO_ERROR;
+        }
+    }
     free(line);
 
     return ret;
@@ -154,6 +158,7 @@ static inline int show_with_key_tag(const int tty, const char* list, const int n
 cleanup:
     if (xfclose(&fp)){
         if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
         }
     }
@@ -232,6 +237,7 @@ static inline int show_without_key_tag(const int tty, const char* list){
 cleanup:
     if (xfclose(&fp)){
         if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
         }
     }

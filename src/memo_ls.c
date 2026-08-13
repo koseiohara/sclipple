@@ -30,6 +30,7 @@
 static inline int get_first_line(const char* notename, const int first_line_len, char* first_line){
     FILE* fp = NULL;
     char* enter;
+    int ret;
 
     fp = fopen(notename, "r");
     if (fp == NULL){
@@ -51,18 +52,27 @@ static inline int get_first_line(const char* notename, const int first_line_len,
             *enter = '\0';
         }
 
-        xfclose(&fp);
-        return 0;
+        ret = 0;
+        goto cleanup;
     }
 
     if (ferror(fp)){
-        xfclose(&fp);
-        return IO_ERROR;
+        ret = IO_ERROR;
+        goto cleanup;
     }
 
     first_line[0] = '\0';
-    xfclose(&fp);
-    return RESULT_EMPTY;
+    ret = RESULT_EMPTY;
+    goto cleanup;
+
+cleanup:
+    if (xfclose(&fp)){
+        if (ret == 0 || ret == RESULT_EMPTY){
+            ret = IO_ERROR;
+        }
+    }
+
+    return ret;
 }
 
 
@@ -198,7 +208,12 @@ static inline int ls_with_key_tag(const int tty, const char* list, const int nke
 
 
 cleanup:
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+        }
+    }
 
     if (field_by_key != NULL){
         for (i = 0; i < nkeys; i = i + 1){
@@ -297,7 +312,7 @@ static inline int ls_without_key_tag(const int tty, const char* list){
         XFREE(tagline);
     }
 
-    if (ferror(fp) != 0){
+    if (ferror(fp)){
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
@@ -307,7 +322,12 @@ static inline int ls_without_key_tag(const int tty, const char* list){
 
 
 cleanup:
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+        }
+    }
     free(line);
     free(tags_all);
     free(tagline);

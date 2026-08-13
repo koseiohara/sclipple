@@ -94,7 +94,13 @@ int mv(const char* list, char* old_key, char* new_key){
         goto cleanup;
     }
 
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+            goto cleanup;
+        }
+    }
 
     if (field[0].key == NULL){
         fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, old_key);
@@ -174,7 +180,12 @@ int mv(const char* list, char* old_key, char* new_key){
 
 
 cleanup:
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+        }
+    }
     if (field != NULL){
         free_ListField(&(field[0]));
         free_ListField(&(field[1]));

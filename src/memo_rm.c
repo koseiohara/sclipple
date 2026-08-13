@@ -118,7 +118,13 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
         goto cleanup;
     }
 
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+        }
+        goto cleanup;
+    }
 
     for (i = 0; i < nkeys && unfound[i] != NULL; i = i + 1){
         fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, unfound[i]);
@@ -175,7 +181,12 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
 
 
 cleanup:
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            ret = IO_ERROR;
+        }
+    }
     if (field_by_key != NULL){
         for (i = 0; i < nkeys; i = i + 1){
             free_ListField(&(field_by_key[i]));
