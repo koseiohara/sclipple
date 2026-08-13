@@ -17,26 +17,40 @@
 #define DELIM ","
 
 
-int write_line(FILE* fp, const char* flag, const char* datetime, const char* file){
+int write_line(FILE* fp, const char* flag, const char* datetime, const char* file, const char** tags, const char* meta_all){
     int flag_len;
     int datetime_len;
     int file_len;
+    int i;
+    int ntags;
 
     flag_len     = strlen(flag);
     datetime_len = strlen(datetime);
     file_len     = strlen(file);
-    if (fprintf(fp, "%d%s%s%s%d%s%s%s%d%s%s\n", flag_len    , DELIM, flag    , DELIM,
-                                                datetime_len, DELIM, datetime, DELIM,
-                                                file_len    , DELIM, file) < 0){
+    if (fprintf(fp, "%d%s%s%s%d%s%s%s%d%s%s%s", flag_len    , DELIM, flag    , DELIM,
+                                                file_len    , DELIM, file    , DELIM,
+                                                datetime_len, DELIM, datetime, DELIM) < 0){
         return IO_ERROR;
     }
+
+    while (tags[i] != NULL){
+        flag_len = strlen(tags[i]);
+        if (fprintf(fp, "%d%s%s%s", flag_len, DELIM, tags[i], DELIM) < 0){
+            return IO_ERROR;
+        }
+    }
+
+    if (fputc('\n', fp) == EOF){
+        return IO_ERROR;
+    }
+
     return 0;
 }
 
 
 // return IO_ERROR if failed to open or write to list file
 // return 0 otherwise
-int write_new_content_to_list(const char* list, const char* flag, const char* datetime, const char* file){
+int write_new_content_to_list(const char* list, const char* flag, const char* datetime, const char* file, const char** tags){
     FILE* fp = NULL;
     int result;
     int ret = 0;
@@ -48,7 +62,7 @@ int write_new_content_to_list(const char* list, const char* flag, const char* da
         goto cleanup;
     }
 
-    result = write_line(fp, flag, datetime, file);
+    result = write_line(fp, flag, datetime, file, tags);
     if (result == 0){
         ret = 0;
         goto cleanup;
@@ -292,21 +306,22 @@ cleanup:
 int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char* new_file){
     FILE* fpr  = NULL;
     FILE* fpw  = NULL;
-    char* line = NULL;
-    char* tmpfile  = NULL;
+    char* line         = NULL;
+    char* tmpfile      = NULL;
+    char* work_line    = NULL;
     char* out_flag     = NULL;
     char* out_datetime = NULL;
     char* out_notename = NULL;
     char* dummy = NULL;
-    char* work_line;
     char* flag;
     char* datetime;
     char* notename;
-    int    fd;
-    int    changed;
-    int    result;
-    int    ret;
-    int    work_len;
+    char* tags[2];
+    int   fd;
+    int   changed;
+    int   result;
+    int   ret;
+    int   work_len;
     size_t size = 0;
     struct stat st;
 
@@ -383,20 +398,18 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char*
             continue;
         }
 
-        work_line = line;
+        work_line = strdup(line);
+        if (work_line == NULL){
+            unlink(tmpfile);
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
 
         // find the first delimiter
-        flag     = get_element(&work_line, &work_len);
-        datetime = get_element(&work_line, &work_len);
-        notename = get_element(&work_line, &work_len);
-        #ifdef DEBUG
-        printf("<DEBUG> FLAG    : %s\n", flag);
-        printf("<DEBUG> DATETIME: %s\n", datetime);
-        printf("<DEBUG> NOTENAME: %s\n", notename);
-        #endif
-
-        if (flag == NULL || datetime == NULL || notename == NULL){
-            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
+        flag = get_element(&work_line, &work_len);
+        // datetime = get_element(&work_line, &work_len);
+        // notename = get_element(&work_line, &work_len);
+        if (flag == NULL){
             unlink(tmpfile);
             ret = LIST_FORMAT_ERROR;
             goto cleanup;
@@ -404,13 +417,30 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char*
 
         // if the flag of the current line is target_flag
         if (strcmp(flag, old_flag) == 0){
-            out_flag     = strdup(new_flag);
-            out_notename = strdup(new_file);
-            if (out_flag == NULL || out_notename == NULL){
+            datetime = get_element(&work_line, &work_len);
+            // notename = get_element(&work_line, &work_len);
+            if (datetime == NULL){
+                unlink(tmpfile);
+                ret = LIST_FORMAT_ERROR;
+                goto cleanup;
+            }
+            notename = strdup(new_file);
+            if (notename == NULL){
                 unlink(tmpfile);
                 ret = MALLOC_ERROR;
                 goto cleanup;
             }
+
+            result = write_line(fpw, flag, datetime, notename, tags);
+
+//             out_flag     = strdup(new_flag);
+//             out_datetime = strdup(datetime);
+//             out_notename = strdup(new_file);
+//             if (out_flag == NULL || out_notename == NULL){
+//                 unlink(tmpfile);
+//                 ret = MALLOC_ERROR;
+//                 goto cleanup;
+//             }
             changed = true;
         } else{
             out_flag     = strdup(flag);
@@ -421,14 +451,14 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char*
                 goto cleanup;
             }
         }
-        out_datetime = strdup(datetime);
-        if (out_datetime == NULL){
-            unlink(tmpfile);
-            ret = MALLOC_ERROR;
-            goto cleanup;
-        }
+        // out_datetime = strdup(datetime);
+        // if (out_datetime == NULL){
+        //     unlink(tmpfile);
+        //     ret = MALLOC_ERROR;
+        //     goto cleanup;
+        // }
 
-        result = write_line(fpw, out_flag, out_datetime, out_notename);
+        result = write_line(fpw, out_flag, out_datetime, out_notename, tags);
         if (result != 0){
             unlink(tmpfile);
             if (result == IO_ERROR){
@@ -438,11 +468,13 @@ int mv_key_in_list(const char* list, const char* old_flag, char* new_flag, char*
             }
             goto cleanup;
         }
+        XFREE(work_line);
         XFREE(out_flag);
         XFREE(out_datetime);
         XFREE(out_notename);
     }
 
+    XFREE(work_line);
     XFREE(line);
     XFREE(out_flag);
     XFREE(out_notename);
@@ -489,6 +521,7 @@ cleanup:
 
     free(line);
     free(tmpfile);
+    free(work_line);
     free(out_flag);
     free(out_datetime);
     free(out_notename);

@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 
 #include "globals.h"
+#include "git_run.h"
 
 // return FORK_ERROR if the operating system cannot create a child process
 // return IO_ERROR if the specified working directory cannot be entered

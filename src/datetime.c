@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "globals.h"
+#include "datetime.h"
 
 
 // return MALLOC_ERROR if asprintf errors

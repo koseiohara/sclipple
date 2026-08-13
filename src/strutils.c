@@ -6,6 +6,7 @@
 #include <ctype.h>
 
 #include "globals.h"
+#include "strutils.h"
 
 
 void leftrim(char** s){
@@ -120,6 +121,46 @@ void delete_bracket(char** s, int n, const char* lbracket, const char* rbracket)
             return;
         }
     }
+}
+
+
+int duplication_filter(int* nvals, char** vals){
+    int i;
+    int j;
+    int n;
+    int found;
+
+    if (nvals == NULL || *nvals < 0 || vals == NULL){
+        return INPUT_ERROR;
+    } else if (*nvals <= 1){
+        if (*nvals == 1 && vals[0] == NULL){
+            *nvals = 0;
+        }
+        return 0;
+    }
+
+    n = *nvals;
+    *nvals = 0;
+    for (i = 0; i < n; i = i + 1){
+        if (vals[i] == NULL){
+            continue;
+        }
+        found = false;
+        for (j = 0; j < *nvals; j = j + 1){
+            if (strcmp(vals[i], vals[j]) == 0){
+                found = true;
+                break;
+            }
+        }
+
+        if (found == false){
+            vals[*nvals] = vals[i];
+            *nvals = *nvals + 1;
+        }
+    }
+    vals[*nvals] = NULL;
+
+    return 0;
 }
 
 

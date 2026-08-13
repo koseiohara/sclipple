@@ -8,12 +8,13 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/stat.h>
-#include <getopt.h>
+// #include <getopt.h>
 
 #include "globals.h"
+#include "parse_options.h"
 #include "help.h"
 #include "git_run.h"
-#include "names.h"
+#include "file_systems.h"
 #include "strutils.h"
 #include "get_rc.h"
 #include "memo_add.h"
@@ -27,7 +28,6 @@
 int main(int argc, char** argv){
     Config  config = {0};
     RcEntry entry[N_ENTRY];
-    // char** editor_commands = NULL;
     char*  home;
     char*  subdir = NULL;
     char*  rc     = NULL;
@@ -39,20 +39,12 @@ int main(int argc, char** argv){
     struct tm* lt;
     struct stat st;
 
-    int    option;
     int    has_help = false;
     int    has_tag  = false;
     int    nonoptsc;
-    int    tagc;
+    int    ntags;
     char** nonopts = NULL;
     char** tags    = NULL;
-
-    static const struct option opt_list[] = {
-                                             {"help"   , no_argument      , NULL, 'h'},
-                                             {"version", no_argument      , NULL, 'v'},
-                                             {"tag"    , required_argument, NULL, 't'},
-                                             {NULL     , 0                , NULL,  0 },
-                                            };
 
 
     if (get_env("HOME", &home) != 0){
@@ -118,37 +110,23 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    nonoptsc = 0;
-    tagc     = 0;
-    nonopts  = malloc(argc * sizeof(char*));
-    tags     = malloc(argc * sizeof(char*));
-    while ((option = getopt_long(argc, argv, "-hvt:", opt_list, NULL)) != -1){
-        switch (option){
-            case 'h':
-                has_help = true;
-                break;
-            case 'v':
-                // has_version = true;
-                printf("%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
-                ret = STOP;
-                goto cleanup;
-                // break;
-            case 't':
-                has_tag = true;
-                tags[tagc] = optarg;
-                tagc = tagc + 1;
-                break;
-            case 1:
-                nonopts[nonoptsc] = optarg;
-                nonoptsc = nonoptsc + 1;
-                break;
-            case '?':
-                ret = ERROR_STOP;
-                goto cleanup;
+    nonopts = malloc(argc * sizeof(char*));
+    tags    = malloc(argc * sizeof(char*));
+    if (nonopts == NULL || tags == NULL){
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+        ret = ERROR_STOP;
+        goto cleanup;
+    }
+    result = parse_opts(argc, argv, &has_help, &has_tag, &nonoptsc, nonopts, &ntags, tags);
+    if (result != 0){
+        if (result == SHOW_VERSION){
+            ret = 0;
+            goto cleanup;
+        } else if (result == INVALID_OPTION){
+            ret = ERROR_STOP;
+            goto cleanup;
         }
     }
-    nonopts[nonoptsc] = NULL;
-    tags[tagc]        = NULL;
 
     if (nonoptsc == 0){
         show_help_all(config.dir, subdir, list, rc);
@@ -170,13 +148,13 @@ int main(int argc, char** argv){
         now = time(NULL);
         lt  = localtime(&now);
 
-        result = add(list, config.dir, subdir, nonoptsc-1, &nonopts[1], config.ext, lt);
+        result = add(list, config.dir, subdir, nonoptsc-1, &nonopts[1], ntags, tags, config.ext, lt);
 
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_DUPLICATE){
             ret = NEGATIVE_STOP;
-        } else if (result == UNKNOWN_ERROR){
+        } else if (result == INPUT_ERROR || result == UNKNOWN_ERROR){
             ret = BUG_STOP;
         } else{
             ret = ERROR_STOP;
@@ -185,7 +163,8 @@ int main(int argc, char** argv){
     }
 
     if (strcmp(nonopts[0], "rm") == 0){
-        if (has_help == true || nonoptsc == 1){
+        // if (has_help == true || nonoptsc == 1){
+        if (has_help == true){
             show_help_rm();
             if (has_help == true){
                 ret = STOP;
@@ -195,7 +174,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = rm(list, nonoptsc-1, &nonopts[1]);
+        result = rm(list, nonoptsc-1, &nonopts[1], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -239,7 +218,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = ls(list, nonoptsc-1, &nonopts[1]);
+        result = ls(list, nonoptsc-1, &nonopts[1], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -263,7 +242,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = search(list, nonopts[1], nonoptsc-2, &nonopts[2]);
+        result = search(list, nonopts[1], nonoptsc-2, &nonopts[2], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -283,7 +262,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = show(list, nonoptsc-1, &nonopts[1]);
+        result = show(list, nonoptsc-1, &nonopts[1], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -296,13 +275,55 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
+    if (strcmp(nonopts[0], "tag") == 0){
+        printf("%s tag <key> <key> --tag <tag> --tag <tag> ... comming soon!", PACKAGE_NAME);
+        // if (has_help == true){
+        //     show_tag_show();
+        //     ret = STOP;
+        //     goto cleanup;
+        // }
+
+        // result = tag(list, nonoptsc-1, &nonopts[1], ntags, tags);
+        // if (result == 0){
+        //     ret = STOP;
+        // } else if (result == KEY_NOT_FOUND){
+        //     ret = NEGATIVE_STOP;
+        // } else if (result == UNKNOWN_ERROR){
+        //     ret = BUG_STOP;
+        // } else{
+        //     ret = ERROR_STOP;
+        // }
+        // goto cleanup;
+    }
+
+    if (strcmp(nonopts[0], "untag") == 0){
+        printf("%s untag <key> <key> --tag <tag> --tag <tag> ... comming soon!", PACKAGE_NAME);
+        // if (has_help == true){
+        //     show_tag_show();
+        //     ret = STOP;
+        //     goto cleanup;
+        // }
+
+        // result = tag(list, nonoptsc-1, &nonopts[1], ntags, tags);
+        // if (result == 0){
+        //     ret = STOP;
+        // } else if (result == KEY_NOT_FOUND){
+        //     ret = NEGATIVE_STOP;
+        // } else if (result == UNKNOWN_ERROR){
+        //     ret = BUG_STOP;
+        // } else{
+        //     ret = ERROR_STOP;
+        // }
+        // goto cleanup;
+    }
+
     if (has_help == true){
         show_help_all(config.dir, subdir, list, rc);
         ret = NEGATIVE_STOP;
         goto cleanup;
     }
 
-    result = memo_edit(list, subdir, config.editor, nonoptsc, nonopts);
+    result = memo_edit(list, subdir, config.editor, nonoptsc, nonopts, ntags, tags);
     if (result == 0){
         ret = STOP;
     } else if (result == KEY_NOT_FOUND){

@@ -1,3 +1,3 @@
 
-int ls(const char* list, int flag_num, char** flag_list);
+int ls(const char* list, int nkeys, char** keys, int ntags, char** tags);
 

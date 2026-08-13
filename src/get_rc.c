@@ -9,7 +9,8 @@
 #include "globals.h"
 #include "ptrutils.h"
 #include "strutils.h"
-#include "names.h"
+#include "file_systems.h"
+#include "validation.h"
 #include "get_rc.h"
 
 
@@ -180,7 +181,12 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
 
 
 cleanup:
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, rc, strerror(errno));
+            ret = IO_ERROR;
+        }
+    }
     free(line);
 
     return ret;
