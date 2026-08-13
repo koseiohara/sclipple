@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include "list_formatter.h"
 
-// int tags2line(int ntags, char** tags, char** line);
-int tags2line(int ntags, char* const* tags, char** line);
 // int tags_add(int* ntags, char*** updated, char** tags, char** add);
 int tags_add(int* ntags, char*** updated, char* const* tags, char* const* add);
 // int tags_del(int* ntags, char*** updated, char** tags, char** del);

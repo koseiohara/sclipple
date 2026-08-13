@@ -164,4 +164,67 @@ int duplication_filter(int* nvals, char** vals){
 }
 
 
+int arr2line(const int narr, char* const* arr, char** line){
+    char*  p;
+    int*   lens = NULL;
+    int    i;
+    int    ret;
+    size_t len;
+
+    if (narr == 0){
+        *line = malloc(sizeof(char));
+        if (*line == NULL){
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+        **line = '\0';
+        ret    = 0;
+        goto cleanup;
+    } else if (narr < 0){
+        ret = INPUT_ERROR;
+        goto cleanup;
+    }
+
+    lens = malloc((size_t)narr * sizeof(int));
+    if (lens == NULL){
+        ret = MALLOC_ERROR;
+        goto cleanup;
+    }
+
+    len = 0;
+    for (i = 0; i < narr; i = i + 1){
+        lens[i] = strlen(arr[i]);
+        len = len + lens[i] + 2;            // +2 for a comma and a space
+    }
+
+    *line = malloc(len * sizeof(char));
+    if (*line == NULL){
+        ret = MALLOC_ERROR;
+        goto cleanup;
+    }
+
+    p = *line;
+    for (i = 0; i < narr; i = i + 1){
+        memcpy(p, arr[i], lens[i]);
+        p  = p + lens[i];
+        if (i != narr-1){
+            *p = ',';
+            p  = p + 1;
+            *p = ' ';
+            p  = p + 1;
+        } else{
+            *p = '\0';
+        }
+    }
+
+    ret = 0;
+    goto cleanup;
+
+
+cleanup:
+    free(lens);
+    return ret;
+}
+
+
 

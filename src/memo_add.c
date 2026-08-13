@@ -90,7 +90,8 @@ int make_file(const char* path, const int cond){
 }
 
 
-// return INVALID_KEY_ERROR if keys is invalid
+// return INVALID_KEY_ERROR if keys are invalid
+// return INVALID_TAG_ERROR if tags are invalid
 // return IO_ERROR if make directory and make file failed
 // return MALLOC_ERROR if malloc failed
 // return KEY_DUPLICATE if keyword already exist
@@ -159,7 +160,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
             } else if (result == RESERVED_WORD_ERROR){
                 fprintf(stderr, "%s: '%s' is a reserved word.\n", PACKAGE_NAME, tags[i]);
             }
-            ret = INVALID_KEY_ERROR;
+            ret = INVALID_TAG_ERROR;
             goto cleanup;
         }
     }
