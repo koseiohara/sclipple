@@ -14,6 +14,7 @@
 #include "strutils.h"
 #include "ptrutils.h"
 #include "datetime.h"
+#include "file_systems.h"
 
 
 // return INPUT_ERROR if invalid env

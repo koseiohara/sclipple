@@ -14,21 +14,34 @@
 #include "globals.h"
 #include "ptrutils.h"
 #include "strutils.h"
-#include "names.h"
-#include "list_formatter.h"
+#include "file_systems.h"
+#include "list_utils.h"
 
 #define DELIM ','
 
 
 int tags2line(int ntags, char* const* tags, char** line){
-    char* p;
-    int*  lens;
-    int i;
+    char*  p;
+    int*   lens = NULL;
+    int    i;
+    int    ret;
     size_t len;
+
+    if (ntags == 0){
+        *line = malloc(sizeof(char));
+        if (*line == NULL){
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+        **line = '\0';
+        ret    = 0;
+        goto cleanup;
+    }
 
     lens = malloc((size_t)ntags * sizeof(int));
     if (lens == NULL){
-        return MALLOC_ERROR;
+        ret = MALLOC_ERROR;
+        goto cleanup;
     }
 
     len = 0;
@@ -38,8 +51,9 @@ int tags2line(int ntags, char* const* tags, char** line){
     }
 
     *line = malloc(len * sizeof(char));
-    if (line == NULL){
-        return MALLOC_ERROR;
+    if (*line == NULL){
+        ret = MALLOC_ERROR;
+        goto cleanup;
     }
 
     p = *line;
@@ -52,7 +66,13 @@ int tags2line(int ntags, char* const* tags, char** line){
         p  = p + 1;
     }
 
-    return 0;
+    ret = 0;
+    goto cleanup;
+
+
+cleanup:
+    free(lens);
+    return ret;
 }
 
 
@@ -246,7 +266,6 @@ int add_contents_to_list(FILE* fp, char* key, char* file, char* datetime, int nt
     char* meta = NULL;
     int   result;
     int   ret;
-    int   i;
 
     result = make_meta(&meta, datetime, ntags, tags);
     if (result != 0){
@@ -307,7 +326,6 @@ int key_exist_check(FILE* fp, const int nkeys, char* const* keys, char** exist, 
     int    i;
     int    exist_count;
     int    nexist_count;
-    int    found;
     size_t size = 0;
 
     // fp = fopen(list, "r");
@@ -663,8 +681,6 @@ int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int
     int result;
     int ret;
     int i;
-    int j;
-    int found;
 
     result = get_content_by_key(fp, nkeys, keys, by_key, true, true);
     if (result != 0){

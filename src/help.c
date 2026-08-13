@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "globals.h"
+#include "help.h"
 
 static void print_separator(void){
     printf("\n");

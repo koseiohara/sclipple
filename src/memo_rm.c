@@ -8,10 +8,9 @@
 
 #include "globals.h"
 #include "ptrutils.h"
-#include "names.h"
-#include "list_formatter.h"
+#include "file_systems.h"
 #include "list_utils.h"
-// #include "edit_list.h"
+#include "memo_rm.h"
 
 
 // return IO_ERROR if failed to open list file
@@ -28,9 +27,9 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
     ListField* field_by_tag = NULL;
     ListField* field_merged = NULL;
     char**     unfound  = NULL;
-    int        found_by_keys;        // number of contents found by searching with keys
-    int        found_by_tags;        // number of contents found by searching with tags
-    int        available_count;      // total number of contents found by searching with keys and tags
+    int        found_by_keys;       // number of contents found by searching with keys
+    int        found_by_tags;       // number of contents found by searching with tags
+    int        nconts;              // total number of contents found by searching with keys and tags
     int        result;
     int        ret = 0;
     int        i;
@@ -60,7 +59,7 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
     unfound = malloc((size_t)nkeys * sizeof(char*));
     result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
-                                        &available_count, &field_merged, &field_by_key, &field_by_tag);
+                                        &nconts, &field_merged, &field_by_key, &field_by_tag);
     if (result != 0){
         if (result == LIST_FORMAT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
@@ -85,13 +84,13 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
         ret = KEY_NOT_FOUND;
     }
 
-    if (available_count == 0){
+    if (nconts == 0){
         ret = KEY_NOT_FOUND;
         goto cleanup;
     }
 
 
-    for (i = 0; i < available_count; i = i + 1){
+    for (i = 0; i < nconts; i = i + 1){
         result = edit_list(list, "rm", 1, &(field_merged[i].key), NULL);
         if (result != 0){
             if (result == LIST_FORMAT_ERROR){

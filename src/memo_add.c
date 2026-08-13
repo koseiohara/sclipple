@@ -14,9 +14,10 @@
 #include "globals.h"
 #include "ptrutils.h"
 #include "datetime.h"
-#include "names.h"
+#include "file_systems.h"
 #include "validation.h"
 #include "list_utils.h"
+#include "memo_add.h"
 
 
 // if directory does not exist, run mkdir()
@@ -234,8 +235,12 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
     }
 
     nexist_count = 0;
-    while (nexists[nexist_count] != NULL){
-        nexist_count = nexist_count + 1;
+    if (nexists[nkeys-1] != NULL){
+        nexist_count = nkeys;
+    } else{
+        while (nexists[nexist_count] != NULL){
+            nexist_count = nexist_count + 1;
+        }
     }
 
     for (i = 0; i < nexist_count; i = i + 1){

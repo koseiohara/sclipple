@@ -1,6 +1,8 @@
 
 #include <stdio.h>
 
+#include "ptrutils.h"
+
 
 int xfclose(FILE** fp){
     int ret;

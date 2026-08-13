@@ -11,9 +11,9 @@
 
 #include "globals.h"
 #include "ptrutils.h"
-#include "names.h"
-#include "list_formatter.h"
+#include "file_systems.h"
 #include "list_utils.h"
+#include "memo_edit.h"
 
 
 void get_command(char* editor, const int file_num, char* file[], char** command){
@@ -63,7 +63,6 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
     char** unfound    = NULL;
     char*  tmp_editor = NULL;
     int i;
-    int j;
     int command_len;
     int found_by_keys;
     int found_by_tags;
@@ -71,7 +70,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
     int ret = 0;
     int stat;
     int exit_stat;
-    int available_count = 0;
+    int nconts = 0;
 
     result = path_status(list, &st);
     if (result != PATH_EXIST){
@@ -93,7 +92,7 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
     unfound = malloc((size_t)nkeys * sizeof(char*));
     result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
-                                        &available_count, &field_merged, &field_by_key, &field_by_tag);
+                                        &nconts, &field_merged, &field_by_key, &field_by_tag);
     if (result != 0){
         if (result == LIST_FORMAT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
@@ -116,20 +115,20 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
         ret = KEY_NOT_FOUND;
     }
 
-    if (available_count == 0){
+    if (nconts == 0){
         fprintf(stderr, "%s: No available key\n", PACKAGE_NAME);
         ret = KEY_NOT_FOUND;
         goto cleanup;
     }
 
-    files = malloc((size_t)available_count * sizeof(char*));
+    files = malloc((size_t)nconts * sizeof(char*));
     if (files == NULL){
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
         goto cleanup;
     }
 
-    for (i = 0; i < available_count; i = i + 1){
+    for (i = 0; i < nconts; i = i + 1){
         files[i] = field_merged[i].file;
     }
 

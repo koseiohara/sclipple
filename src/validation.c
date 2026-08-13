@@ -6,6 +6,7 @@
 
 #include "globals.h"
 #include "strutils.h"
+#include "validation.h"
 
 
 // return INPUT_ERROR for invalid character

@@ -6,6 +6,7 @@
 #include <ctype.h>
 
 #include "globals.h"
+#include "strutils.h"
 
 
 void leftrim(char** s){

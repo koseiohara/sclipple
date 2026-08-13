@@ -103,10 +103,12 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_sclipple_OBJECTS = ptrutils.$(OBJEXT) help.$(OBJEXT) \
 	strutils.$(OBJEXT) get_rc.$(OBJEXT) datetime.$(OBJEXT) \
-	names.$(OBJEXT) edit_list.$(OBJEXT) git_run.$(OBJEXT) \
-	memo_add.$(OBJEXT) memo_edit.$(OBJEXT) memo_rm.$(OBJEXT) \
-	memo_mv.$(OBJEXT) memo_ls.$(OBJEXT) memo_search.$(OBJEXT) \
-	memo_show.$(OBJEXT) main.$(OBJEXT)
+	file_systems.$(OBJEXT) validation.$(OBJEXT) \
+	parse_options.$(OBJEXT) list_formatter.$(OBJEXT) \
+	list_utils.$(OBJEXT) git_run.$(OBJEXT) memo_add.$(OBJEXT) \
+	memo_edit.$(OBJEXT) memo_rm.$(OBJEXT) memo_mv.$(OBJEXT) \
+	memo_ls.$(OBJEXT) memo_search.$(OBJEXT) memo_show.$(OBJEXT) \
+	main.$(OBJEXT)
 sclipple_OBJECTS = $(am_sclipple_OBJECTS)
 sclipple_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -124,14 +126,16 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/datetime.Po ./$(DEPDIR)/edit_list.Po \
-	./$(DEPDIR)/get_rc.Po ./$(DEPDIR)/git_run.Po \
-	./$(DEPDIR)/help.Po ./$(DEPDIR)/main.Po \
-	./$(DEPDIR)/memo_add.Po ./$(DEPDIR)/memo_edit.Po \
-	./$(DEPDIR)/memo_ls.Po ./$(DEPDIR)/memo_mv.Po \
-	./$(DEPDIR)/memo_rm.Po ./$(DEPDIR)/memo_search.Po \
-	./$(DEPDIR)/memo_show.Po ./$(DEPDIR)/names.Po \
-	./$(DEPDIR)/ptrutils.Po ./$(DEPDIR)/strutils.Po
+am__depfiles_remade = ./$(DEPDIR)/datetime.Po \
+	./$(DEPDIR)/file_systems.Po ./$(DEPDIR)/get_rc.Po \
+	./$(DEPDIR)/git_run.Po ./$(DEPDIR)/help.Po \
+	./$(DEPDIR)/list_formatter.Po ./$(DEPDIR)/list_utils.Po \
+	./$(DEPDIR)/main.Po ./$(DEPDIR)/memo_add.Po \
+	./$(DEPDIR)/memo_edit.Po ./$(DEPDIR)/memo_ls.Po \
+	./$(DEPDIR)/memo_mv.Po ./$(DEPDIR)/memo_rm.Po \
+	./$(DEPDIR)/memo_search.Po ./$(DEPDIR)/memo_show.Po \
+	./$(DEPDIR)/parse_options.Po ./$(DEPDIR)/ptrutils.Po \
+	./$(DEPDIR)/strutils.Po ./$(DEPDIR)/validation.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -270,8 +274,11 @@ sclipple_SOURCES = \
     strutils.c strutils.h \
     get_rc.c get_rc.h \
     datetime.c datetime.h \
-    names.c names.h \
-    edit_list.c edit_list.h \
+    file_systems.c file_systems.h \
+    validation.c validation.h \
+    parse_options.c parse_options.h \
+    list_formatter.c list_formatter.h \
+    list_utils.c list_utils.h \
     git_run.c git_run.h \
     memo_add.c memo_add.h \
     memo_edit.c memo_edit.h \
@@ -375,10 +382,12 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/datetime.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/edit_list.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file_systems.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_rc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/git_run.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/help.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list_formatter.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list_utils.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_add.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_edit.Po@am__quote@ # am--include-marker
@@ -387,9 +396,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_rm.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_search.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memo_show.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/names.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parse_options.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ptrutils.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strutils.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/validation.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -539,10 +549,12 @@ clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
 	-rm -f ./$(DEPDIR)/datetime.Po
-	-rm -f ./$(DEPDIR)/edit_list.Po
+	-rm -f ./$(DEPDIR)/file_systems.Po
 	-rm -f ./$(DEPDIR)/get_rc.Po
 	-rm -f ./$(DEPDIR)/git_run.Po
 	-rm -f ./$(DEPDIR)/help.Po
+	-rm -f ./$(DEPDIR)/list_formatter.Po
+	-rm -f ./$(DEPDIR)/list_utils.Po
 	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/memo_add.Po
 	-rm -f ./$(DEPDIR)/memo_edit.Po
@@ -551,9 +563,10 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/memo_rm.Po
 	-rm -f ./$(DEPDIR)/memo_search.Po
 	-rm -f ./$(DEPDIR)/memo_show.Po
-	-rm -f ./$(DEPDIR)/names.Po
+	-rm -f ./$(DEPDIR)/parse_options.Po
 	-rm -f ./$(DEPDIR)/ptrutils.Po
 	-rm -f ./$(DEPDIR)/strutils.Po
+	-rm -f ./$(DEPDIR)/validation.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -600,10 +613,12 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/datetime.Po
-	-rm -f ./$(DEPDIR)/edit_list.Po
+	-rm -f ./$(DEPDIR)/file_systems.Po
 	-rm -f ./$(DEPDIR)/get_rc.Po
 	-rm -f ./$(DEPDIR)/git_run.Po
 	-rm -f ./$(DEPDIR)/help.Po
+	-rm -f ./$(DEPDIR)/list_formatter.Po
+	-rm -f ./$(DEPDIR)/list_utils.Po
 	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/memo_add.Po
 	-rm -f ./$(DEPDIR)/memo_edit.Po
@@ -612,9 +627,10 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/memo_rm.Po
 	-rm -f ./$(DEPDIR)/memo_search.Po
 	-rm -f ./$(DEPDIR)/memo_show.Po
-	-rm -f ./$(DEPDIR)/names.Po
+	-rm -f ./$(DEPDIR)/parse_options.Po
 	-rm -f ./$(DEPDIR)/ptrutils.Po
 	-rm -f ./$(DEPDIR)/strutils.Po
+	-rm -f ./$(DEPDIR)/validation.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

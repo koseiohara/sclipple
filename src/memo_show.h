@@ -1,3 +1,3 @@
 
-int show(char* list, int flag_num, char** flag_list);
+int show(char* list, int nkeys, char** keys, int ntags, char** tags);
 

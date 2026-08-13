@@ -12,10 +12,10 @@
 
 #include "globals.h"
 #include "ptrutils.h"
-#include "names.h"
+#include "file_systems.h"
 #include "strutils.h"
-#include "list_formatter.h"
 #include "list_utils.h"
+#include "memo_ls.h"
 
 // #include "edit_list.h"
 
@@ -27,7 +27,7 @@
 // return IO_ERROR if failed to open note
 // return RESULT_EMPTY if note is empty
 // return 0 otherwise
-inline int get_first_line(const char* notename, const int first_line_len, char* first_line){
+static inline int get_first_line(const char* notename, const int first_line_len, char* first_line){
     FILE* fp = NULL;
     char* enter;
 
@@ -36,7 +36,7 @@ inline int get_first_line(const char* notename, const int first_line_len, char* 
         return IO_ERROR;
     }
 
-    while (fgets(first_line, first_line_len, fp) != NULL){
+    while (fgets(first_line, first_line_len-4, fp) != NULL){
         if (is_white_space(first_line) == true){
             continue;
         }
@@ -66,7 +66,7 @@ inline int get_first_line(const char* notename, const int first_line_len, char* 
 }
 
 
-inline int ls_with_key_tag(const int tty, const char* list, const int nkeys, char* const* keys, const int ntags, char* const* tags){
+static inline int ls_with_key_tag(const int tty, const char* list, const int nkeys, char* const* keys, const int ntags, char* const* tags){
     FILE*      fp           = NULL;
     ListField* field_by_key = NULL;
     ListField* field_by_tag = NULL;
@@ -76,10 +76,6 @@ inline int ls_with_key_tag(const int tty, const char* list, const int nkeys, cha
     char** tags_all = NULL;
     char*  line     = NULL;
     char*  tagline  = NULL;
-    char*  work_line;
-    char*  key;
-    char*  file;
-    char*  meta;
     char*  date;
     char   first_line[LS_LINE_LEN];
     int    ntags_all;
@@ -133,6 +129,11 @@ inline int ls_with_key_tag(const int tty, const char* list, const int nkeys, cha
     // }
 
     for (j = 0; j < nconts; j = j + 1){
+        if (first_echo == false){
+            putchar('\n');
+        }
+        first_echo = false;
+
         work_list = &field_merged[j];
 
         result = get_first_line(work_list->file, LS_LINE_LEN, first_line);
@@ -163,10 +164,10 @@ inline int ls_with_key_tag(const int tty, const char* list, const int nkeys, cha
 
         if (tty){
             // result = asprintf(&lines[j], OUTPUT_TTY , work_list->key, date, work_list->file, tagline, first_line);
-            fprintf(stdout, OUTPUT_TTY , work_list->key, date, work_list->file, tagline, first_line);
+            printf(OUTPUT_TTY , work_list->key, date, work_list->file, tagline, first_line);
         } else{
             // result = asprintf(&lines[j], OUTPUT_NTTY, work_list->key, date, work_list->file, tagline, first_line);
-            fprintf(stdout, OUTPUT_NTTY, work_list->key, date, work_list->file, tagline, first_line);
+            printf(OUTPUT_NTTY, work_list->key, date, work_list->file, tagline, first_line);
         }
         XFREE(tags_all);
         XFREE(tagline);
@@ -198,7 +199,7 @@ cleanup:
 }
 
 
-inline int ls_without_key_tag(const int tty, const char* list, const int nkeys, char* const* keys, const int ntags, char* const* tags){
+static inline int ls_without_key_tag(const int tty, const char* list){
     FILE*  fp       = NULL;
     char*  line     = NULL;
     char** tags_all = NULL;
@@ -209,9 +210,10 @@ inline int ls_without_key_tag(const int tty, const char* list, const int nkeys, 
     char*  meta;
     char*  date;
     char   first_line[LS_LINE_LEN];
+    int    first_echo = true;
     int    ntags_all;
     int    result;
-    int    ret;
+    int    ret = 0;
     size_t size = 0;
 
     fp = fopen(list, "r");
@@ -222,6 +224,11 @@ inline int ls_without_key_tag(const int tty, const char* list, const int nkeys, 
     }
 
     while (getline(&line, &size, fp) != -1){
+        if (first_echo == false){
+            putchar('\n');
+        }
+        first_echo = false;
+
         work_line = line;
         result = parse_line(&work_line, &key, &file, &meta);
         if (result == LIST_FORMAT_ERROR){
@@ -266,12 +273,16 @@ inline int ls_without_key_tag(const int tty, const char* list, const int nkeys, 
         XFREE(tagline);
     }
 
+    goto cleanup;
+
 
 cleanup:
     xfclose(&fp);
     free(line);
     free(tags_all);
     free(tagline);
+
+    return ret;
 }
 
 
@@ -303,7 +314,7 @@ int ls(const char* list, int nkeys, char** keys, int ntags, char** tags){
     } 
 
     if (nkeys < 0 || ntags < 0){
-        fprintf(stderr, "%s: Invalid number of keys and tags: keys=%d, tags=%d\n", PACKAGE_NAME, nkeys, ntags);
+        fprintf(stderr, "%s: Invalid number of keys or tags: keys=%d, tags=%d\n", PACKAGE_NAME, nkeys, ntags);
         ret = INPUT_ERROR;
         goto cleanup;
     } else if (nkeys > 0 || ntags > 0){
@@ -313,7 +324,7 @@ int ls(const char* list, int nkeys, char** keys, int ntags, char** tags){
             goto cleanup;
         }
     } else{
-        result = ls_without_key_tag(tty, list, nkeys, keys, ntags, tags);
+        result = ls_without_key_tag(tty, list);
         if (result != 0){
             ret = result;
             goto cleanup;

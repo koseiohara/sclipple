@@ -8,11 +8,10 @@
 
 #include "globals.h"
 #include "ptrutils.h"
-#include "names.h"
+#include "file_systems.h"
 #include "validation.h"
-#include "list_formatter.h"
 #include "list_utils.h"
-// #include "edit_list.h"
+#include "memo_mv.h"
 
 
 // return INVALID_KEY_ERROR if new_flag is invalid
@@ -175,7 +174,7 @@ cleanup:
     }
     free(field);
     free(new_file);
-    free(old_file);
+    // free(old_file);
 
     return ret;
 }

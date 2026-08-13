@@ -1,3 +1,3 @@
 
-int search(char* list, char* word, int flag_num, char** flag_list);
+int search(char* list, char* word, int nkeys, char** keys, int ntags, char** tags);
 

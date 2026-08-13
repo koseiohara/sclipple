@@ -7,8 +7,11 @@ sclipple_SOURCES = \
     strutils.c strutils.h \
     get_rc.c get_rc.h \
     datetime.c datetime.h \
-    names.c names.h \
-    edit_list.c edit_list.h \
+    file_systems.c file_systems.h \
+    validation.c validation.h \
+    parse_options.c parse_options.h \
+    list_formatter.c list_formatter.h \
+    list_utils.c list_utils.h \
     git_run.c git_run.h \
     memo_add.c memo_add.h \
     memo_edit.c memo_edit.h \
