@@ -36,7 +36,7 @@ static inline int get_first_line(const char* notename, const int first_line_len,
         return IO_ERROR;
     }
 
-    while (fgets(first_line, first_line_len-4, fp) != NULL){
+    while (fgets(first_line, first_line_len-3, fp) != NULL){
         if (is_white_space(first_line) == true){
             continue;
         }
@@ -76,6 +76,7 @@ static inline int ls_with_key_tag(const int tty, const char* list, const int nke
     char** tags_all = NULL;
     char*  line     = NULL;
     char*  tagline  = NULL;
+    char** work_tags;
     char*  date;
     char   first_line[LS_LINE_LEN];
     int    ntags_all;
@@ -95,7 +96,22 @@ static inline int ls_with_key_tag(const int tty, const char* list, const int nke
         goto cleanup;
     }
 
-    unfound = malloc((size_t)nkeys * sizeof(char*));
+    if (nkeys > 0){
+        unfound = malloc((size_t)nkeys * sizeof(char*));
+        if (unfound == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+    } else{
+        unfound = malloc(sizeof(char*));
+        if (unfound == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+        unfound[0] = NULL;
+    }
     result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);
@@ -138,24 +154,31 @@ static inline int ls_with_key_tag(const int tty, const char* list, const int nke
 
         result = get_first_line(work_list->file, LS_LINE_LEN, first_line);
         if (result == IO_ERROR){
-            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, work_list->file, strerror(errno));
             ret = IO_ERROR;
             goto cleanup;
         }
 
-        result = parse_meta(work_list->meta, &date, &ntags_all, &tags_all);
-        if (result != 0){
-            if (result == LIST_FORMAT_ERROR){
-                fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
-                ret = LIST_FORMAT_ERROR;
-            } else if (result == MALLOC_ERROR){
-                fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-                ret = MALLOC_ERROR;
+        if (work_list->meta != NULL){
+            result = parse_meta(work_list->meta, &date, &ntags_all, &tags_all);
+            if (result != 0){
+                if (result == LIST_FORMAT_ERROR){
+                    fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
+                    ret = LIST_FORMAT_ERROR;
+                } else if (result == MALLOC_ERROR){
+                    fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+                    ret = MALLOC_ERROR;
+                }
+                goto cleanup;
             }
-            goto cleanup;
+            work_tags = tags_all;
+        } else{
+            date      = work_list->date;
+            ntags_all = work_list->ntags;
+            work_tags = work_list->tags;
         }
 
-        result = tags2line(ntags_all, tags_all, &tagline);
+        result = tags2line(ntags_all, work_tags, &tagline);
         if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
@@ -239,7 +262,7 @@ static inline int ls_without_key_tag(const int tty, const char* list){
 
         result = get_first_line(file, LS_LINE_LEN, first_line);
         if (result == IO_ERROR){
-            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, file, strerror(errno));
             ret = IO_ERROR;
             goto cleanup;
         }
@@ -262,6 +285,7 @@ static inline int ls_without_key_tag(const int tty, const char* list){
             ret = MALLOC_ERROR;
             goto cleanup;
         }
+        XFREE(tags_all);
 
         if (tty){
             // result = asprintf(&lines[j], OUTPUT_TTY , work_list->key, date, work_list->file, tagline, first_line);
@@ -271,6 +295,12 @@ static inline int ls_without_key_tag(const int tty, const char* list){
             fprintf(stdout, OUTPUT_NTTY, key, date, file, tagline, first_line);
         }
         XFREE(tagline);
+    }
+
+    if (ferror(fp) != 0){
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+        ret = IO_ERROR;
+        goto cleanup;
     }
 
     goto cleanup;
@@ -298,6 +328,16 @@ int ls(const char* list, int nkeys, char** keys, int ntags, char** tags){
     int    tty;
     int    result;
     int    ret = 0;
+
+    if (nkeys < 0 || ntags < 0){
+        if (nkeys < 0){
+            fprintf(stderr, "%s: Unknown error: No keys were speicified to add\n", PACKAGE_NAME);
+        } else{
+            fprintf(stderr, "%s: Unknown error: Number of tags is negative\n", PACKAGE_NAME);
+        }
+        ret = INPUT_ERROR;
+        goto cleanup;
+    }
 
     tty = isatty(fileno(stdout));
 

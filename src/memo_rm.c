@@ -8,6 +8,7 @@
 
 #include "globals.h"
 #include "ptrutils.h"
+#include "strutils.h"
 #include "file_systems.h"
 #include "list_utils.h"
 #include "memo_rm.h"
@@ -34,6 +35,16 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
     int        ret = 0;
     int        i;
 
+    if (nkeys < 0 || ntags < 0){
+        if (nkeys < 0){
+            fprintf(stderr, "%s: Unknown error: No keys were speicified to add\n", PACKAGE_NAME);
+        } else{
+            fprintf(stderr, "%s: Unknown error: Number of tags is negative\n", PACKAGE_NAME);
+        }
+        ret = INPUT_ERROR;
+        goto cleanup;
+    }
+
     #ifdef DEBUG
     printf("List file name: %s\n", list);
     #endif
@@ -50,13 +61,43 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
         goto cleanup;
     } 
 
+    result = duplication_filter(&nkeys, keys);
+    if (result != 0){
+        fprintf(stderr, "%s: Unknown error by dulication_filter()\n", PACKAGE_NAME);
+        ret = UNKNOWN_ERROR;
+        goto cleanup;
+    }
+
+    result = duplication_filter(&ntags, tags);
+    if (result != 0){
+        fprintf(stderr, "%s: Unknown error by dulication_filter()\n", PACKAGE_NAME);
+        ret = UNKNOWN_ERROR;
+        goto cleanup;
+    }
+
     fp = fopen(list, "r");
     if (fp == NULL){
         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
     }
-    unfound = malloc((size_t)nkeys * sizeof(char*));
+
+    if (nkeys > 0){
+        unfound = malloc((size_t)nkeys * sizeof(char*));
+        if (unfound == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+    } else{
+        unfound = malloc(sizeof(char*));
+        if (unfound == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+        unfound[0] = NULL;
+    }
     result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);
@@ -107,7 +148,7 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
                 ret = KEY_DUPLICATE;
             } else if (result == KEY_NOT_FOUND){
                 fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, field_merged[i].key);
-                ret = KEY_DUPLICATE;
+                ret = KEY_NOT_FOUND;
             } else{
                 fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
                 ret = UNKNOWN_ERROR;
@@ -116,7 +157,7 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
         }
 
         if (unlink(field_merged[i].file) == 0){
-            printf("%s: removed '%s'\n", PACKAGE_NAME, field_merged[i].file);
+            printf("%s: removed '%s'\n", PACKAGE_NAME, field_merged[i].key);
             continue;
         }
 
@@ -125,6 +166,11 @@ int rm(const char* list, int nkeys, char** keys, int ntags, char** tags){
         goto cleanup;
     }
 
+    if (nconts == 1){
+        fprintf(stdout, "%s: %d key was removed\n"  , PACKAGE_NAME, nconts);
+    } else{
+        fprintf(stdout, "%s: %d keys were removed\n", PACKAGE_NAME, nconts);
+    }
     goto cleanup;
 
 

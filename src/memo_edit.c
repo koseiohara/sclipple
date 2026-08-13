@@ -72,6 +72,16 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
     int exit_stat;
     int nconts = 0;
 
+    if (nkeys < 0 || ntags < 0){
+        if (nkeys < 0){
+            fprintf(stderr, "%s: Unknown error: No keys were speicified to add\n", PACKAGE_NAME);
+        } else{
+            fprintf(stderr, "%s: Unknown error: Number of tags is negative\n", PACKAGE_NAME);
+        }
+        ret = INPUT_ERROR;
+        goto cleanup;
+    }
+
     result = path_status(list, &st);
     if (result != PATH_EXIST){
         if (result == PATH_NOT_EXIST){
@@ -89,7 +99,23 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
         ret = IO_ERROR;
         goto cleanup;
     }
-    unfound = malloc((size_t)nkeys * sizeof(char*));
+
+    if (nkeys > 0){
+        unfound = malloc((size_t)nkeys * sizeof(char*));
+        if (unfound == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+    } else{
+        unfound = malloc(sizeof(char*));
+        if (unfound == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+        unfound[0] = NULL;
+    }
     result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);

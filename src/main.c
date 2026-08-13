@@ -275,6 +275,48 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
+    if (strcmp(nonopts[0], "tag") == 0){
+        printf("%s tag <key> <key> --tag <tag> --tag <tag> ... comming soon!", PACKAGE_NAME);
+        // if (has_help == true){
+        //     show_tag_show();
+        //     ret = STOP;
+        //     goto cleanup;
+        // }
+
+        // result = tag(list, nonoptsc-1, &nonopts[1], ntags, tags);
+        // if (result == 0){
+        //     ret = STOP;
+        // } else if (result == KEY_NOT_FOUND){
+        //     ret = NEGATIVE_STOP;
+        // } else if (result == UNKNOWN_ERROR){
+        //     ret = BUG_STOP;
+        // } else{
+        //     ret = ERROR_STOP;
+        // }
+        // goto cleanup;
+    }
+
+    if (strcmp(nonopts[0], "untag") == 0){
+        printf("%s untag <key> <key> --tag <tag> --tag <tag> ... comming soon!", PACKAGE_NAME);
+        // if (has_help == true){
+        //     show_tag_show();
+        //     ret = STOP;
+        //     goto cleanup;
+        // }
+
+        // result = tag(list, nonoptsc-1, &nonopts[1], ntags, tags);
+        // if (result == 0){
+        //     ret = STOP;
+        // } else if (result == KEY_NOT_FOUND){
+        //     ret = NEGATIVE_STOP;
+        // } else if (result == UNKNOWN_ERROR){
+        //     ret = BUG_STOP;
+        // } else{
+        //     ret = ERROR_STOP;
+        // }
+        // goto cleanup;
+    }
+
     if (has_help == true){
         show_help_all(config.dir, subdir, list, rc);
         ret = NEGATIVE_STOP;

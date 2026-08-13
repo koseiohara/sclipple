@@ -36,6 +36,9 @@ int tags2line(int ntags, char* const* tags, char** line){
         **line = '\0';
         ret    = 0;
         goto cleanup;
+    } else if (ntags < 0){
+        ret = INPUT_ERROR;
+        goto cleanup;
     }
 
     lens = malloc((size_t)ntags * sizeof(int));
@@ -337,6 +340,15 @@ int key_exist_check(FILE* fp, const int nkeys, char* const* keys, char** exist, 
     //     ret = IO_ERROR;
     //     goto cleanup;
     // }
+    //
+    if (nkeys <= 0){
+        if (nkeys == 0){
+            ret = 0;
+            goto cleanup;
+        }
+        ret = INPUT_ERROR;
+        goto cleanup;
+    }
 
     key_is_exist = malloc((size_t)nkeys * sizeof(int));
     if (key_is_exist == NULL){
@@ -502,7 +514,7 @@ int get_content_by_key(FILE* fp, const int nkeys, char* const* keys, ListField**
                 } else{
                     (*field)[i].meta = NULL;
                 }
-                break;
+                // break;
             }
         }
     }
@@ -681,7 +693,10 @@ cleanup:
 // return LIST_FORMAT_ERROR if list file is broken
 // return UNKNOWN_ERROR if a bug is found
 // return 0 otherwise
-int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int* found_by_key, char** unfound, const int ntags, char* const* tags, int* found_by_tag, int* found_all, ListField** field, ListField** by_key, ListField** by_tag){
+int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int* found_by_key, char** unfound,
+                               const int ntags, char* const* tags, int* found_by_tag,
+                               int* found_all, ListField** field, ListField** by_key, ListField** by_tag){
+    int unfound_count;
     int result;
     int ret;
     int i;
@@ -701,20 +716,34 @@ int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int
     }
 
     *found_by_key = 0;
+    unfound_count = 0;
     for (i = 0; i < nkeys; i = i + 1){
         if ((*by_key)[i].key != NULL){
-            unfound[*found_by_key] = keys[i];
             *found_by_key = *found_by_key + 1;
+        } else{
+            unfound[unfound_count] = keys[i];
+            unfound_count = unfound_count + 1;
         }
     }
-    for (i = *found_by_key; i < nkeys; i = i + 1){
+    for (i = unfound_count; i < nkeys; i = i + 1){
         unfound[i] = NULL;
     }
 
     if (ntags == 0){
-        *field = malloc((size_t)(*found_by_key) * sizeof(ListField));
         *found_all = 0;
-        for (i = 0; i < *found_by_key; i = i + 1){
+        if (*found_by_key == 0){
+            *field = NULL;
+            ret = 0;
+            goto cleanup;
+        }
+
+        *field = malloc((size_t)(*found_by_key) * sizeof(ListField));
+        if (*field == NULL){
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+
+        for (i = 0; i < nkeys; i = i + 1){
             if ((*by_key)[i].key == NULL){
                 continue;
             }
@@ -722,6 +751,9 @@ int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int
             (*field)[*found_all] = (*by_key)[i];
             *found_all = *found_all + 1;
         }
+        // for (i = *found_all; i < *found_by_key; i = i + 1){
+        //     (*field)[*found_all] = (ListField){0};
+        // }
         ret = 0;
         goto cleanup;
     }
@@ -816,6 +848,11 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
 
     if (stat(list, &st) != 0){
         ret = IO_ERROR;
+        goto cleanup;
+    }
+
+    if (nkeys <= 0 || keys == NULL){
+        ret = INPUT_ERROR;
         goto cleanup;
     }
 

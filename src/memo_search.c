@@ -154,7 +154,22 @@ static inline int search_with_key_tag(regex_t* regex, const int tty, const char*
         goto cleanup;
     }
 
-    unfound = malloc((size_t)nkeys * sizeof(char*));
+    if (nkeys > 0){
+        unfound = malloc((size_t)nkeys * sizeof(char*));
+        if (unfound == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+    } else{
+        unfound = malloc(sizeof(char*));
+        if (unfound == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            ret = MALLOC_ERROR;
+            goto cleanup;
+        }
+        unfound[0] = NULL;
+    }
     result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);
@@ -204,7 +219,7 @@ static inline int search_with_key_tag(regex_t* regex, const int tty, const char*
     }
 
 cleanup:
-    if (xfclose(&fp) != 0){
+    if (xfclose(&fp)){
         if (ret == 0){
             ret = IO_ERROR;
         }
@@ -270,15 +285,15 @@ static inline int search_without_key_tag(regex_t* regex, const int tty, const ch
         }
     }
 
-    if (ferror(fp) != 0){
-        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, file, strerror(errno));
+    if (ferror(fp)){
+        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
         ret = IO_ERROR;
         goto cleanup;
     }
 
 
 cleanup:
-    if (xfclose(&fp) != 0){
+    if (xfclose(&fp)){
         if (ret == 0){
             ret = IO_ERROR;
         }
@@ -303,6 +318,16 @@ int search(char* list, char* word, int nkeys, char** keys, int ntags, char** tag
     int    tty;
     int    result;
     int    ret = 0;
+
+    if (nkeys < 0 || ntags < 0){
+        if (nkeys < 0){
+            fprintf(stderr, "%s: Unknown error: No keys were speicified to add\n", PACKAGE_NAME);
+        } else{
+            fprintf(stderr, "%s: Unknown error: Number of tags is negative\n", PACKAGE_NAME);
+        }
+        ret = INPUT_ERROR;
+        goto cleanup;
+    }
 
     result = path_status(list, &st);
     if (result != PATH_EXIST){

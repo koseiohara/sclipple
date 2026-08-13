@@ -34,6 +34,18 @@ int mv(const char* list, char* old_key, char* new_key){
     int   result;
     int   ret = 0;
 
+    // check whether list file is exist
+    result = path_status(list, &st);
+    if (result != PATH_EXIST){
+        if (result == PATH_NOT_EXIST){
+            fprintf(stderr, "%s: No notes have been added\n", PACKAGE_NAME);
+        } else if (result == ACCESS_FAILED_ERROR){
+            fprintf(stderr, "%s: Failed to access list file\n", PACKAGE_NAME);
+        }
+        ret = IO_ERROR;
+        goto cleanup;
+    } 
+
     // check new keyword
     result = key_validation(new_key);
     if (result != 0){
@@ -48,17 +60,11 @@ int mv(const char* list, char* old_key, char* new_key){
         goto cleanup;
     }
 
-    // check whether list file is exist
-    result = path_status(list, &st);
-    if (result != PATH_EXIST){
-        if (result == PATH_NOT_EXIST){
-            fprintf(stderr, "%s: No notes have been added\n", PACKAGE_NAME);
-        } else if (result == ACCESS_FAILED_ERROR){
-            fprintf(stderr, "%s: Failed to access list file\n", PACKAGE_NAME);
-        }
-        ret = IO_ERROR;
+    if (strcmp(old_key, new_key) == 0){
+        fprintf(stderr, "%s: The same key was specified\n", PACKAGE_NAME);
+        ret = KEY_DUPLICATE;
         goto cleanup;
-    } 
+    }
 
     fp = fopen(list, "r");
     if (fp == NULL){
@@ -145,7 +151,7 @@ int mv(const char* list, char* old_key, char* new_key){
             ret = KEY_DUPLICATE;
         } else if (result == KEY_NOT_FOUND){
             fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, old_key);
-            ret = KEY_DUPLICATE;
+            ret = KEY_NOT_FOUND;
         } else{
             fprintf(stderr, "%s: Unknown error\n", PACKAGE_NAME);
             ret = UNKNOWN_ERROR;
@@ -168,6 +174,7 @@ int mv(const char* list, char* old_key, char* new_key){
 
 
 cleanup:
+    xfclose(&fp);
     if (field != NULL){
         free_ListField(&(field[0]));
         free_ListField(&(field[1]));

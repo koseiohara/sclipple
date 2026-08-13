@@ -84,7 +84,7 @@ int key_validation(const char* key){
         return RESERVED_WORD_ERROR;
     }
 
-    if (strcmp(key, "utag") == 0){
+    if (strcmp(key, "untag") == 0){
         return RESERVED_WORD_ERROR;
     }
 
@@ -161,7 +161,7 @@ int tag_validation(const char* tag){
     //     return RESERVED_WORD_ERROR;
     // }
 
-    // if (strcmp(tag, "utag") == 0){
+    // if (strcmp(tag, "untag") == 0){
     //     return RESERVED_WORD_ERROR;
     // }
 

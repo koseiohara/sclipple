@@ -13,6 +13,7 @@
 #include <time.h>
 #include "globals.h"
 #include "ptrutils.h"
+#include "strutils.h"
 #include "datetime.h"
 #include "file_systems.h"
 #include "validation.h"
@@ -107,6 +108,16 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
     int   nexist_count;
     int   i;
 
+    if (nkeys <= 0 || ntags < 0){
+        if (nkeys <= 0){
+            fprintf(stderr, "%s: Unknown error: No keys were speicified to add\n", PACKAGE_NAME);
+        } else{
+            fprintf(stderr, "%s: Unknown error: Number of tags is negative\n", PACKAGE_NAME);
+        }
+        ret = INPUT_ERROR;
+        goto cleanup;
+    }
+
     // Key validation
     for (i = 0; i < nkeys; i = i + 1){
         if (keys[i] == NULL){
@@ -142,9 +153,9 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
             if (result == INPUT_ERROR){
                 fprintf(stderr, "%s: Tag is empty\n", PACKAGE_NAME);
             } else if (result == CHARACTER_NOT_ALLOWED_ERROR){
-                fprintf(stderr, "%s: Invalid character is included in a tag '%s'. Tags can include alphabets, numbers, '_', '-', and '.'\n", PACKAGE_NAME, keys[i]);
+                fprintf(stderr, "%s: Invalid character is included in a tag '%s'. Tags can include alphabets, numbers, '_', '-', and '.'\n", PACKAGE_NAME, tags[i]);
             } else if (result == RESERVED_WORD_ERROR){
-                fprintf(stderr, "%s: '%s' is a reserved word.\n", PACKAGE_NAME, keys[i]);
+                fprintf(stderr, "%s: '%s' is a reserved word.\n", PACKAGE_NAME, tags[i]);
             }
             ret = INVALID_KEY_ERROR;
             goto cleanup;
@@ -186,16 +197,24 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
         goto cleanup;
     }
 
-    if (nkeys <= 0){
-        fprintf(stderr, "%s: Unknown error: No keys were speicified to add\n", PACKAGE_NAME);
-        ret = INPUT_ERROR;
-        goto cleanup;
-    }
-
     result = get_datetime(clock, '\0', &datetime);
     if (result == MALLOC_ERROR){
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = MALLOC_ERROR;
+        goto cleanup;
+    }
+
+    result = duplication_filter(&nkeys, keys);
+    if (result != 0){
+        fprintf(stderr, "%s: Unknown error by dulication_filter()\n", PACKAGE_NAME);
+        ret = UNKNOWN_ERROR;
+        goto cleanup;
+    }
+
+    result = duplication_filter(&ntags, tags);
+    if (result != 0){
+        fprintf(stderr, "%s: Unknown error by dulication_filter()\n", PACKAGE_NAME);
+        ret = UNKNOWN_ERROR;
         goto cleanup;
     }
 
@@ -232,7 +251,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
         }
     } else{
         if (result == IO_ERROR){
-            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, path, strerror(errno));
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
@@ -303,13 +322,21 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
         XFREE(file);
         XFREE(path);
     }
-    // ret = 0;
-    fprintf(stdout, "%s: %d keys were created\n", PACKAGE_NAME, nexist_count);
+
+    if (nexist_count == 1){
+        fprintf(stdout, "%s: %d key was created\n"  , PACKAGE_NAME, nexist_count);
+    } else{
+        fprintf(stdout, "%s: %d keys were created\n", PACKAGE_NAME, nexist_count);
+    }
     goto cleanup;
 
 
 cleanup:
-    xfclose(&fp);
+    if (xfclose(&fp)){
+        if (ret == 0){
+            ret = IO_ERROR;
+        }
+    };
     free(datetime);
     free(path);
     free(file);
