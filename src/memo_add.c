@@ -1,8 +1,8 @@
 
 #include "config.h"
 
-#include <sys/stat.h>
-#include <sys/types.h>
+// #include <sys/stat.h>
+// #include <sys/types.h>
 // #include <strings.h>
 #include <string.h>
 #include <stdlib.h>
@@ -20,74 +20,6 @@
 #include "list_utils.h"
 #include "memo_add.h"
 
-
-// if directory does not exist, run mkdir()
-// return IS_DIRECTORY if dir already exist and is a directory
-// return IS_NOT_DIRECTORY_ERROR if dir already exist and is not a directory
-// return MKDIR_ERROR if mkdir() failed
-// return ACCESS_FAILED_ERROR if failed to access dir
-int make_dir(const char* dir){
-    struct stat st;
-    int result;
-
-    result = path_status(dir, &st);
-    if (result == PATH_EXIST){
-        #ifdef DEBUG
-        printf("%s already exist\n", dir);
-        #endif
-        if (S_ISDIR(st.st_mode)){
-            #ifdef DEBUG
-            printf("%s is a directory\n", dir);
-            #endif
-            return IS_DIRECTORY;
-        } else {
-            #ifdef DEBUG
-            printf("%s is NOT a directory\n", dir);
-            #endif
-            return IS_NOT_DIRECTORY_ERROR;
-        }
-    } else if (result == PATH_NOT_EXIST){
-        #ifdef DEBUG
-        printf("mkdir %s\n", dir);
-        #endif
-        if (mkdir(dir, 0755) == -1){
-            return MKDIR_ERROR;
-        }
-        return 0;
-    } else{
-        return ACCESS_FAILED_ERROR;
-    }
-}
-
-
-// if file does not exist, open and close the specified file to make it
-// return IO_ERROR if failed to open
-// return PATH_EXIST if path already exist
-// return ACCESS_FAILED_ERROR if failed to access path
-// return LIST_FORMAT_ERROR if list file is broken
-// return UNKNOWN_ERROR if program has bug
-// return 0 and make a file if file does not exist
-int make_file(const char* path, const int cond){
-    struct stat st;
-    int result;
-    int fd;
-
-    result = path_status(path, &st);
-    if (result == PATH_NOT_EXIST){
-        fd = open(path, cond, 0644);
-        if (fd == -1){
-            return IO_ERROR;
-        }
-        if (close(fd) != 0){
-            return IO_ERROR;
-        }
-        return 0;
-    } else if (result == PATH_EXIST){
-        return PATH_EXIST;
-    } else{
-        return ACCESS_FAILED_ERROR;
-    }
-}
 
 
 // return INVALID_KEY_ERROR if keys are invalid

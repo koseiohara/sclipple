@@ -13,11 +13,11 @@
 #endif
 
 #define DIR        ".sclipple"
-// #define EXT        "txt"
 #define SUBDIR     "notes"
+#define TRASHDIR   "trash"
+#define TRASHFILE  "trash"
 #define LISTNAME   ".list.csv"
 #define RCNAME     ".sclipplerc"
-// #define EDITOR     "nvim -p"
 #define RC_COMMENT '#'
 
 #define STOP 0

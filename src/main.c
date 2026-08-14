@@ -181,7 +181,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = rm(list, nonoptsc-1, &nonopts[1], ntags, tags);
+        result = rm(list, config.dir, TRASHDIR, TRASHFILE, nonoptsc-1, &nonopts[1], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
