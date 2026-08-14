@@ -18,6 +18,8 @@ Choose the archive for your system:
 | Linux arm64 | `sclipple-@VERSION@-linux-arm64.tar.gz` |
 | macOS Apple Silicon | `sclipple-@VERSION@-macos-arm64.tar.gz` |
 
+The Linux binaries are built on Ubuntu 24.04. The macOS binary is built for Apple Silicon with a deployment target of macOS 12.0 or later.
+
 `SHA256SUMS` contains checksums for all binary archives.
 
 ## Installation
@@ -35,6 +37,7 @@ To build from source instead:
 ```sh
 ./configure
 make
+make check
 make install
 ```
 

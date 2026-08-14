@@ -2,19 +2,26 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-configure:
-    name: ${{ matrix.os }} / ${{ matrix.cc }} / ${{ matrix.mode }}
-    runs-on: ${{ matrix.os }}
+  autotools-linux:
+    name: Linux x86_64 / ${{ matrix.cc }} / ${{ matrix.mode }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
 
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-22.04
-          - ubuntu-24.04
         cc:
           - gcc
           - clang
@@ -23,53 +30,107 @@ jobs:
           - bootstrap
           - out-of-tree
 
+    env:
+      CC: ${{ matrix.cc }}
+      CFLAGS: -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer
+      LDFLAGS: -fsanitize=address,undefined
+      ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+      UBSAN_OPTIONS: halt_on_error=1
+
     steps:
-      - uses: actions/checkout@v5
+      - name: Check out source
+        uses: actions/checkout@v7
 
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential clang autoconf automake git
 
-      - name: Set compiler
-        run: echo "CC=${{ matrix.cc }}" >> "$GITHUB_ENV"
-
-      - name: Normal configure build
+      - name: Normal configure build and test
         if: matrix.mode == 'normal'
         run: |
-          ./configure CFLAGS="-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address,undefined"
+          set -euo pipefail
+          ./configure
           make -j"$(nproc)"
-          bash tests/cli.sh
+          make check
           make clean
           make -j"$(nproc)"
 
-      - name: Bootstrap configure build
+      - name: Bootstrap configure build and test
         if: matrix.mode == 'bootstrap'
         run: |
+          set -euo pipefail
           autoreconf -fi
-          ./configure CFLAGS="-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address,undefined"
+          ./configure
           make -j"$(nproc)"
-          bash tests/cli.sh
+          make check
           make clean
           make -j"$(nproc)"
 
-      - name: Out-of-tree build
+      - name: Out-of-tree build and test
         if: matrix.mode == 'out-of-tree'
         run: |
+          set -euo pipefail
           mkdir build
           cd build
-          ../configure CFLAGS="-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address,undefined"
+          ../configure
           make -j"$(nproc)"
-          bash ../tests/cli.sh ../build/src/sclipple
+          make check
           make clean
           make -j"$(nproc)"
+
+  platform:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04-arm
+            target: Linux arm64
+          - os: macos-15
+            target: macOS arm64
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake git
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: brew install autoconf automake
+
+      - name: Bootstrap, build, and test
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            jobs="$(sysctl -n hw.ncpu)"
+          else
+            jobs="$(nproc)"
+          fi
+
+          autoreconf -fi
+          ./configure
+          make -j"$jobs"
+          make check
 
   distcheck:
     name: distcheck
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Check out source
+        uses: actions/checkout@v7
 
       - name: Install dependencies
         run: |
@@ -78,6 +139,9 @@ jobs:
 
       - name: Distcheck
         run: |
+          set -euo pipefail
           autoreconf -fi
-          ./configure CFLAGS="-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address,undefined"
+          ./configure
           make distcheck
+
+

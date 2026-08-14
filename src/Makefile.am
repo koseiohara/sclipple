@@ -25,7 +25,6 @@ sclipple_SOURCES = \
 
 AM_CFLAGS = \
     -D_POSIX_C_SOURCE=200809L \
-    -O3 \
     -Wall \
     -Wextra
 

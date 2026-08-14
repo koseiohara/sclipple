@@ -13,7 +13,8 @@ concurrency:
 jobs:
   validate:
     name: Validate release
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
 
     outputs:
       version: ${{ steps.release.outputs.version }}
@@ -22,7 +23,7 @@ jobs:
 
     steps:
       - name: Check out main
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -61,23 +62,22 @@ jobs:
     name: Build ${{ matrix.target }}
     needs: validate
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             target: linux-x86_64
-
-          - os: ubuntu-22.04-arm
+          - os: ubuntu-24.04-arm
             target: linux-arm64
-
           - os: macos-15
             target: macos-arm64
 
     steps:
       - name: Check out release commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.validate.outputs.commit }}
 
@@ -111,9 +111,9 @@ jobs:
           fi
 
           autoreconf -fi
-          ./configure
+          ./configure CFLAGS="-O3"
           make -j"$jobs"
-          bash tests/cli.sh ./src/sclipple
+          make check
 
           expected="sclipple version $VERSION"
           actual="$(./src/sclipple --version)"
@@ -155,8 +155,8 @@ jobs:
     needs:
       - validate
       - build
-
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     permissions:
       actions: read
@@ -164,7 +164,7 @@ jobs:
 
     steps:
       - name: Check out release commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.validate.outputs.commit }}
 
@@ -208,3 +208,4 @@ jobs:
             --generate-notes \
             --notes "$(cat dist/release-intro.md)" \
             --draft
+
