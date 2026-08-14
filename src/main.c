@@ -283,9 +283,8 @@ int main(int argc, char** argv){
     }
 
     if (strcmp(nonopts[0], "tag") == 0){
-        // printf("%s tag <key> <key> --tag <tag> --tag <tag> ... comming soon!", PACKAGE_NAME);
-        if (has_help == true){
-            // show_tag_show();
+        if (has_help == true || nonoptsc <= 1 || ntags <= 0){
+            show_help_tag();
             ret = STOP;
             goto cleanup;
         }
@@ -304,9 +303,8 @@ int main(int argc, char** argv){
     }
 
     if (strcmp(nonopts[0], "untag") == 0){
-        // printf("%s untag <key> <key> --tag <tag> --tag <tag> ... comming soon!", PACKAGE_NAME);
-        if (has_help == true){
-        //     show_tag_show();
+        if (has_help == true || nonoptsc <= 1 || ntags <= 0){
+            show_help_untag();
             ret = STOP;
             goto cleanup;
         }

@@ -1,3 +1,5 @@
+
+
 #include <stdio.h>
 #include <string.h>
 
@@ -11,7 +13,7 @@ static void print_separator(void){
 void show_help_add(char* subdir, char* list){
     printf("ADD\n");
     printf("  Usage:\n");
-    printf("    %s add KEY [KEY ...]\n", PACKAGE_NAME);
+    printf("    %s add KEY [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    Create one or more new notes. Each KEY becomes the note keyword.\n");
@@ -23,6 +25,15 @@ void show_help_add(char* subdir, char* list){
     printf("    - '.' and '..' are not valid KEY values.\n");
     printf("    - KEY must not already exist.\n");
     printf("\n");
+    printf("  Tags:\n");
+    printf("    Use -t TAG or --tag TAG to assign a tag when the notes are created.\n");
+    printf("    Repeat the option to assign more than one tag. Duplicate tags are\n");
+    printf("    ignored.\n");
+    printf("\n");
+    printf("  TAG rules:\n");
+    printf("    - TAG may contain letters, digits, '_', '-' and '.'.\n");
+    printf("    - TAG must not begin with '-'.\n");
+    printf("\n");
     printf("  Files:\n");
     printf("    - Notes are stored under %s.\n", subdir);
     printf("    - The note index is stored at %s.\n", list);
@@ -31,20 +42,29 @@ void show_help_add(char* subdir, char* list){
     printf("  Examples:\n");
     printf("    %s add <KEY>\n", PACKAGE_NAME);
     printf("    %s add <KEY1> <KEY2>\n", PACKAGE_NAME);
+    printf("    %s add <KEY> --tag <TAG>\n", PACKAGE_NAME);
+    printf("    %s add <KEY1> <KEY2> -t <TAG1> -t <TAG2>\n", PACKAGE_NAME);
 }
 
 void show_help_rm(void){
     printf("RM\n");
     printf("  Usage:\n");
-    printf("    %s rm KEY [KEY ...]\n", PACKAGE_NAME);
+    printf("    %s rm [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
-    printf("    Remove one or more notes. The note file is deleted and the matching\n");
-    printf("    KEY entry is removed from the index.\n");
+    printf("    Remove notes selected by KEY or tag. The note file is deleted and the\n");
+    printf("    matching KEY entry is removed from the index.\n");
+    printf("\n");
+    printf("  Tag selection:\n");
+    printf("    Use -t TAG or --tag TAG to select notes having that tag. Repeat the\n");
+    printf("    option to specify more than one tag. If both KEY and TAG are specified,\n");
+    printf("    notes matching any KEY or any specified TAG are removed.\n");
     printf("\n");
     printf("  Examples:\n");
     printf("    %s rm <KEY>\n", PACKAGE_NAME);
     printf("    %s rm <KEY1> <KEY2>\n", PACKAGE_NAME);
+    printf("    %s rm --tag <TAG>\n", PACKAGE_NAME);
+    printf("    %s rm <KEY> -t <TAG1> -t <TAG2>\n", PACKAGE_NAME);
 }
 
 void show_help_mv(void){
@@ -67,30 +87,43 @@ void show_help_mv(void){
 void show_help_ls(void){
     printf("LS\n");
     printf("  Usage:\n");
-    printf("    %s ls [KEY ...]\n", PACKAGE_NAME);
+    printf("    %s ls [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
-    printf("    List notes. Without KEY, all notes are listed. With one or more KEY\n");
-    printf("    arguments, only those notes are listed in the requested order.\n");
+    printf("    List notes. Without KEY or TAG, all notes are listed. KEY and TAG\n");
+    printf("    arguments can be used to select notes.\n");
+    printf("\n");
+    printf("  Tag selection:\n");
+    printf("    Use -t TAG or --tag TAG to list notes having that tag. Repeat the option\n");
+    printf("    to specify more than one tag. If both KEY and TAG are specified, the\n");
+    printf("    result is the union of notes matching any KEY or any specified TAG.\n");
     printf("\n");
     printf("  Output:\n");
-    printf("    For each note, this command prints the keyword, creation timestamp, and\n");
-    printf("    file path, the first non-empty line of the note. Long first lines are shortened.\n");
+    printf("    For each note, this command prints the keyword, creation timestamp,\n");
+    printf("    file path, tags, and the first non-empty line of the note. Long first\n");
+    printf("    lines are shortened.\n");
     printf("\n");
     printf("  Examples:\n");
     printf("    %s ls\n", PACKAGE_NAME);
     printf("    %s ls <KEY1> <KEY2>\n", PACKAGE_NAME);
+    printf("    %s ls --tag <TAG>\n", PACKAGE_NAME);
+    printf("    %s ls <KEY> -t <TAG1> -t <TAG2>\n", PACKAGE_NAME);
 }
 
 void show_help_search(void){
     printf("SEARCH\n");
     printf("  Usage:\n");
-    printf("    %s search PATTERN [KEY ...]\n", PACKAGE_NAME);
+    printf("    %s search PATTERN [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    Search note contents using a POSIX extended regular expression. The\n");
-    printf("    search is case-insensitive. Without KEY, all notes are searched. With\n");
-    printf("    one or more KEY arguments, only those notes are searched.\n");
+    printf("    search is case-insensitive. Without KEY or TAG, all notes are searched.\n");
+    printf("    KEY and TAG arguments can be used to select notes before searching.\n");
+    printf("\n");
+    printf("  Tag selection:\n");
+    printf("    Use -t TAG or --tag TAG to search notes having that tag. Repeat the\n");
+    printf("    option to specify more than one tag. If both KEY and TAG are specified,\n");
+    printf("    the selected notes match any KEY or any specified TAG.\n");
     printf("\n");
     printf("  Output:\n");
     printf("    Matching notes are printed with their keyword. Each matching line is\n");
@@ -100,17 +133,23 @@ void show_help_search(void){
     printf("  Examples:\n");
     printf("    %s search <PATTERN>\n", PACKAGE_NAME);
     printf("    %s search '<PATTERN1>|<PATTERN2>' <KEY>\n", PACKAGE_NAME);
+    printf("    %s search <PATTERN> --tag <TAG>\n", PACKAGE_NAME);
+    printf("    %s search <PATTERN> <KEY> -t <TAG>\n", PACKAGE_NAME);
 }
 
 void show_help_show(void){
     printf("SHOW\n");
     printf("  Usage:\n");
-    printf("    %s show [KEY ...]\n", PACKAGE_NAME);
+    printf("    %s show [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
-    printf("    Print full note contents to stdout. Without KEY, all notes are shown.\n");
-    printf("    With one or more KEY arguments, only those notes are shown in the\n");
-    printf("    requested order.\n");
+    printf("    Print full note contents to stdout. Without KEY or TAG, all notes are\n");
+    printf("    shown. KEY and TAG arguments can be used to select notes.\n");
+    printf("\n");
+    printf("  Tag selection:\n");
+    printf("    Use -t TAG or --tag TAG to show notes having that tag. Repeat the option\n");
+    printf("    to specify more than one tag. If both KEY and TAG are specified, the\n");
+    printf("    result is the union of notes matching any KEY or any specified TAG.\n");
     printf("\n");
     printf("  Output:\n");
     printf("    Each note begins with a [KEY] header. When stdout is a terminal, the\n");
@@ -119,17 +158,64 @@ void show_help_show(void){
     printf("  Examples:\n");
     printf("    %s show\n", PACKAGE_NAME);
     printf("    %s show <KEY1> <KEY2>\n", PACKAGE_NAME);
+    printf("    %s show --tag <TAG>\n", PACKAGE_NAME);
+    printf("    %s show <KEY> -t <TAG1> -t <TAG2>\n", PACKAGE_NAME);
+}
+
+void show_help_tag(void){
+    printf("TAG\n");
+    printf("  Usage:\n");
+    printf("    %s tag KEY [KEY ...] --tag TAG [--tag TAG]...\n", PACKAGE_NAME);
+    printf("\n");
+    printf("  Description:\n");
+    printf("    Add one or more tags to one or more existing notes. Duplicate KEY and\n");
+    printf("    TAG arguments are ignored. If some KEY values do not exist, an error is\n");
+    printf("    reported for them and the existing notes are still processed.\n");
+    printf("\n");
+    printf("  TAG rules:\n");
+    printf("    - TAG may contain letters, digits, '_', '-' and '.'.\n");
+    printf("    - TAG must not begin with '-'.\n");
+    printf("    - Adding a tag that a note already has leaves that tag unchanged.\n");
+    printf("\n");
+    printf("  Examples:\n");
+    printf("    %s tag <KEY> --tag <TAG>\n", PACKAGE_NAME);
+    printf("    %s tag <KEY1> <KEY2> -t <TAG1> -t <TAG2>\n", PACKAGE_NAME);
+}
+
+void show_help_untag(void){
+    printf("UNTAG\n");
+    printf("  Usage:\n");
+    printf("    %s untag KEY [KEY ...] --tag TAG [--tag TAG]...\n", PACKAGE_NAME);
+    printf("\n");
+    printf("  Description:\n");
+    printf("    Remove one or more tags from one or more existing notes. Duplicate KEY\n");
+    printf("    and TAG arguments are ignored. If some KEY values do not exist, an error\n");
+    printf("    is reported for them and the existing notes are still processed.\n");
+    printf("\n");
+    printf("  TAG rules:\n");
+    printf("    - TAG may contain letters, digits, '_', '-' and '.'.\n");
+    printf("    - TAG must not begin with '-'.\n");
+    printf("    - Removing a tag that a note does not have leaves the note unchanged.\n");
+    printf("\n");
+    printf("  Examples:\n");
+    printf("    %s untag <KEY> --tag <TAG>\n", PACKAGE_NAME);
+    printf("    %s untag <KEY1> <KEY2> -t <TAG1> -t <TAG2>\n", PACKAGE_NAME);
 }
 
 void show_help_edit(char* rc){
     printf("EDIT\n");
     printf("  Usage:\n");
-    printf("    %s KEY [KEY ...]\n", PACKAGE_NAME);
+    printf("    %s KEY [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
     printf("\n");
     printf("  Description:\n");
     printf("    Edit one or more existing notes. Any first argument that is not a built-in\n");
-    printf("    command is treated as a note KEY and opens the note in the configured\n");
-    printf("    editor. Multiple KEY arguments open multiple notes.\n");
+    printf("    command is treated as a note KEY and opens selected notes in the\n");
+    printf("    configured editor. Multiple KEY arguments can be specified.\n");
+    printf("\n");
+    printf("  Tag selection:\n");
+    printf("    Use -t TAG or --tag TAG to additionally select notes having that tag.\n");
+    printf("    Repeat the option to specify more than one tag. If both KEY and TAG are\n");
+    printf("    specified, the selected notes match any KEY or any specified TAG.\n");
     printf("\n");
     printf("  Editor:\n");
     printf("    The default editor command is 'vim -p'. It can be changed with the\n");
@@ -138,6 +224,8 @@ void show_help_edit(char* rc){
     printf("  Examples:\n");
     printf("    %s <KEY>\n", PACKAGE_NAME);
     printf("    %s <KEY1> <KEY2>\n", PACKAGE_NAME);
+    printf("    %s <KEY> --tag <TAG>\n", PACKAGE_NAME);
+    printf("    %s <KEY1> -t <TAG1> -t <TAG2>\n", PACKAGE_NAME);
 }
 
 void show_help_git(void){
@@ -189,14 +277,31 @@ void show_help_all(char* dir, char* subdir, char* list, char* rc){
     printf("  %s\n", PACKAGE_VERSION);
     printf("\n");
     printf("SYNOPSIS\n");
-    printf("  %s add KEY [KEY ...]\n", PACKAGE_NAME);
-    printf("  %s rm KEY [KEY ...]\n", PACKAGE_NAME);
+    printf("  %s add KEY [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
+    printf("  %s rm [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
     printf("  %s mv OLD_KEY NEW_KEY\n", PACKAGE_NAME);
-    printf("  %s ls [KEY ...]\n", PACKAGE_NAME);
-    printf("  %s search PATTERN [KEY ...]\n", PACKAGE_NAME);
-    printf("  %s show [KEY ...]\n", PACKAGE_NAME);
+    printf("  %s ls [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
+    printf("  %s search PATTERN [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
+    printf("  %s show [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
+    printf("  %s tag KEY [KEY ...] --tag TAG [--tag TAG]...\n", PACKAGE_NAME);
+    printf("  %s untag KEY [KEY ...] --tag TAG [--tag TAG]...\n", PACKAGE_NAME);
     printf("  %s git GIT_ARGUMENTS...\n", PACKAGE_NAME);
-    printf("  %s KEY [KEY ...]\n", PACKAGE_NAME);
+    printf("  %s KEY [KEY ...] [--tag TAG]...\n", PACKAGE_NAME);
+    printf("\n");
+    printf("TAG OPTION\n");
+    printf("  -t TAG, --tag TAG\n");
+    printf("    Repeat this option to specify multiple tags. With add, the tags are\n");
+    printf("    assigned to newly created notes. With rm, ls, search, show, and edit,\n");
+    printf("    tags select notes. The tag and untag commands use it to specify tags to\n");
+    printf("    add or remove.\n");
+    printf("\n");
+    printf("  Selection semantics:\n");
+    printf("    When a command supports selection by both KEY and TAG, notes matching\n");
+    printf("    any KEY or any specified TAG are selected. Duplicate matches are merged.\n");
+    printf("\n");
+    printf("  TAG rules:\n");
+    printf("    - TAG may contain letters, digits, '_', '-' and '.'.\n");
+    printf("    - TAG must not begin with '-'.\n");
     printf("\n");
     printf("STORAGE\n");
     printf("  Directory: %s\n", dir);
@@ -219,12 +324,14 @@ void show_help_all(char* dir, char* subdir, char* list, char* rc){
     print_separator();
     show_help_show();
     print_separator();
+    show_help_tag();
+    print_separator();
+    show_help_untag();
+    print_separator();
     show_help_edit(rc);
     print_separator();
     show_help_git();
     print_separator();
     show_help_config(rc);
 }
-
-
 
