@@ -253,6 +253,7 @@ cleanup:
 }
 
 
+// return LIST_FORMAT_ERROR if list file is broken
 // return IO_ERROR if IO failed
 // return MALLOC_ERROR if malloc_failed
 // return UNKNOWN_ERROR if a bug is found

@@ -227,7 +227,10 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
             goto cleanup;
         }
     } else{
-        if (result == IO_ERROR){
+        if (result == LIST_FORMAT_ERROR){
+            fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
+            ret = LIST_FORMAT_ERROR;
+        } else if (result == IO_ERROR){
             fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
             ret = IO_ERROR;
         } else if (result == MALLOC_ERROR){
