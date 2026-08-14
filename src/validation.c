@@ -132,11 +132,6 @@ int tag_validation(const char* tag){
         return INPUT_ERROR;
     }
 
-    // check banned character
-    // if (strcmp(tag, ".") == 0 || strcmp(tag, "..") == 0) {
-    //     return CHARACTER_NOT_ALLOWED_ERROR;
-    // }
-
     if (tag[0] == '-'){
         return CHARACTER_NOT_ALLOWED_ERROR;
     }

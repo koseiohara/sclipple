@@ -124,8 +124,6 @@ int mv_filename(char* old_file, const char* new_key, char** output){
     char* fname;
     int   result;
 
-    // strcpy(tmp_old_file, old_file);
-    // snprintf(tmp_old_file, sizeof(tmp_old_file), "%s", old_file);
     tmp_old_file = strdup(old_file);
     if (tmp_old_file == NULL){
         return MALLOC_ERROR;
@@ -157,18 +155,6 @@ int mv_filename(char* old_file, const char* new_key, char** output){
     #ifdef DEBUG
     printf("<DEBUG> mv_filename: prefix is %s\n", prefix);
     #endif
-
-    // last = NULL;
-    // while ((cp = strstr(cp, ".")) != NULL){
-    //     last = cp;
-    //     cp = cp + 2;
-    //     #ifdef DEBUG
-    //     printf("<DEBUG> mv_filename: %s", cp);
-    //     #endif
-    // }
-    // #ifdef DEBUG
-    // printf("<DEBUG> File name after '--': %s\n", last);
-    // #endif
 
     last = strchr(cp, '.');
     if (last != NULL){

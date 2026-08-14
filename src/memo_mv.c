@@ -159,9 +159,6 @@ int mv(const char* list, char* old_key, char* new_key){
         } else if (result == MALLOC_ERROR){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             ret = MALLOC_ERROR;
-        // } else if (result == KEY_DUPLICATE){
-        //     fprintf(stderr, "%s: New key '%s' already exists\n", PACKAGE_NAME, new_key);
-        //     ret = KEY_DUPLICATE;
         } else if (result == KEY_NOT_FOUND){
             fprintf(stderr, "%s: No such key: %s\n", PACKAGE_NAME, old_key);
             ret = KEY_NOT_FOUND;
@@ -199,7 +196,6 @@ cleanup:
     }
     free(field);
     free(new_file);
-    // free(old_file);
 
     return ret;
 }

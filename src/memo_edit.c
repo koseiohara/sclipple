@@ -253,11 +253,6 @@ cleanup:
         }
     }
 
-    // if (files != NULL){
-    //     for (j = 0; j < nkeys; j = j + 1){
-    //         free(files[j]);
-    //     }
-    // }
     if (field_by_key != NULL){
         for (i = 0; i < nkeys; i = i + 1){
             free_ListField(&(field_by_key[i]));

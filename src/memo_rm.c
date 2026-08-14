@@ -202,7 +202,6 @@ int rm(const char* list, const char* dir, const char* trashdir, const char* tras
             // rollback
             if (rename(tmpfile, field_merged[i].file) != 0){
                 fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, field_merged[i].file, strerror(errno));
-                // ret = RENAME_ERROR;
                 goto cleanup;
             }
 
@@ -210,13 +209,6 @@ int rm(const char* list, const char* dir, const char* trashdir, const char* tras
         }
 
         printf("%s: removed '%s'\n", PACKAGE_NAME, field_merged[i].key);
-        // if (unlink(tmpfile) == 0){
-        //     continue;
-        // }
-
-        // fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, field_merged[i].file, strerror(errno));
-        // ret = UNLINK_ERROR;
-        // goto cleanup;
     }
 
     if (nconts == 1){
@@ -240,13 +232,6 @@ cleanup:
             ret = IO_ERROR;
         }
     }
-    // xfclose(&fptmp);
-    // if (xfclose(&fptmp)){
-    //     if (ret == 0){
-    //         fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, TRASHFILE, strerror(errno));
-    //         ret = IO_ERROR;
-    //     }
-    // }
     if (field_by_key != NULL){
         for (i = 0; i < nkeys; i = i + 1){
             free_ListField(&(field_by_key[i]));

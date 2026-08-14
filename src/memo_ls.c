@@ -148,13 +148,6 @@ static inline int ls_with_key_tag(const int tty, const char* list, const int nke
         ret = KEY_NOT_FOUND;
     }
 
-    // lines = malloc((size_t)nconts * sizeof(char*));
-    // if (lines == NULL){
-    //     fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-    //     ret = MALLOC_ERROR;
-    //     goto cleanup;
-    // }
-
     for (j = 0; j < nconts; j = j + 1){
         if (first_echo == false){
             putchar('\n');
@@ -197,10 +190,8 @@ static inline int ls_with_key_tag(const int tty, const char* list, const int nke
         }
 
         if (tty){
-            // result = asprintf(&lines[j], OUTPUT_TTY , work_list->key, date, work_list->file, tagline, first_line);
             printf(OUTPUT_TTY , work_list->key, date, work_list->file, tagline, first_line);
         } else{
-            // result = asprintf(&lines[j], OUTPUT_NTTY, work_list->key, date, work_list->file, tagline, first_line);
             printf(OUTPUT_NTTY, work_list->key, date, work_list->file, tagline, first_line);
         }
         XFREE(tags_all);
@@ -304,10 +295,8 @@ static inline int ls_without_key_tag(const int tty, const char* list){
         XFREE(tags_all);
 
         if (tty){
-            // result = asprintf(&lines[j], OUTPUT_TTY , work_list->key, date, work_list->file, tagline, first_line);
             printf(OUTPUT_TTY , key, date, file, tagline, first_line);
         } else{
-            // result = asprintf(&lines[j], OUTPUT_NTTY, work_list->key, date, work_list->file, tagline, first_line);
             printf(OUTPUT_NTTY, key, date, file, tagline, first_line);
         }
         XFREE(tagline);

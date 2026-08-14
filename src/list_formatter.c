@@ -56,7 +56,6 @@ int get_element(size_t* line_len, char** line, size_t* ellen, char** element){
     char*  len_c;
     char*  delim;
     char*  endp;
-    // char*  next;
     long   work_ellen;
     int    has_line_len;
     size_t header_len;
@@ -97,7 +96,6 @@ int get_element(size_t* line_len, char** line, size_t* ellen, char** element){
         work_len = *line_len - header_len;
     }
 
-    // *ellen = atoi(len_c);
     errno = 0;
     work_ellen = strtol(len_c, &endp, 10);
     if (errno == ERANGE || endp != delim || work_ellen <= 0 || (uintmax_t)work_ellen > (uintmax_t)work_len){
@@ -148,7 +146,6 @@ int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
     size_t ellen;
 
     line_len = strlen(meta);
-    // work_datetime = get_element(&line_len, &meta, &ellen);
     result = get_element(&line_len, &meta, &ellen, &work_datetime);
     if (result != 0){
         if (result == LIST_FORMAT_ERROR){
@@ -170,7 +167,6 @@ int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
         return 0;
     }
 
-    // ntags_c = get_element(&line_len, &meta, &ellen);
     result = get_element(&line_len, &meta, &ellen, &ntags_c);
     if (result != 0){
         if (result == LIST_FORMAT_ERROR){
@@ -185,10 +181,9 @@ int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
         *tags  = NULL;
         return 0;
     }
-    // *ntags  = atoi(ntags_c);
     errno = 0;
     work_ntags = strtol(ntags_c, &endp, 10);
-    if (errno == ERANGE || work_ntags < 0){
+    if (errno == ERANGE || endp == ntags_c || *endp != '\0' || work_ntags < 0 || work_ntags > INT_MAX){
         // invalid element length
         return LIST_FORMAT_ERROR;
     }
@@ -199,7 +194,6 @@ int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
         return MALLOC_ERROR;
     }
     for (i = 0; i < *ntags; i = i + 1){
-        // (*tags)[i] = get_element(&line_len, &meta, &ellen);
         result = get_element(&line_len, &meta, &ellen, &(*tags)[i]);
         if (result != 0){
             if (result == LIST_FORMAT_ERROR){
@@ -341,7 +335,6 @@ int parse_line(char** line, char** key, char** file, char** meta){
     (*line)[strcspn(*line, "\n")] = '\0';
 
     line_len = strlen(*line);
-    // *key = get_element(&line_len, line, &ellen);
 
     result = get_element(&line_len, line, &ellen, key);
     if (result != 0){
@@ -361,8 +354,6 @@ int parse_line(char** line, char** key, char** file, char** meta){
         ret = 0;
         goto cleanup;
     }
-
-    // work_file = get_element(&line_len, line, &ellen);
 
     result = get_element(&line_len, line, &ellen, &work_file);
     if (result != 0){
@@ -388,11 +379,6 @@ int parse_line(char** line, char** key, char** file, char** meta){
             goto cleanup;
         }
         *meta = *line;
-        // *meta = get_element(&line_len, line, &ellen);
-        // if (*meta == NULL){
-        //     ret = LIST_FORMAT_ERROR;
-        //     goto cleanup;
-        // }
     }
 
     ret = 0;

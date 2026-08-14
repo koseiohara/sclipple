@@ -112,9 +112,6 @@ int search_one_file(regex_t* regex, int tty, char* key, char* file, int first_ec
         goto cleanup;
     }
 
-    // if (say_name == true){
-    //     printf("\n");
-    // }
     if (say_name == false){
         ret = RESULT_EMPTY;
         goto cleanup;

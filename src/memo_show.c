@@ -47,7 +47,6 @@ int show_one_file(int tty, char* key, char* file){
         goto cleanup;
     }
 
-    // printf("\n");
     ret = 0;
     goto cleanup;
 

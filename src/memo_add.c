@@ -1,9 +1,6 @@
 
 #include "config.h"
 
-// #include <sys/stat.h>
-// #include <sys/types.h>
-// #include <strings.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -225,11 +222,6 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
         for (i = 0; i < nkeys && exists[i] != NULL; i = i + 1){
             fprintf(stderr, "%s: Key '%s' already exists\n", PACKAGE_NAME, exists[i]);
         }
-        // i = 0;
-        // while (exists[i] != NULL){
-        //     fprintf(stderr, "%s: Key '%s' already exists\n", PACKAGE_NAME, exists[i]);
-        //     i = i + 1;
-        // }
         if (result == 0){
             ret = KEY_DUPLICATE;
             goto cleanup;
@@ -302,7 +294,6 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
             goto cleanup;
         }
 
-        // fprintf(stdout, "%s: New note was created: '%s'\n", PACKAGE_NAME, nexists[i]);
         printf("%s: New note was created: '%s'\n", PACKAGE_NAME, nexists[i]);
 
         XFREE(file);

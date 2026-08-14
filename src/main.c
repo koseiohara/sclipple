@@ -8,7 +8,6 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/stat.h>
-// #include <getopt.h>
 
 #include "globals.h"
 #include "parse_options.h"
@@ -170,7 +169,6 @@ int main(int argc, char** argv){
     }
 
     if (strcmp(nonopts[0], "rm") == 0){
-        // if (has_help == true || nonoptsc == 1){
         if (has_help == true){
             show_help_rm();
             if (has_help == true){
@@ -343,7 +341,6 @@ int main(int argc, char** argv){
 
 cleanup:
     free_config(&config);
-    // free(editor_commands);
     free(subdir);
     free(rc);
     free(list);

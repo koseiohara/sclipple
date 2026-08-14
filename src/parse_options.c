@@ -25,10 +25,8 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_tag, int* nonoptsc
                 *has_help = true;
                 break;
             case 'v':
-                // has_version = true;
                 printf("%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
                 return SHOW_VERSION;
-                // break;
             case 't':
                 *has_tag = true;
                 tags[*ntags] = optarg;

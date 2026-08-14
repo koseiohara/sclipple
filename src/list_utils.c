@@ -205,7 +205,6 @@ int fields_add(int* nfields, ListField** updated, const int fields_len, const Li
 // return UNKNOWN_ERROR if a bug is found
 // return 0 otherwise
 int add_contents_to_list(FILE* fp, char* key, char* file, char* datetime, int ntags, char** tags){
-    // FILE* fp   = NULL;
     ListField field = {0};
     char* meta = NULL;
     int   result;
@@ -260,7 +259,6 @@ cleanup:
 // return KEY_NOT_FOUND if one or more keys were not found
 // return 0 if all keys exist
 int key_exist_check(FILE* fp, const int nkeys, char* const* keys, char** exist, char** nexist){
-    // FILE*  fp   = NULL;
     char*  ikey = NULL;
     char*  line = NULL;
     char*  work_line;
@@ -272,12 +270,6 @@ int key_exist_check(FILE* fp, const int nkeys, char* const* keys, char** exist, 
     int    nexist_count;
     size_t size = 0;
 
-    // fp = fopen(list, "r");
-    // if (fp == NULL){
-    //     ret = IO_ERROR;
-    //     goto cleanup;
-    // }
-    //
     if (nkeys <= 0){
         if (nkeys == 0){
             ret = 0;
@@ -362,11 +354,6 @@ int key_exist_check(FILE* fp, const int nkeys, char* const* keys, char** exist, 
     goto cleanup;
 
 cleanup:
-    // if (xfclose(&fp) != 0){
-    //     if (ret == 0){
-    //         ret = IO_ERROR;
-    //     }
-    // }
     free(line);
     free(key_is_exist);
     return ret;
@@ -423,7 +410,6 @@ int get_content_by_key(FILE* fp, const int nkeys, char* const* keys, ListField**
         for (i = 0; i < nkeys; i = i + 1){
             if (strcmp(work_key, keys[i]) == 0){
                 work_line = line;
-                // result = parse_line(&work_line, &work_key, &work_file, &work_meta);
                 free_ListField(&(*field)[i]);
 
                 (*field)[i].key = strdup(work_key);
@@ -451,7 +437,6 @@ int get_content_by_key(FILE* fp, const int nkeys, char* const* keys, ListField**
                 } else{
                     (*field)[i].meta = NULL;
                 }
-                // break;
             }
         }
     }
@@ -688,9 +673,6 @@ int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int
             (*field)[*found_all] = (*by_key)[i];
             *found_all = *found_all + 1;
         }
-        // for (i = *found_all; i < *found_by_key; i = i + 1){
-        //     (*field)[*found_all] = (ListField){0};
-        // }
         ret = 0;
         goto cleanup;
     }
@@ -766,13 +748,11 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
     char**    work_curr_tags = NULL;
     char**    work_new_tags  = NULL;
     char*     work_new_meta  = NULL;
-    // char**    work_exist     = NULL;
     int*      is_found = NULL;
     int       imode;
     int       fd;
     int       result;
     int       ret = 0;
-    // int       work_nkeys;
     int       work_ntags;
     int       changed;
     int       line_changed;
@@ -828,48 +808,6 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
         goto cleanup;
     }
 
-    // check existence of the new flag
-    // if (imode == mode_mv){
-    //     result = key_exist_check(fpr, 1, info, NULL, NULL);
-    //     if (result != KEY_NOT_FOUND){
-    //         if (result == 0){
-    //             ret = KEY_DUPLICATE;
-    //         } else if (result == IO_ERROR){
-    //             ret = IO_ERROR;
-    //         } else if (result == MALLOC_ERROR){
-    //             ret = MALLOC_ERROR;
-    //         } else{
-    //             ret = UNKNOWN_ERROR;
-    //         }
-    //         goto cleanup;
-    //     }
-    //     rewind(fpr);
-    // } else if (imode == mode_tag || imode == mode_utag){
-    //     work_exist = malloc((size_t)nkeys * sizeof(char*));
-    //     if (work_exist == NULL){
-    //         ret = MALLOC_ERROR;
-    //         goto cleanup;
-    //     }
-    //     result = key_exist_check(fpr, nkeys, keys, work_exist, NULL);
-    //     if (result == 0){
-    //         work_nkeys = nkeys;
-    //     } else if (result == KEY_NOT_FOUND){
-    //         work_nkeys = 0;
-    //         while (work_exist[work_nkeys] != NULL){
-    //             work_nkeys = work_nkeys + 1;
-    //         }
-    //     } else{
-    //         if (result == IO_ERROR){
-    //             ret = IO_ERROR;
-    //         } else if (result == MALLOC_ERROR){
-    //             ret = MALLOC_ERROR;
-    //         } else{
-    //             ret = UNKNOWN_ERROR;
-    //         }
-    //         goto cleanup;
-    //     }
-    //     rewind(fpr);
-
     is_found = malloc((size_t)nkeys * sizeof(int));
     if (is_found == NULL){
         ret = MALLOC_ERROR;
@@ -878,7 +816,6 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
     for (i = 0; i < nkeys; i = i + 1){
         is_found[i] = false;
     }
-    // }
 
     result = asprintf(&tmpfile, "%s.XXXXXX", list);
     if (result < 0){
@@ -927,9 +864,7 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
 
         if (imode == mode_rm){
             if (strcmp(work_key, *keys) == 0){
-                // XFREE(line);
                 changed = true;
-                // continue;
             } else{
                 field = (ListField){
                     .key   = work_key,
@@ -1123,12 +1058,6 @@ int edit_list(const char* list, const char* mode, const int nkeys, char* const* 
     
     XFREE(tmpfile);
 
-    // if (imode == mode_tag || imode == mode_utag){
-    //     if (count < work_nkeys){
-    //         ret = KEY_NOT_FOUND;
-    //     }
-    // }
-
     goto cleanup;
 
 
@@ -1147,7 +1076,6 @@ cleanup:
     free(line);
     free(is_found);
     free(tmpfile);
-    // free(work_exist);
     free(work_curr_tags);
     free(work_new_tags);
     free(work_new_meta);
