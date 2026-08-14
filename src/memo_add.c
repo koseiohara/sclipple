@@ -253,16 +253,17 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
             goto cleanup;
         }
 
-        fprintf(stdout, "%s: New note was created: '%s'\n", PACKAGE_NAME, nexists[i]);
+        // fprintf(stdout, "%s: New note was created: '%s'\n", PACKAGE_NAME, nexists[i]);
+        printf("%s: New note was created: '%s'\n", PACKAGE_NAME, nexists[i]);
 
         XFREE(file);
         XFREE(path);
     }
 
     if (nexist_count == 1){
-        fprintf(stdout, "%s: %d key was created\n"  , PACKAGE_NAME, nexist_count);
+        printf("%s: %d key was created\n"  , PACKAGE_NAME, nexist_count);
     } else{
-        fprintf(stdout, "%s: %d keys were created\n", PACKAGE_NAME, nexist_count);
+        printf("%s: %d keys were created\n", PACKAGE_NAME, nexist_count);
     }
     goto cleanup;
 

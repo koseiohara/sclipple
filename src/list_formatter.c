@@ -140,6 +140,8 @@ int get_element(size_t* line_len, char** line, size_t* ellen, char** element){
 int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
     char*  work_datetime;
     char*  ntags_c;
+    char*  endp;
+    long   work_ntags;
     int    i;
     int    result;
     size_t line_len;
@@ -183,7 +185,14 @@ int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
         *tags  = NULL;
         return 0;
     }
-    *ntags  = atoi(ntags_c);
+    // *ntags  = atoi(ntags_c);
+    errno = 0;
+    work_ntags = strtol(ntags_c, &endp, 10);
+    if (errno == ERANGE || work_ntags < 0){
+        // invalid element length
+        return LIST_FORMAT_ERROR;
+    }
+    *ntags = (int)work_ntags;
 
     *tags = malloc((size_t)(*ntags+1) * sizeof(char*));
     if (*tags == NULL){

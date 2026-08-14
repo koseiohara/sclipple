@@ -305,10 +305,10 @@ static inline int ls_without_key_tag(const int tty, const char* list){
 
         if (tty){
             // result = asprintf(&lines[j], OUTPUT_TTY , work_list->key, date, work_list->file, tagline, first_line);
-            fprintf(stdout, OUTPUT_TTY , key, date, file, tagline, first_line);
+            printf(OUTPUT_TTY , key, date, file, tagline, first_line);
         } else{
             // result = asprintf(&lines[j], OUTPUT_NTTY, work_list->key, date, work_list->file, tagline, first_line);
-            fprintf(stdout, OUTPUT_NTTY, key, date, file, tagline, first_line);
+            printf(OUTPUT_NTTY, key, date, file, tagline, first_line);
         }
         XFREE(tagline);
     }

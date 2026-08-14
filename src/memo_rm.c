@@ -220,9 +220,9 @@ int rm(const char* list, const char* dir, const char* trashdir, const char* tras
     }
 
     if (nconts == 1){
-        fprintf(stdout, "%s: %d key was removed\n"  , PACKAGE_NAME, nconts);
+        printf("%s: %d key was removed\n"  , PACKAGE_NAME, nconts);
     } else{
-        fprintf(stdout, "%s: %d keys were removed\n", PACKAGE_NAME, nconts);
+        printf("%s: %d keys were removed\n", PACKAGE_NAME, nconts);
     }
 
     if (unlink(tmpfile) != 0){
