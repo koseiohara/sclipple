@@ -21,6 +21,71 @@
 #include "memo_add.h"
 
 
+// return IO_ERROR if dir or note_stock is not a directory, make-directory failed, make-file failed, or access to list file failed
+// return 0 if list file already exists or initialization completed
+int file_init(const char* dir, const char* note_stock, const char* list){
+    struct stat st;
+    int result;
+
+    // check the existence of the list file
+    result = path_status(list, &st);
+    if (result == PATH_EXIST){
+        return 0;
+    }
+
+    if (result == ACCESS_FAILED_ERROR){
+        result = path_status(dir, &st);
+        if (result != PATH_EXIST){
+            fprintf(stderr, "%s: Failed to access %s\n", PACKAGE_NAME, dir);
+            return IO_ERROR;
+        }
+
+        if (!S_ISDIR(st.st_mode)){
+            fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, dir);
+            return IO_ERROR;
+        }
+
+        fprintf(stderr, "%s: Failed to access list file\n", PACKAGE_NAME);
+        return IO_ERROR;
+    }
+
+    if (result == PATH_NOT_EXIST){
+        fprintf(stderr, "%s: No notes have been added\n", PACKAGE_NAME);
+        fprintf(stderr, "%s: Started initialization processes\n", PACKAGE_NAME);
+
+        result = make_dir(dir);
+        if (result != 0 && result != IS_DIRECTORY){
+            if (result == IS_NOT_DIRECTORY_ERROR){
+                fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, dir);
+            } else if (result == MKDIR_ERROR){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, dir, strerror(errno));
+            }
+            return IO_ERROR;
+        }
+
+        result = make_dir(note_stock);
+        if (result != 0 && result != IS_DIRECTORY){
+            if (result == IS_NOT_DIRECTORY_ERROR){
+                fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, note_stock);
+            } else if (result == MKDIR_ERROR){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, note_stock, strerror(errno));
+            }
+            return IO_ERROR;
+        }
+
+        result = make_file(list, O_CREAT | O_WRONLY);
+        if (result == IO_ERROR || result == ACCESS_FAILED_ERROR){
+            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
+            return IO_ERROR;
+        }
+
+        fprintf(stderr, "%s: Completed\n", PACKAGE_NAME);
+        return 0;
+    }
+
+    return IO_ERROR;
+}
+
 
 // return INVALID_KEY_ERROR if keys are invalid
 // return INVALID_TAG_ERROR if tags are invalid
@@ -32,7 +97,7 @@
 // return UNKONWN_ERROR when bug
 // return 0 otherwise
 int add(const char* list, const char* dir, const char* note_stock, int nkeys, char** keys, int ntags, char** tags, char* ext, struct tm* clock){
-    FILE* fp = NULL;
+    FILE* fp       = NULL;
     char* file     = NULL;
     char* path     = NULL;
     char* datetime = NULL;
@@ -102,33 +167,13 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
         goto cleanup;
     }
 
-
-    result = make_dir(dir);
-    if (result != 0 && result != IS_DIRECTORY){
-        if (result == IS_NOT_DIRECTORY_ERROR){
-            fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, dir);
-        } else if (result == MKDIR_ERROR){
-            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, dir, strerror(errno));
+    result = file_init(dir, note_stock, list);
+    if (result != 0){
+        if (result == IO_ERROR){
+            ret = IO_ERROR;
+        } else{
+            ret = UNKNOWN_ERROR;
         }
-        ret = IO_ERROR;
-        goto cleanup;
-    }
-
-    result = make_dir(note_stock);
-    if (result != 0 && result != IS_DIRECTORY){
-        if (result == IS_NOT_DIRECTORY_ERROR){
-            fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, note_stock);
-        } else if (result == MKDIR_ERROR){
-            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, note_stock, strerror(errno));
-        }
-        ret = IO_ERROR;
-        goto cleanup;
-    }
-
-    result = make_file(list, O_CREAT | O_WRONLY);
-    if (result == IO_ERROR || result == ACCESS_FAILED_ERROR){
-        fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));
-        ret = IO_ERROR;
         goto cleanup;
     }
 
