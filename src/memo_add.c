@@ -29,7 +29,10 @@ int file_init(const char* dir, const char* note_stock, const char* list){
 
     // check the existence of the list file
     result = path_status(list, &st);
-    if (result == PATH_EXIST){
+    if (S_ISDIR(st.st_mode)){
+        fprintf(stderr, "%s: '%s' exists but is a directory\n", PACKAGE_NAME, dir);
+        return IO_ERROR;
+    } else if (result == PATH_EXIST){
         return 0;
     }
 
