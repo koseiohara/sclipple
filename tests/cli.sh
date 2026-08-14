@@ -2,7 +2,6 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# BIN="${1:-$ROOT/src/sclipple}"
 BIN="${1:-${SCLIPPLE_TEST_BIN:-$ROOT/src/sclipple}}"
 
 STDOUT=""
@@ -315,10 +314,39 @@ assert_success
 assert_contains "$STDOUT" "[alpha]"
 assert_contains "$STDOUT" "[tagged1]"
 assert_contains "$STDOUT" "[tagged2]"
-alpha_count="$(printf '%s' "$STDOUT" | grep -F -c '[alpha]' || true)"
-[ "$alpha_count" -eq 1 ] || fail "KEY/TAG union duplicated alpha: count=$alpha_count"
 
-echo "7. tag and untag mutate metadata and partial missing keys are reported"
+run_cmd "$BIN" show tagged1 -t red
+assert_success
+tagged1_count="$(printf '%s' "$STDOUT" | grep -F -c '[tagged1]' || true)"
+[ "$tagged1_count" -eq 1 ] \
+  || fail "KEY/TAG union duplicated tagged1: count=$tagged1_count"
+
+echo "7. multiple distinct tag selectors use OR semantics"
+
+run_cmd "$BIN" add greenonly -t greenonlytag
+assert_success
+write_note greenonly $'green-only body\n'
+
+run_cmd "$BIN" show -t red -t greenonlytag
+assert_success
+assert_contains "$STDOUT" "[tagged1]"
+assert_contains "$STDOUT" "[tagged2]"
+assert_contains "$STDOUT" "[greenonly]"
+assert_not_contains "$STDOUT" "[alpha]"
+
+echo "8. duplicate tags are persisted only once"
+
+run_cmd "$BIN" add duptag -t dupcheck -t dupcheck
+assert_success
+write_note duptag $'neutral body\n'
+
+run_cmd "$BIN" ls duptag
+assert_success
+dupcheck_count="$(printf '%s' "$STDOUT" | { grep -oF 'dupcheck' || true; } | wc -l | tr -d ' ')"
+[ "$dupcheck_count" -eq 1 ] \
+  || fail "duplicate tag persisted more than once: count=$dupcheck_count"
+
+echo "9. tag and untag mutate metadata and partial missing keys are reported"
 
 run_cmd "$BIN" tag alpha beta -t blue -t blue
 assert_success
@@ -350,10 +378,19 @@ assert_success
 assert_not_contains "$STDOUT" "[alpha]"
 assert_contains "$STDOUT" "[beta]"
 
+run_cmd "$BIN" show alpha beta
+assert_success
+assert_contains "$STDOUT" "[alpha]"
+assert_contains "$STDOUT" "[beta]"
+
 run_cmd "$BIN" untag alpha -t does-not-exist
 assert_success
 
-echo "8. tag selectors are honored by search and edit"
+run_cmd "$BIN" show alpha
+assert_success
+assert_contains "$STDOUT" "[alpha]"
+
+echo "10. tag selectors are honored by search and edit"
 
 run_cmd "$BIN" search needle-red -t red
 assert_success
@@ -366,14 +403,14 @@ assert_success
 assert_contains "$STDOUT" "tagged one red body"
 assert_contains "$STDOUT" "tagged two red body"
 
-echo "9. valid key characters are accepted"
+echo "11. valid key characters are accepted"
 
 run_cmd "$BIN" add A_1-b
 assert_success
 assert_file_exists "$(note_path A_1-b)"
-assert_note_count 6
+assert_note_count 8
 
-echo "10. invalid and reserved keys do not create notes"
+echo "12. invalid and reserved keys do not create notes"
 
 before_count="$(note_count)"
 
@@ -390,7 +427,7 @@ after_count="$(note_count)"
 [ "$before_count" -eq "$after_count" ] \
   || fail "invalid or reserved keys changed note count: before=$before_count after=$after_count"
 
-echo "11. ls shows first non-empty lines"
+echo "13. ls shows first non-empty lines"
 
 write_note alpha $'\n\nfirst alpha line\nsecond alpha line\nurgent task\n'
 write_note beta $'first beta line\nsecond beta line\n'
@@ -403,7 +440,7 @@ assert_contains "$STDOUT" "first alpha line"
 assert_contains "$STDOUT" "beta"
 assert_contains "$STDOUT" "first beta line"
 
-echo "12. ls supports selected keys"
+echo "14. ls supports selected keys"
 
 run_cmd "$BIN" ls beta alpha
 assert_success
@@ -411,7 +448,7 @@ assert_contains "$STDOUT" "beta"
 assert_contains "$STDOUT" "alpha"
 assert_not_contains "$STDOUT" "[gamma]"
 
-echo "13. ls abbreviates long first lines"
+echo "15. ls abbreviates long first lines"
 
 long_line="$(printf '%*s' 160 '' | tr ' ' x)"
 write_note gamma "$long_line"$'\n'
@@ -420,7 +457,7 @@ run_cmd "$BIN" ls gamma
 assert_success
 assert_contains "$STDOUT" "..."
 
-echo "14. show prints full notes"
+echo "16. show prints full notes"
 
 run_cmd "$BIN" show
 assert_success
@@ -435,7 +472,7 @@ assert_contains "$STDOUT" "[beta]"
 assert_contains "$STDOUT" "[alpha]"
 assert_not_contains "$STDOUT" "[gamma]"
 
-echo "15. search supports case-insensitive extended regex"
+echo "17. search supports case-insensitive extended regex"
 
 run_cmd "$BIN" search urgent
 assert_success
@@ -455,14 +492,14 @@ assert_error_stop
 [ -z "$STDOUT" ] || fail "invalid regex unexpectedly wrote to stdout: $STDOUT"
 [ -n "$STDERR" ] || fail "invalid regex did not produce a diagnostic on stderr"
 
-echo "16. edit command invokes configured editor"
+echo "18. edit command invokes configured editor"
 
 run_cmd "$BIN" alpha
 assert_success
 assert_contains "$STDOUT" "first alpha line"
 assert_contains "$STDOUT" "urgent task"
 
-echo "17. rc extension is used for new notes"
+echo "19. rc extension is used for new notes"
 
 reset_home
 
@@ -483,7 +520,7 @@ run_cmd "$BIN" show mdnote
 assert_success
 assert_contains "$STDOUT" "markdown body"
 
-echo "18. rc parser handles whitespace, line-head comments, and quotes"
+echo "20. rc parser handles whitespace, line-head comments, and quotes"
 
 reset_home
 
@@ -505,7 +542,7 @@ run_cmd "$BIN" quoted
 assert_success
 assert_contains "$STDOUT" "quoted rc body"
 
-echo "19. rc parser keeps non-leading hash characters"
+echo "21. rc parser keeps non-leading hash characters"
 
 reset_home
 
@@ -519,7 +556,7 @@ assert_failure
 assert_diagnostic
 assert_note_count 0
 
-echo "20. rc directory option is used for storage"
+echo "22. rc directory option is used for storage"
 
 reset_home
 
@@ -548,7 +585,7 @@ run_cmd "$BIN" git init
 assert_success
 assert_file_exists "$custom_dir/.git"
 
-echo "21. invalid rc extension is fatal"
+echo "23. invalid rc extension is fatal"
 
 reset_home
 
@@ -561,7 +598,7 @@ assert_failure
 assert_diagnostic
 assert_note_count 0
 
-echo "22. mv succeeds and preserves content"
+echo "24. mv succeeds and preserves content"
 
 reset_home
 setup_rc
@@ -594,21 +631,21 @@ assert_contains "$STDOUT" "new"
 assert_contains "$STDOUT" "other"
 assert_not_contains "$STDOUT" "[old]"
 
-echo "23. mv missing old key fails with status 1 and preserves existing notes"
+echo "25. mv missing old key fails with status 1 and preserves existing notes"
 
 run_cmd "$BIN" mv missing dst
 assert_status 1
 assert_diagnostic
 assert_storage_intact_for_new_other
 
-echo "24. mv existing new key fails with status 1 and preserves existing notes"
+echo "26. mv existing new key fails with status 1 and preserves existing notes"
 
 run_cmd "$BIN" mv new other
 assert_status 1
 assert_diagnostic
 assert_storage_intact_for_new_other
 
-echo "25. mv invalid new key fails and preserves existing note"
+echo "27. mv invalid new key fails and preserves existing note"
 
 run_cmd "$BIN" mv new ..
 assert_status 2
@@ -620,7 +657,7 @@ run_cmd "$BIN" show new
 assert_success
 assert_contains "$STDOUT" "content for old"
 
-echo "26. rm removes key and note file"
+echo "28. rm removes key and note file"
 
 run_cmd "$BIN" rm new
 assert_success
@@ -631,13 +668,13 @@ run_cmd "$BIN" show new
 assert_failure
 assert_diagnostic
 
-echo "27. rm missing key fails"
+echo "29. rm missing key fails"
 
 run_cmd "$BIN" rm missing
 assert_negative_stop
 assert_stderr_contains "missing"
 
-echo "28. rm supports tag selection"
+echo "30. rm supports tag selection"
 
 run_cmd "$BIN" add trash1 trash2 -t disposable
 assert_success
@@ -657,7 +694,30 @@ run_cmd "$BIN" show keep
 assert_success
 assert_contains "$STDOUT" "keep me"
 
-echo "29. storage-dependent commands fail before storage exists"
+echo "31. rm combines key and tag selectors with OR semantics"
+
+run_cmd "$BIN" add rmkey -t retained
+assert_success
+run_cmd "$BIN" add rmtag -t disposable2
+assert_success
+run_cmd "$BIN" add survivor -t retained
+assert_success
+
+write_note rmkey $'remove by key\n'
+write_note rmtag $'remove by tag\n'
+write_note survivor $'survive rm union\n'
+
+run_cmd "$BIN" rm rmkey -t disposable2
+assert_success
+assert_file_not_exists "$(note_path rmkey)"
+assert_file_not_exists "$(note_path rmtag)"
+assert_file_exists "$(note_path survivor)"
+
+run_cmd "$BIN" show survivor
+assert_success
+assert_contains "$STDOUT" "survive rm union"
+
+echo "32. storage-dependent commands fail before storage exists"
 
 reset_home
 setup_rc
@@ -680,7 +740,7 @@ run_cmd "$BIN" mv x y
 assert_failure
 assert_diagnostic
 
-echo "30. storage path conflicts are rejected"
+echo "33. storage path conflicts are rejected"
 
 reset_home
 setup_rc
@@ -701,7 +761,7 @@ run_cmd "$BIN" add x
 assert_failure
 assert_diagnostic
 
-echo "31. broken list file is detected"
+echo "34. broken list file is detected"
 
 reset_home
 setup_rc
@@ -723,7 +783,7 @@ run_cmd "$BIN" search anything
 assert_failure
 assert_diagnostic
 
-echo "32. git subcommand runs inside storage"
+echo "35. git subcommand runs inside storage"
 
 reset_home
 setup_rc
@@ -739,7 +799,7 @@ run_cmd "$BIN" git status --short
 assert_success
 assert_contains "$STDOUT$STDERR" ".list.csv"
 
-echo "33. git before storage reports diagnostic and exits with status 2"
+echo "36. git before storage reports diagnostic and exits with status 2"
 
 reset_home
 setup_rc
@@ -749,6 +809,7 @@ assert_status 2
 assert_diagnostic
 
 echo "All CLI tests passed."
+
 
 
 
