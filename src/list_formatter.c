@@ -48,15 +48,22 @@ void free_ListField(ListField* field){
 }
 
 
-// return NULL if line is empty or invalid format
+// return LIST_FORMAT_ERROR if list file is broken
+// return INPUT_ERROR if an argument is invalid
 // return 0 otherwise
-char* get_element(size_t* line_len, char** line, size_t* ellen){
+int get_element(size_t* line_len, char** line, size_t* ellen, char** element){
     char*  len_c;
     char*  delim;
-    char*  next;
+    char*  endp;
+    // char*  next;
+    long   work_ellen;
     int    has_line_len;
     size_t header_len;
     size_t work_len;
+
+    if (line == NULL || *line == NULL || ellen == NULL || element == NULL){
+        return INPUT_ERROR;
+    }
 
     if (line_len == NULL){
         has_line_len = false;
@@ -70,33 +77,43 @@ char* get_element(size_t* line_len, char** line, size_t* ellen){
     delim = strchr(len_c, DELIM);
     if (delim == NULL){
         // no delimiter found
-        return NULL;
+        *element = NULL;
+        return 0;
     }
 
-    next = delim + 1;
+    *element = delim + 1;
 
     if (has_line_len == false){
-        work_len = strlen(next);
+        work_len = strlen(*element);
     } else{
-        header_len = (size_t)(next - *line);
+        header_len = (size_t)(*element - *line);
         if (*line_len < header_len){
             // invalid line length
-            return NULL;
+            // if the input *line_len is smaller than the length of header (including delimiter)
+            return INPUT_ERROR;
         }
 
         work_len = *line_len - header_len;
     }
 
-    *delim = '\0';
-    *ellen = atoi(len_c);
-
-    if (*ellen > work_len){
+    // *ellen = atoi(len_c);
+    errno = 0;
+    work_ellen = strtol(len_c, &endp, 10);
+    if (errno == ERANGE || endp != delim || work_ellen <= 0 || (uintmax_t)work_ellen > (uintmax_t)work_len){
         // invalid element length
-        return NULL;
+        return LIST_FORMAT_ERROR;
     }
 
-    next[*ellen] = '\0';
-    *line = next + (*ellen);
+    *ellen = (size_t)work_ellen;
+
+    if ((*element)[*ellen] != DELIM && (*element)[*ellen] != '\0'){
+        return LIST_FORMAT_ERROR;
+    }
+
+    *delim = '\0';
+
+    (*element)[*ellen] = '\0';
+    *line = *element + (*ellen);
 
     if (*ellen < work_len){
         // the read is not the last column
@@ -111,23 +128,34 @@ char* get_element(size_t* line_len, char** line, size_t* ellen){
         }
     }
 
-    return next;
+    return 0;
 }
 
 
 // return LIST_FORMAT_ERROR if list file is broken
 // return MALLOC_ERROR if malloc failed
+// return UNKNOWN_ERROR if a bug is found
 // return 0 otherwise
 int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
     char*  work_datetime;
     char*  ntags_c;
     int    i;
+    int    result;
     size_t line_len;
     size_t ellen;
 
     line_len = strlen(meta);
-    work_datetime = get_element(&line_len, &meta, &ellen);
-    if (work_datetime == NULL){
+    // work_datetime = get_element(&line_len, &meta, &ellen);
+    result = get_element(&line_len, &meta, &ellen, &work_datetime);
+    if (result != 0){
+        if (result == LIST_FORMAT_ERROR){
+            return LIST_FORMAT_ERROR;
+        } else if (result == INPUT_ERROR){
+            return UNKNOWN_ERROR;
+        } else{
+            return UNKNOWN_ERROR;
+        }
+    } else if (work_datetime == NULL){
         return LIST_FORMAT_ERROR;
     }
 
@@ -139,8 +167,17 @@ int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
         return 0;
     }
 
-    ntags_c = get_element(&line_len, &meta, &ellen);
-    if (ntags_c == NULL){
+    // ntags_c = get_element(&line_len, &meta, &ellen);
+    result = get_element(&line_len, &meta, &ellen, &ntags_c);
+    if (result != 0){
+        if (result == LIST_FORMAT_ERROR){
+            return LIST_FORMAT_ERROR;
+        } else if (result == INPUT_ERROR){
+            return UNKNOWN_ERROR;
+        } else{
+            return UNKNOWN_ERROR;
+        }
+    } else if (ntags_c == NULL){
         *ntags = 0;
         *tags  = NULL;
         return 0;
@@ -152,8 +189,17 @@ int parse_meta(char* meta, char** datetime, int* ntags, char*** tags){
         return MALLOC_ERROR;
     }
     for (i = 0; i < *ntags; i = i + 1){
-        (*tags)[i] = get_element(&line_len, &meta, &ellen);
-        if ((*tags)[i] == NULL){
+        // (*tags)[i] = get_element(&line_len, &meta, &ellen);
+        result = get_element(&line_len, &meta, &ellen, &(*tags)[i]);
+        if (result != 0){
+            if (result == LIST_FORMAT_ERROR){
+                return LIST_FORMAT_ERROR;
+            } else if (result == INPUT_ERROR){
+                return UNKNOWN_ERROR;
+            } else{
+                return UNKNOWN_ERROR;
+            }
+        } else if ((*tags)[i] == NULL){
             return LIST_FORMAT_ERROR;
         }
     }
@@ -278,14 +324,25 @@ cleanup:
 int parse_line(char** line, char** key, char** file, char** meta){
     char*  work_file;
     int    ret;
+    int    result;
     size_t line_len;
     size_t ellen;
 
     (*line)[strcspn(*line, "\n")] = '\0';
 
     line_len = strlen(*line);
-    *key = get_element(&line_len, line, &ellen);
-    if (*key == NULL){
+    // *key = get_element(&line_len, line, &ellen);
+
+    result = get_element(&line_len, line, &ellen, key);
+    if (result != 0){
+        if (result == LIST_FORMAT_ERROR){
+            return LIST_FORMAT_ERROR;
+        } else if (result == INPUT_ERROR){
+            return UNKNOWN_ERROR;
+        } else{
+            return UNKNOWN_ERROR;
+        }
+    } else if (*key == NULL){
         ret = LIST_FORMAT_ERROR;
         goto cleanup;
     }
@@ -295,11 +352,22 @@ int parse_line(char** line, char** key, char** file, char** meta){
         goto cleanup;
     }
 
-    work_file = get_element(&line_len, line, &ellen);
-    if (work_file == NULL){
+    // work_file = get_element(&line_len, line, &ellen);
+
+    result = get_element(&line_len, line, &ellen, &work_file);
+    if (result != 0){
+        if (result == LIST_FORMAT_ERROR){
+            return LIST_FORMAT_ERROR;
+        } else if (result == INPUT_ERROR){
+            return UNKNOWN_ERROR;
+        } else{
+            return UNKNOWN_ERROR;
+        }
+    } else if (work_file == NULL){
         ret = LIST_FORMAT_ERROR;
         goto cleanup;
     }
+
     if (file != NULL){
         *file = work_file;
     }
