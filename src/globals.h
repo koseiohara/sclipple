@@ -50,6 +50,7 @@
 #define WAIT_ERROR 19
 #define IS_NOT_DIRECTORY_ERROR 20
 #define MKDIR_ERROR 21
+#define EDITOR_ERROR 22
 #define UNKNOWN_ERROR 100
 
 

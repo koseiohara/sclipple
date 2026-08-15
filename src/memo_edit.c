@@ -11,6 +11,7 @@
 
 #include "globals.h"
 #include "ptrutils.h"
+#include "strutils.h"
 #include "file_systems.h"
 #include "list_utils.h"
 #include "memo_edit.h"
@@ -92,6 +93,12 @@ int memo_edit(const char* list, const char* dir, char* editor, const int nkeys, 
         ret = IO_ERROR;
         goto cleanup;
     } 
+
+    if (is_white_space(editor) == true){
+        fprintf(stderr, "%s: Editor command is blank\n", PACKAGE_NAME);
+        ret = EDITOR_ERROR;
+        goto cleanup;
+    }
 
     fp = fopen(list, "r");
     if (fp == NULL){

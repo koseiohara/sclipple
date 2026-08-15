@@ -92,13 +92,24 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
     char*  line = NULL;
     char*  in_key;
     char*  in_value;
+    char*  new_value;
     const char* lbrack = "\"'";
     const char* rbrack = "\"'";
-    int    i;
-    int    n;
     int    result;
-    int    ret;
+    int    ret = 0;
+    size_t i;
     size_t size;
+
+    if (rc == NULL || (entry == NULL && n_entry != 0)){
+        fprintf(stderr, "%s: Invalid input to function read_rc()\n", PACKAGE_NAME);
+        return INPUT_ERROR;
+    }
+    for (i = 0; i < n_entry; i = i + 1){
+        if (entry[i].key == NULL || entry[i].value == NULL){
+            fprintf(stderr, "%s: Invalid input to function read_rc()\n", PACKAGE_NAME);
+            return INPUT_ERROR;
+        }
+    }
 
     fp = fopen(rc, "r");
     if (fp == NULL){
@@ -108,7 +119,6 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
     }
 
     size = 0;
-    n    = (int)n_entry;
     while(getline(&line, &size, fp) != -1){
         // delete comment
         if (line[0] == RC_COMMENT){
@@ -119,64 +129,66 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
             continue;
         }
 
-        for (i = 0; i < n; i = i + 1){
-            if (strcmp(in_key, entry[i].key) == 0){
+        for (i = 0; i < n_entry; i = i + 1){
+            if (strcmp(in_key, entry[i].key) != 0){
+                continue;
+            }
+
+            new_value = NULL;
+            if (strcmp(entry[i].key, "directory") == 0){
+                result = parse_directory(in_value, &new_value);
+                if (result != 0){
+                    if (result == FILE_FORMAT_ERROR){
+                        fprintf(stderr, "%s: %s: Invalid directory: '%s'\n"
+                                        "Directory must be the absolute path format\n", PACKAGE_NAME, rc, in_value);
+                        ret = FILE_FORMAT_ERROR;
+                    } else if (result == WORDEXP_ERROR){
+                        fprintf(stderr, "%s: %s: Invalid directory: '%s'\n", PACKAGE_NAME, rc, in_value);
+                        ret = RC_ERROR;
+                    } else if (result == MALLOC_ERROR){
+                        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+                        ret = MALLOC_ERROR;
+                    } else if (result == INPUT_ERROR){
+                        fprintf(stderr, "%s: Invalid input to function parse_directory()\n", PACKAGE_NAME);
+                        ret = INPUT_ERROR;
+                    } else{
+                        fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
+                        ret = UNKNOWN_ERROR;
+                    }
+                    XFREE(new_value);
+                    goto cleanup;
+                }
+            } else{
                 delete_bracket(&in_value, (int)strlen(lbrack), lbrack, rbrack);
 
-                XFREE(*(entry[i].value));
-                *(entry[i].value) = strdup(in_value);
-                if (*(entry[i].value) == NULL){
+                new_value = strdup(in_value);
+                if (new_value == NULL){
                     fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
                     ret = MALLOC_ERROR;
                     goto cleanup;
                 }
 
                 if (strcmp(entry[i].key, "extension") == 0){
-                    result = ext_validation(*(entry[i].value));
+                    result = ext_validation(new_value);
                     if (result != 0){
                         if (result == CHARACTER_NOT_ALLOWED_ERROR){
                             fprintf(stderr, "%s: %s: Invalid extension: '%s'\n"
                                             "Extension must consist of alphabets, numbers, '.', '-', and '_'\n"
-                                            "Extension cannot start with '.'\n", PACKAGE_NAME, rc, *(entry[i].value));
+                                            "Extension cannot start with '.'\n", PACKAGE_NAME, rc, new_value);
                             ret = RC_ERROR;
                         } else{
                             fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
                             ret = UNKNOWN_ERROR;
                         }
-
+                        XFREE(new_value);
                         goto cleanup;
-                    }
-                } else if (strcmp(entry[i].key, "directory") == 0){
-                    XFREE(*(entry[i].value));
-                    result = parse_directory(in_value, entry[i].value);
-                    if (result == 0){
-                        continue;
-                    } else{
-                        if (result == FILE_FORMAT_ERROR){
-                            fprintf(stderr, "%s: %s: Invalid directory: '%s'\n"
-                                            "Directory must be the absolute path format\n", PACKAGE_NAME, rc, *entry[i].value);//, in_value);
-                            ret = FILE_FORMAT_ERROR;
-                            goto cleanup;
-                        } else if (result == WORDEXP_ERROR){
-                            fprintf(stderr, "%s: %s: Invalid directory: '%s'\n", PACKAGE_NAME, rc, in_value);
-                            ret = RC_ERROR;
-                            goto cleanup;
-                        } else if (result == MALLOC_ERROR){
-                            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-                            ret = MALLOC_ERROR;
-                            goto cleanup;
-                        } else if (result == INPUT_ERROR){
-                            fprintf(stderr, "%s: Invalid input to function parse_directory()\n", PACKAGE_NAME);
-                            ret = INPUT_ERROR;
-                            goto cleanup;
-                        } else{
-                            fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
-                            ret = UNKNOWN_ERROR;
-                            goto cleanup;
-                        }
                     }
                 }
             }
+
+            XFREE(*(entry[i].value));
+            *(entry[i].value) = new_value;
+            break;
         }
     }
 
@@ -200,4 +212,5 @@ cleanup:
 
     return ret;
 }
+
 
