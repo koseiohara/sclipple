@@ -137,7 +137,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                         if (result == CHARACTER_NOT_ALLOWED_ERROR){
                             fprintf(stderr, "%s: %s: Invalid extension: '%s'\n"
                                             "Extension must consist of alphabets, numbers, '.', '-', and '_'\n"
-                                            "Extension cannot start with '.'", PACKAGE_NAME, rc, *(entry[i].value));
+                                            "Extension cannot start with '.'\n", PACKAGE_NAME, rc, *(entry[i].value));
                             ret = RC_ERROR;
                         } else{
                             fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
@@ -154,7 +154,7 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                     } else{
                         if (result == FILE_FORMAT_ERROR){
                             fprintf(stderr, "%s: %s: Invalid directory: '%s'\n"
-                                            "Directory must be the absolute path format\n", PACKAGE_NAME, rc, in_value);
+                                            "Directory must be the absolute path format\n", PACKAGE_NAME, rc, *entry[i].value);//, in_value);
                             ret = FILE_FORMAT_ERROR;
                             goto cleanup;
                         } else if (result == WORDEXP_ERROR){

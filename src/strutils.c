@@ -167,6 +167,7 @@ int duplication_filter(int* nvals, char** vals){
 int arr2line(const int narr, char* const* arr, const char delim, const char left, const char right, char** line){
     char*   p;
     size_t* lens = NULL;
+    int     delim_len;
     int     left_len;
     int     right_len;
     int     i;
@@ -193,6 +194,12 @@ int arr2line(const int narr, char* const* arr, const char delim, const char left
         goto cleanup;
     }
 
+    if (delim == '\0'){
+        delim_len = 0;
+    } else{
+        delim_len = 1;
+    }
+
     if (left == '\0'){
         left_len = 0;
     } else{
@@ -207,10 +214,13 @@ int arr2line(const int narr, char* const* arr, const char delim, const char left
 
     len = 0;
     for (i = 0; i < narr; i = i + 1){
+        if (arr[i] == NULL){
+            return INPUT_ERROR;
+        }
         lens[i] = strlen(arr[i]);
         len = len + lens[i];
     }
-    len = len + narr * (2 + left_len + right_len);      // for a comma, space, left, and right
+    len = len + narr * (1 + delim_len + left_len + right_len);      // for a comma, space, left, and right
 
     *line = malloc(len * sizeof(char));
     if (*line == NULL){
@@ -234,8 +244,10 @@ int arr2line(const int narr, char* const* arr, const char delim, const char left
         }
 
         if (i != narr-1){
-            *p = delim;
-            p  = p + 1;
+            if (delim != '\0'){
+                *p = delim;
+                p  = p + 1;
+            }
             *p = ' ';
             p  = p + 1;
         } else{

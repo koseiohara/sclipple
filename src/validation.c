@@ -25,7 +25,7 @@ int ext_validation(const char* ext){
     len = strlen(ext);
 
     if (is_white_space(ext) == true){
-        return INPUT_ERROR;
+        return CHARACTER_NOT_ALLOWED_ERROR;
     }
 
     if (ext[0] == '.'){

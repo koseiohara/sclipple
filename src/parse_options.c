@@ -20,14 +20,16 @@ enum {
 
 
 // return MALLOC_ERROR if malloc failed
-// FILE_FORMAT_ERROR if input directory does not start with /
-// CHARACTER_NOT_ALLOWED_ERROR if invalid character is included in extension
-// INVALID_OPTION if unknown option is obtained
-// WORDEXP_ERROR if directory is invalid
-// UNKNOWN_ERROR if a bug is found
-// GIT_FOUND if the first non-option argument is git
-// 0 otherwise
+// return FILE_FORMAT_ERROR if input directory does not start with /
+// return CHARACTER_NOT_ALLOWED_ERROR if invalid character is included in extension
+// return INVALID_OPTION if unknown option is obtained
+// return UNKNOWN_ERROR if a bug is found
+// return GIT_FOUND if the first non-option argument is git
+// return 0 otherwise
 int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_pos, int* nonoptsc, char** nonopts, int* ntags, char** tags, Config* config){
+    char* directory;
+    char* extension;
+    char* editor;
     int opt;
     int result;
     static const struct option opt_list[] = {
@@ -40,8 +42,12 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
                                              {NULL       , 0                , NULL,  0 },
                                             };
 
-    *nonoptsc  = 0;
-    *ntags     = 0;
+    *nonoptsc = 0;
+    *ntags    = 0;
+    *git_pos  = -1;
+    directory = NULL;
+    extension = NULL;
+    editor    = NULL;
     while ((opt = getopt_long(argc, argv, "-hvt:", opt_list, NULL)) != -1){
         switch (opt){
             case 'h':
@@ -55,57 +61,17 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
                 *ntags = *ntags + 1;
                 break;
             case OPT_DIRECTORY:
-                XFREE(config->dir);
-                result = parse_directory(optarg, &config->dir);
-                if (result != 0){
-                    if (result == FILE_FORMAT_ERROR){
-                        fprintf(stderr, "%s: Invalid directory: '%s'\nDirectory must be the absolute path format\n", PACKAGE_NAME, optarg);
-                        return FILE_FORMAT_ERROR;
-                    } else if (result == WORDEXP_ERROR){
-                        fprintf(stderr, "%s: Invalid directory: '%s'\n", PACKAGE_NAME, optarg);
-                        return WORDEXP_ERROR;
-                    } else if (result == MALLOC_ERROR){
-                        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-                        return MALLOC_ERROR;
-                    } else if (result == INPUT_ERROR){
-                        fprintf(stderr, "%s: Invalid input to function parse_directory()\n", PACKAGE_NAME);
-                        return UNKNOWN_ERROR;
-                    } else{
-                        fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
-                        return UNKNOWN_ERROR;
-                    }
-                }
+                directory = optarg;
                 break;
             case OPT_EXTENSION:
-                XFREE(config->ext);
-                result = ext_validation(optarg);
-                if (result != 0){
-                    if (result == CHARACTER_NOT_ALLOWED_ERROR){
-                        fprintf(stderr, "%s: Invalid extension: '%s'\n"
-                                        "Extension must consist of alphabets, numbers, '.', '-', and '_'\n"
-                                        "Extension cannot start with '.'", PACKAGE_NAME, optarg);
-                        return CHARACTER_NOT_ALLOWED_ERROR;
-                    } else{
-                        fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
-                        return UNKNOWN_ERROR;
-                    }
-                }
-                config->ext = strdup(optarg);
-                if (config->ext == NULL){
-                    return MALLOC_ERROR;
-                }
+                extension = optarg;
                 break;
             case OPT_EDITOR:
-                XFREE(config->editor);
-                config->editor = strdup(optarg);
-                if (config->editor == NULL){
-                    return MALLOC_ERROR;
-                }
+                editor = optarg;
                 break;
             case 1:
                 if (*nonoptsc == 0 && strcmp(optarg, "git") == 0){
                     *git_pos = optind - 1;
-                    return GIT_FOUND;
                 }
 
                 nonopts[*nonoptsc] = optarg;
@@ -114,11 +80,64 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
             case '?':
                 return INVALID_OPTION;
         }
+        if (*git_pos >= 0){
+            break;
+        }
     }
+
+    if (*has_version == true || *has_help == true){
+        return 0;
+    }
+
+    if (directory != NULL){
+        XFREE(config->dir);
+        if (directory[0] != '/'){
+            return FILE_FORMAT_ERROR;
+        }
+        config->dir = strdup(directory);
+        if (config->dir == NULL){
+            return MALLOC_ERROR;
+        }
+    }
+
+    if (extension != NULL){
+        XFREE(config->ext);
+        result = ext_validation(extension);
+        if (result != 0){
+            if (result == CHARACTER_NOT_ALLOWED_ERROR){
+                fprintf(stderr, "%s: Invalid extension: '%s'\n"
+                                "Extension must consist of alphabets, numbers, '.', '-', and '_'\n"
+                                "Extension cannot start with '.'\n", PACKAGE_NAME, extension);
+                return CHARACTER_NOT_ALLOWED_ERROR;
+            } else{
+                fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
+                return UNKNOWN_ERROR;
+            }
+        }
+        config->ext = strdup(extension);
+        if (config->ext == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            return MALLOC_ERROR;
+        }
+    }
+
+    if (editor != NULL){
+        XFREE(config->editor);
+        config->editor = strdup(editor);
+        if (config->editor == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            return MALLOC_ERROR;
+        }
+    }
+
     nonopts[*nonoptsc] = NULL;
     tags[*ntags]       = NULL;
 
-    return 0;
+    if (*git_pos >= 0){
+        return GIT_FOUND;
+    } else{
+        return 0;
+    }
 }
 
 
