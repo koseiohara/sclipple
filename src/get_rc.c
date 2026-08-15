@@ -81,6 +81,7 @@ int init(Config* config, RcEntry* entry, char* home){
 
 
 // return RC_ERROR when bad input
+// return FILE_FORMAT_ERROR if directory does not begin with /
 // return IO_ERROR when io error
 // return MALLOC_ERROR if strdup failed
 // return INPUT_ERROR if a bug
@@ -133,9 +134,16 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                 if (strcmp(entry[i].key, "extension") == 0){
                     result = ext_validation(*(entry[i].value));
                     if (result != 0){
-                        fprintf(stderr, "%s: Invalid extension: '%s'\nExtension must consist of alphabets, numbers, '.', '-', and '_'\n", rc, *(entry[i].value));
+                        if (result == CHARACTER_NOT_ALLOWED_ERROR){
+                            fprintf(stderr, "%s: %s: Invalid extension: '%s'\n"
+                                            "Extension must consist of alphabets, numbers, '.', '-', and '_'\n"
+                                            "Extension cannot start with '.'", PACKAGE_NAME, rc, *(entry[i].value));
+                            ret = RC_ERROR;
+                        } else{
+                            fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
+                            ret = UNKNOWN_ERROR;
+                        }
 
-                        ret = RC_ERROR;
                         goto cleanup;
                     }
                 } else if (strcmp(entry[i].key, "directory") == 0){
@@ -144,12 +152,13 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                     if (result == 0){
                         continue;
                     } else{
-                        if (result == RC_ERROR){
-                            fprintf(stderr, "%s: Invalid directory: '%s'\nDirectory must be the absolute path format\n", rc, in_value);
-                            ret = RC_ERROR;
+                        if (result == FILE_FORMAT_ERROR){
+                            fprintf(stderr, "%s: %s: Invalid directory: '%s'\n"
+                                            "Directory must be the absolute path format\n", PACKAGE_NAME, rc, in_value);
+                            ret = FILE_FORMAT_ERROR;
                             goto cleanup;
                         } else if (result == WORDEXP_ERROR){
-                            fprintf(stderr, "%s: Invalid directory specified: '%s'\n", rc, in_value);
+                            fprintf(stderr, "%s: %s: Invalid directory: '%s'\n", PACKAGE_NAME, rc, in_value);
                             ret = RC_ERROR;
                             goto cleanup;
                         } else if (result == MALLOC_ERROR){

@@ -1,4 +1,6 @@
 
+#ifndef _GET_RC_H
+#define _GET_RC_H
 
 #include <stdlib.h>
 #include "globals.h"
@@ -23,4 +25,5 @@ int init(Config* config, RcEntry* entry, char* home);
 void free_config(Config* config);
 int read_rc(const char* rc, RcEntry* entry, const size_t n_entry);
 
+#endif
 

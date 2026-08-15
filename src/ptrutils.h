@@ -1,4 +1,7 @@
 
+#ifndef _PTRUTILS_H
+#define _PTRUTILS_H
+
 #include <stdio.h>
 
 #define XFREE(p)              \
@@ -9,4 +12,6 @@
 
 
 int xfclose(FILE** fp);
+
+#endif
 

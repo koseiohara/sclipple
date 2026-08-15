@@ -28,19 +28,21 @@
 int main(int argc, char** argv){
     Config  config = {0};
     RcEntry entry[N_ENTRY];
-    char*  home;
-    char*  subdir = NULL;
-    char*  rc     = NULL;
-    char*  list   = NULL;
-    int    result;
-    int    ret;
+    char*   home;
+    char*   subdir = NULL;
+    char*   rc     = NULL;
+    char*   list   = NULL;
+    int     result;
+    int     result_opt;
+    int     ret;
+    int     git_pos;
 
     time_t now;
     struct tm* lt;
     struct stat st;
 
-    int    has_help = false;
-    int    has_tag  = false;
+    int    has_help    = false;
+    int    has_version = false;
     int    nonoptsc;
     int    ntags;
     char** nonopts = NULL;
@@ -77,6 +79,29 @@ int main(int argc, char** argv){
         }
     }
 
+    nonopts = malloc(argc * sizeof(char*));
+    tags    = malloc(argc * sizeof(char*));
+    if (nonopts == NULL || tags == NULL){
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+        ret = ERROR_STOP;
+        goto cleanup;
+    }
+    result_opt = parse_opts(argc, argv,
+                            &has_help, &has_version, &git_pos,
+                            &nonoptsc, nonopts,
+                            &ntags, tags,
+                            &config
+                           );
+
+    if (result_opt != 0 && result_opt != GIT_FOUND){
+        ret = ERROR_STOP;
+        goto cleanup;
+    }
+
+    // printf("DEBUG: %s\n", config.dir);
+    // printf("DEBUG: %s\n", config.ext);
+    // printf("DEBUG: %s\n", config.editor);
+
     result = asprintf(&subdir, "%s/%s", config.dir, SUBDIR);
     if (result < 0){
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
@@ -96,8 +121,26 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    if (strcmp(argv[1], "git") == 0){
-        result = git_run(config.dir, &argv[1]);
+    if (has_version == true){
+        printf("%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
+        ret = 0;
+        goto cleanup;
+    }
+
+    if (has_help == true){
+        show_help_all(config.dir, subdir, list, rc);
+        ret = STOP;
+        goto cleanup;
+    }
+
+    // if (result_opt == INVALID_OPTION){
+    //     // getopt will return error messages
+    //     ret = ERROR_STOP;
+    //     goto cleanup;
+    // }
+
+    if (result_opt == GIT_FOUND){
+        result = git_run(config.dir, &argv[git_pos]);
         if (argc == 2){
             ret = NEGATIVE_STOP;
         } else if (result == 0){
@@ -110,33 +153,9 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    nonopts = malloc(argc * sizeof(char*));
-    tags    = malloc(argc * sizeof(char*));
-    if (nonopts == NULL || tags == NULL){
-        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-        ret = ERROR_STOP;
-        goto cleanup;
-    }
-    result = parse_opts(argc, argv, &has_help, &has_tag, &nonoptsc, nonopts, &ntags, tags);
-    if (result != 0){
-        if (result == SHOW_VERSION){
-            ret = 0;
-            goto cleanup;
-        } else if (result == INVALID_OPTION){
-            ret = ERROR_STOP;
-            goto cleanup;
-        }
-    }
-
     if (nonoptsc == 0){
         show_help_all(config.dir, subdir, list, rc);
         ret = STOP;
-        goto cleanup;
-    }
-
-    if (strcmp(nonopts[0], "git") == 0){
-        fprintf(stderr, "%s: Options must be specified after the git subcommand\n", PACKAGE_NAME);
-        ret = ERROR_STOP;
         goto cleanup;
     }
 

@@ -1,4 +1,6 @@
 
+#ifndef _LIST_FORMATTER_H
+#define _LIST_FORMATTER_H
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,4 +22,6 @@ int make_meta(char** meta, const char* datetime, const int ntags, char* const* t
 // int make_meta(char** meta, char* datetime, int ntags, char** tags);
 int parse_line(char** line, char** key, char** file, char** meta);
 int write_one_line(FILE* fp, ListField field);
+
+#endif
 

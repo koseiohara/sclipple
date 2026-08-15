@@ -1,4 +1,7 @@
 
+#ifndef _FILE_SYSTEMS_H
+#define _FILE_SYSTEMS_H
+
 #include <stdlib.h>
 #include <sys/stat.h>
 
@@ -9,4 +12,6 @@ int mv_filename(char* old_file, const char* new_key, char** output);
 int path_status(const char* file, struct stat* st);
 int make_dir(const char* dir);
 int make_file(const char* path, const int cond);
+
+#endif
 

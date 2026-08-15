@@ -9,7 +9,8 @@
 #include "validation.h"
 
 
-// return INPUT_ERROR for invalid character
+// return CHARACTER_NOT_ALLOWED_ERROR for invalid character
+// return INPUT_ERROR if an argument is invalid
 // return  0 for valid ext
 int ext_validation(const char* ext){
     unsigned char c;
@@ -23,12 +24,20 @@ int ext_validation(const char* ext){
 
     len = strlen(ext);
 
+    if (is_white_space(ext) == true){
+        return INPUT_ERROR;
+    }
+
+    if (ext[0] == '.'){
+        return CHARACTER_NOT_ALLOWED_ERROR;
+    }
+
     for (i = 0; i < len; i = i + 1){
         c = ext[i];
         if (isalnum(c) || c == '_' || c == '-' || c == '.'){
             continue;
         }
-        return INPUT_ERROR;
+        return CHARACTER_NOT_ALLOWED_ERROR;
     }
 
     return 0;

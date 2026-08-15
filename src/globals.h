@@ -1,4 +1,8 @@
 
+#ifndef _GLOBALS_H
+#define _GLOBALS_H
+
+
 #include "config.h"
 
 
@@ -59,4 +63,6 @@
 #define END_OF_FILE 71
 #define RESULT_EMPTY 72
 #define IS_DIRECTORY 73
+
+#endif
 
