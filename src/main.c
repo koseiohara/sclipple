@@ -14,7 +14,6 @@
 #include "help.h"
 #include "git_run.h"
 #include "file_systems.h"
-#include "strutils.h"
 #include "get_rc.h"
 #include "memo_add.h"
 #include "memo_rm.h"
@@ -26,7 +25,8 @@
 #include "memo_edit.h"
 
 int main(int argc, char** argv){
-    Config  config = {0};
+    Config  config     = {0};
+    Config  config_opt = {0};
     RcEntry entry[N_ENTRY];
     char*   home;
     char*   subdir = NULL;
@@ -49,7 +49,39 @@ int main(int argc, char** argv){
     char** tags    = NULL;
 
 
+    nonopts = malloc(argc * sizeof(char*));
+    tags    = malloc(argc * sizeof(char*));
+    if (nonopts == NULL || tags == NULL){
+        fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+        ret = ERROR_STOP;
+        goto cleanup;
+    }
+    result_opt = parse_opts(argc, argv,
+                            &has_help, &has_version, &git_pos,
+                            &nonoptsc, nonopts,
+                            &ntags, tags,
+                            &config_opt
+                           );
+
+    if (result_opt != 0 && result_opt != GIT_FOUND){
+        ret = ERROR_STOP;
+        goto cleanup;
+    }
+
+    if (has_version == true){
+        printf("%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
+        ret = 0;
+        goto cleanup;
+    }
+
+    if (argc == 1 || (argc == 2 && has_help == true)){
+        show_help_all();
+        ret = STOP;
+        goto cleanup;
+    }
+
     if (get_env("HOME", &home) != 0){
+        fprintf(stderr, "%s: $HOME is not set\n", PACKAGE_NAME);
         ret = ERROR_STOP;
         goto cleanup;
     }
@@ -79,28 +111,12 @@ int main(int argc, char** argv){
         }
     }
 
-    nonopts = malloc(argc * sizeof(char*));
-    tags    = malloc(argc * sizeof(char*));
-    if (nonopts == NULL || tags == NULL){
+    result = config_update(&config, config_opt);
+    if (result != 0){
         fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
         ret = ERROR_STOP;
         goto cleanup;
     }
-    result_opt = parse_opts(argc, argv,
-                            &has_help, &has_version, &git_pos,
-                            &nonoptsc, nonopts,
-                            &ntags, tags,
-                            &config
-                           );
-
-    if (result_opt != 0 && result_opt != GIT_FOUND){
-        ret = ERROR_STOP;
-        goto cleanup;
-    }
-
-    // printf("DEBUG: %s\n", config.dir);
-    // printf("DEBUG: %s\n", config.ext);
-    // printf("DEBUG: %s\n", config.editor);
 
     result = asprintf(&subdir, "%s/%s", config.dir, SUBDIR);
     if (result < 0){
@@ -115,31 +131,13 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    if (argc == 1){
-        show_help_all(config.dir, subdir, list, rc);
-        ret = STOP;
-        goto cleanup;
-    }
-
-    if (has_version == true){
-        printf("%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
-        ret = 0;
-        goto cleanup;
-    }
-
-    if (has_help == true){
-        show_help_all(config.dir, subdir, list, rc);
-        ret = STOP;
-        goto cleanup;
-    }
-
-    // if (result_opt == INVALID_OPTION){
-    //     // getopt will return error messages
-    //     ret = ERROR_STOP;
-    //     goto cleanup;
-    // }
-
     if (result_opt == GIT_FOUND){
+        if (has_help == true){
+            show_help_all();
+            ret = STOP;
+            goto cleanup;
+        }
+
         result = git_run(config.dir, &argv[git_pos]);
         if (argc == 2){
             ret = NEGATIVE_STOP;
@@ -154,14 +152,14 @@ int main(int argc, char** argv){
     }
 
     if (nonoptsc == 0){
-        show_help_all(config.dir, subdir, list, rc);
+        show_help_all();
         ret = STOP;
         goto cleanup;
     }
 
     if (strcmp(nonopts[0], "add") == 0){
         if (has_help == true || nonoptsc == 1){
-            show_help_add(subdir, list);
+            show_help_add();
             if (has_help == true){
                 ret = STOP;
             } else{
@@ -340,7 +338,7 @@ int main(int argc, char** argv){
     }
 
     if (has_help == true){
-        show_help_all(config.dir, subdir, list, rc);
+        show_help_all();
         ret = NEGATIVE_STOP;
         goto cleanup;
     }
@@ -360,6 +358,7 @@ int main(int argc, char** argv){
 
 cleanup:
     free_config(&config);
+    free_config(&config_opt);
     free(subdir);
     free(rc);
     free(list);

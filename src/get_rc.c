@@ -214,3 +214,32 @@ cleanup:
 }
 
 
+int config_update(Config* base, Config new_config){
+    if (new_config.dir != NULL){
+        XFREE(base->dir);
+        base->dir = strdup(new_config.dir);
+        if (base->dir == NULL){
+            return MALLOC_ERROR;
+        }
+    }
+
+    if (new_config.ext != NULL){
+        XFREE(base->ext);
+        base->ext = strdup(new_config.ext);
+        if (base->ext == NULL){
+            return MALLOC_ERROR;
+        }
+    }
+
+    if (new_config.editor != NULL){
+        XFREE(base->editor);
+        base->editor = strdup(new_config.editor);
+        if (base->editor == NULL){
+            return MALLOC_ERROR;
+        }
+    }
+
+    return 0;
+}
+
+

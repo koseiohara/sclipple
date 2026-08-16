@@ -245,17 +245,17 @@ assert_success
 
 before_count="$(note_count)"
 
-assert_command_help "ADD" add foo
+assert_command_help "add" add foo
 assert_note_count "$before_count"
 assert_file_not_exists "$HOME/.sclipple"
 
-assert_command_help "RM" rm foo
-assert_command_help "MV" mv old new
-assert_command_help "LS" ls foo
-assert_command_help "SEARCH" search pattern foo
-assert_command_help "SHOW" show foo
-assert_command_help "TAG" tag foo
-assert_command_help "UNTAG" untag foo
+assert_command_help "rm" rm foo
+assert_command_help "mv" mv old new
+assert_command_help "ls" ls foo
+assert_command_help "search" search pattern foo
+assert_command_help "show" show foo
+assert_command_help "tag" tag foo
+assert_command_help "untag" untag foo
 
 echo "2. version works without storage"
 

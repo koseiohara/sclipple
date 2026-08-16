@@ -92,10 +92,13 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
     if (directory != NULL){
         XFREE(config->dir);
         if (directory[0] != '/'){
+            fprintf(stderr, "%s: Invalid directory: '%s'\n"
+                            "Directory must be the absolute path format\n", PACKAGE_NAME, directory);
             return FILE_FORMAT_ERROR;
         }
         config->dir = strdup(directory);
         if (config->dir == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             return MALLOC_ERROR;
         }
     }

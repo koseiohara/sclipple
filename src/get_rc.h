@@ -24,6 +24,7 @@ typedef struct{
 int init(Config* config, RcEntry* entry, char* home);
 void free_config(Config* config);
 int read_rc(const char* rc, RcEntry* entry, const size_t n_entry);
+int config_update(Config* base, Config new_config);
 
 #endif
 
