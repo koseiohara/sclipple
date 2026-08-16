@@ -585,7 +585,69 @@ run_cmd "$BIN" git init
 assert_success
 assert_file_exists "$custom_dir/.git"
 
-echo "23. invalid rc extension is fatal"
+echo "23. --directory overrides rc directory"
+
+reset_home
+
+rc_dir="$HOME/rc-storage"
+cli_dir="$HOME/cli-storage"
+cat > "$HOME/.sclipplerc" <<RC
+editor = cat
+extension = txt
+directory = $rc_dir
+RC
+
+run_cmd "$BIN" --directory "$cli_dir" add cli-dir
+assert_success
+
+cli_dir_note="$cli_dir/notes/cli-dir.txt"
+assert_file_exists "$cli_dir_note"
+assert_file_not_exists "$rc_dir/notes/cli-dir.txt"
+assert_contains "$(cat "$cli_dir/.list.csv")" "cli-dir,"
+
+printf 'cli directory body\n' > "$cli_dir_note"
+
+run_cmd "$BIN" --directory "$cli_dir" show cli-dir
+assert_success
+assert_contains "$STDOUT" "cli directory body"
+
+echo "24. --extension overrides rc extension"
+
+reset_home
+
+cat > "$HOME/.sclipplerc" <<'RC'
+editor = cat
+extension = rcx
+RC
+
+run_cmd "$BIN" --extension md add cli-ext
+assert_success
+
+assert_file_exists "$HOME/.sclipple/notes/cli-ext.md"
+assert_file_not_exists "$HOME/.sclipple/notes/cli-ext.rcx"
+assert_contains "$(cat "$HOME/.sclipple/.list.csv")" "cli-ext.md"
+
+echo "25. --editor overrides rc editor"
+
+reset_home
+
+cat > "$HOME/.sclipplerc" <<'RC'
+editor = /bin/false
+extension = txt
+RC
+
+run_cmd "$BIN" add cli-editor
+assert_success
+write_note cli-editor $'editor override body\n'
+
+run_cmd "$BIN" cli-editor
+assert_error_stop
+
+run_cmd "$BIN" --editor cat cli-editor
+assert_success
+assert_contains "$STDOUT" "editor override body"
+
+echo "26. invalid rc extension is fatal"
 
 reset_home
 
@@ -598,7 +660,7 @@ assert_failure
 assert_diagnostic
 assert_note_count 0
 
-echo "24. mv succeeds and preserves content"
+echo "27. mv succeeds and preserves content"
 
 reset_home
 setup_rc
@@ -631,21 +693,21 @@ assert_contains "$STDOUT" "new"
 assert_contains "$STDOUT" "other"
 assert_not_contains "$STDOUT" "[old]"
 
-echo "25. mv missing old key fails with status 1 and preserves existing notes"
+echo "28. mv missing old key fails with status 1 and preserves existing notes"
 
 run_cmd "$BIN" mv missing dst
 assert_status 1
 assert_diagnostic
 assert_storage_intact_for_new_other
 
-echo "26. mv existing new key fails with status 1 and preserves existing notes"
+echo "29. mv existing new key fails with status 1 and preserves existing notes"
 
 run_cmd "$BIN" mv new other
 assert_status 1
 assert_diagnostic
 assert_storage_intact_for_new_other
 
-echo "27. mv invalid new key fails and preserves existing note"
+echo "30. mv invalid new key fails and preserves existing note"
 
 run_cmd "$BIN" mv new ..
 assert_status 2
@@ -657,7 +719,7 @@ run_cmd "$BIN" show new
 assert_success
 assert_contains "$STDOUT" "content for old"
 
-echo "28. rm removes key and note file"
+echo "31. rm removes key and note file"
 
 run_cmd "$BIN" rm new
 assert_success
@@ -668,13 +730,13 @@ run_cmd "$BIN" show new
 assert_failure
 assert_diagnostic
 
-echo "29. rm missing key fails"
+echo "32. rm missing key fails"
 
 run_cmd "$BIN" rm missing
 assert_negative_stop
 assert_stderr_contains "missing"
 
-echo "30. rm supports tag selection"
+echo "33. rm supports tag selection"
 
 run_cmd "$BIN" add trash1 trash2 -t disposable
 assert_success
@@ -694,7 +756,7 @@ run_cmd "$BIN" show keep
 assert_success
 assert_contains "$STDOUT" "keep me"
 
-echo "31. rm combines key and tag selectors with OR semantics"
+echo "34. rm combines key and tag selectors with OR semantics"
 
 run_cmd "$BIN" add rmkey -t retained
 assert_success
@@ -717,7 +779,7 @@ run_cmd "$BIN" show survivor
 assert_success
 assert_contains "$STDOUT" "survive rm union"
 
-echo "32. storage-dependent commands fail before storage exists"
+echo "35. storage-dependent commands fail before storage exists"
 
 reset_home
 setup_rc
@@ -740,7 +802,7 @@ run_cmd "$BIN" mv x y
 assert_failure
 assert_diagnostic
 
-echo "33. storage path conflicts are rejected"
+echo "36. storage path conflicts are rejected"
 
 reset_home
 setup_rc
@@ -761,7 +823,7 @@ run_cmd "$BIN" add x
 assert_failure
 assert_diagnostic
 
-echo "34. broken list file is detected"
+echo "37. broken list file is detected"
 
 reset_home
 setup_rc
@@ -783,7 +845,7 @@ run_cmd "$BIN" search anything
 assert_failure
 assert_diagnostic
 
-echo "35. git subcommand runs inside storage"
+echo "38. git subcommand runs inside storage"
 
 reset_home
 setup_rc
@@ -799,7 +861,7 @@ run_cmd "$BIN" git status --short
 assert_success
 assert_contains "$STDOUT$STDERR" ".list.csv"
 
-echo "36. git before storage reports diagnostic and exits with status 2"
+echo "39. git before storage reports diagnostic and exits with status 2"
 
 reset_home
 setup_rc
@@ -809,7 +871,5 @@ assert_status 2
 assert_diagnostic
 
 echo "All CLI tests passed."
-
-
 
 
