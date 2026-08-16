@@ -24,7 +24,7 @@
 // return KEY_DUPLICATE if new_flag already exist
 // return UNKNOWN_ERROR if program bug is found
 // return 0 otherwise
-int mv(const char* list, char* old_key, char* new_key){
+int mv(const char* list, const char* subdir, char* old_key, char* new_key){
     struct stat st;
     ListField* field = NULL;
     FILE*      fp    = NULL;
@@ -75,7 +75,7 @@ int mv(const char* list, char* old_key, char* new_key){
 
     info[0] = old_key;
     info[1] = new_key;
-    result = get_content_by_key(fp, 2, info, &field, true, false);
+    result = get_content_by_key(fp, subdir, 2, info, &field, true, false);
     if (result != 0){
         if (result == LIST_FORMAT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);

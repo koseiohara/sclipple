@@ -133,7 +133,7 @@ cleanup:
 }
 
 
-static inline int search_with_key_tag(regex_t* regex, const int tty, const char* list, const int nkeys, char* const* keys, const int ntags, char* const* tags){
+static inline int search_with_key_tag(regex_t* regex, const int tty, const char* list, const char* subdir, const int nkeys, char* const* keys, const int ntags, char* const* tags){
     FILE*      fp           = NULL;
     ListField* field_by_key = NULL;
     ListField* field_by_tag = NULL;
@@ -171,7 +171,7 @@ static inline int search_with_key_tag(regex_t* regex, const int tty, const char*
         }
         unfound[0] = NULL;
     }
-    result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
+    result = get_content_by_key_and_tag(fp, subdir, nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);
     if (result != 0){
@@ -245,9 +245,10 @@ cleanup:
 }
 
 
-static inline int search_without_key_tag(regex_t* regex, const int tty, const char* list){
+static inline int search_without_key_tag(regex_t* regex, const int tty, const char* list, const char* subdir){
     FILE* fp;
     char* line = NULL;
+    char* work_file = NULL;
     char* work_line;
     char* key;
     char* file;
@@ -272,7 +273,16 @@ static inline int search_without_key_tag(regex_t* regex, const int tty, const ch
             goto cleanup;
         }
 
-        result = search_one_file(regex, tty, key, file, first_echo);
+        result = file_to_abs(subdir, file, &work_file);
+        if (result != 0){
+            if (result == MALLOC_ERROR){
+                fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+                ret = MALLOC_ERROR;
+            }
+            goto cleanup;
+        }
+
+        result = search_one_file(regex, tty, key, work_file, first_echo);
         if (result == 0){
             first_echo = false;
         } else if (result != RESULT_EMPTY){
@@ -285,6 +295,8 @@ static inline int search_without_key_tag(regex_t* regex, const int tty, const ch
             ret = UNKNOWN_ERROR;
             goto cleanup;
         }
+
+        XFREE(work_file);
     }
 
     if (ferror(fp)){
@@ -302,6 +314,7 @@ cleanup:
         }
     }
     free(line);
+    free(work_file);
 
     return ret;
 }
@@ -314,7 +327,7 @@ cleanup:
 // return KEY_NOT_FOUND if one of key does not exist
 // return UNKNOWN_ERROR if program has a bug
 // return 0 otherwise
-int search(char* list, char* word, int nkeys, char** keys, int ntags, char** tags){
+int search(const char* list, const char* subdir, const char* word, const int nkeys, char* const * keys, const int ntags, char* const* tags){
     struct  stat st;
     regex_t regex;
     char   errbuf[256];
@@ -360,9 +373,9 @@ int search(char* list, char* word, int nkeys, char** keys, int ntags, char** tag
         ret = INPUT_ERROR;
         goto cleanup;
     } else if (nkeys > 0 || ntags > 0){
-        result = search_with_key_tag(&regex, tty, list, nkeys, keys, ntags, tags);
+        result = search_with_key_tag(&regex, tty, list, subdir, nkeys, keys, ntags, tags);
     } else{
-        result = search_without_key_tag(&regex, tty, list);
+        result = search_without_key_tag(&regex, tty, list, subdir);
     }
 
     regfree(&regex);

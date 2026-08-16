@@ -196,7 +196,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = rm(list, config.dir, TRASHDIR, TRASHFILE, nonoptsc-1, &nonopts[1], ntags, tags);
+        result = rm(list, config.dir, subdir, TRASHDIR, TRASHFILE, nonoptsc-1, &nonopts[1], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -220,7 +220,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = mv(list, nonopts[1], nonopts[2]);
+        result = mv(list, subdir, nonopts[1], nonopts[2]);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND || result == KEY_DUPLICATE){
@@ -240,7 +240,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = ls(list, nonoptsc-1, &nonopts[1], ntags, tags);
+        result = ls(list, subdir, nonoptsc-1, &nonopts[1], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -264,7 +264,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = search(list, nonopts[1], nonoptsc-2, &nonopts[2], ntags, tags);
+        result = search(list, subdir, nonopts[1], nonoptsc-2, &nonopts[2], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -284,7 +284,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = show(list, nonoptsc-1, &nonopts[1], ntags, tags);
+        result = show(list, subdir, nonoptsc-1, &nonopts[1], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){

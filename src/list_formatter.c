@@ -395,11 +395,14 @@ cleanup:
 // return IO_ERROR if IO failed
 // return 0 otherwise
 int write_one_line(FILE* fp, ListField field){
+    char* work_file;
     int result;
     int ret;
 
-    result = fprintf(fp, "%zu%c%s%c%zu%c%s%c%s\n", strlen(field.key) , DELIM, field.key , DELIM, 
-                                                   strlen(field.file), DELIM, field.file, DELIM, 
+    work_file = abs_to_file(field.file);
+
+    result = fprintf(fp, "%zu%c%s%c%zu%c%s%c%s\n", strlen(field.key), DELIM, field.key, DELIM, 
+                                                   strlen(work_file), DELIM, work_file, DELIM, 
                                                    field.meta);
     if (result < 0){
         ret = IO_ERROR;

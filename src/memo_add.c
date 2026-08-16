@@ -18,9 +18,9 @@
 #include "memo_add.h"
 
 
-// return IO_ERROR if dir or note_stock is not a directory, make-directory failed, make-file failed, or access to list file failed
+// return IO_ERROR if dir or subdir is not a directory, make-directory failed, make-file failed, or access to list file failed
 // return 0 if list file already exists or initialization completed
-int file_init(const char* dir, const char* note_stock, const char* list){
+int file_init(const char* dir, const char* subdir, const char* list){
     struct stat st;
     int result;
 
@@ -64,12 +64,12 @@ int file_init(const char* dir, const char* note_stock, const char* list){
             return IO_ERROR;
         }
 
-        result = make_dir(note_stock);
+        result = make_dir(subdir);
         if (result != 0 && result != IS_DIRECTORY){
             if (result == IS_NOT_DIRECTORY_ERROR){
-                fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, note_stock);
+                fprintf(stderr, "%s: '%s' exists but is not a directory\n", PACKAGE_NAME, subdir);
             } else if (result == MKDIR_ERROR){
-                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, note_stock, strerror(errno));
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, subdir, strerror(errno));
             }
             return IO_ERROR;
         }
@@ -97,7 +97,7 @@ int file_init(const char* dir, const char* note_stock, const char* list){
 // return PATH_EXIST if note file already exist
 // return UNKONWN_ERROR when bug
 // return 0 otherwise
-int add(const char* list, const char* dir, const char* note_stock, int nkeys, char** keys, int ntags, char** tags, char* ext, struct tm* clock){
+int add(const char* list, const char* dir, const char* subdir, int nkeys, char** keys, int ntags, char** tags, char* ext, struct tm* clock){
     FILE* fp       = NULL;
     char* file     = NULL;
     char* path     = NULL;
@@ -168,7 +168,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
         goto cleanup;
     }
 
-    result = file_init(dir, note_stock, list);
+    result = file_init(dir, subdir, list);
     if (result != 0){
         if (result == IO_ERROR){
             ret = IO_ERROR;
@@ -260,10 +260,21 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
             goto cleanup;
         }
 
-        result = asprintf(&path, "%s/%s", note_stock, file);
-        if (result < 0){
-            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-            ret = MALLOC_ERROR;
+        // result = asprintf(&path, "%s/%s", subdir, file);
+        // if (result < 0){
+        //     fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+        //     ret = MALLOC_ERROR;
+        //     goto cleanup;
+        // }
+        result = file_to_abs(subdir, file, &path);
+        if (result != 0){
+            if (result == MALLOC_ERROR){
+                fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+                ret = MALLOC_ERROR;
+            } else{
+                fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
+                ret = UNKNOWN_ERROR;
+            }
             goto cleanup;
         }
 
@@ -278,7 +289,7 @@ int add(const char* list, const char* dir, const char* note_stock, int nkeys, ch
             goto cleanup;
         }
 
-        result = add_contents_to_list(fp, nexists[i], path, datetime, ntags, tags);
+        result = add_contents_to_list(fp, nexists[i], file, datetime, ntags, tags);
         if (result != 0){
             if (result == IO_ERROR){
                 fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, list, strerror(errno));

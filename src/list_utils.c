@@ -206,7 +206,7 @@ int fields_add(int* nfields, ListField** updated, const int fields_len, const Li
 // return 0 otherwise
 int add_contents_to_list(FILE* fp, char* key, char* file, char* datetime, int ntags, char** tags){
     ListField field = {0};
-    char* meta = NULL;
+    char* meta     = NULL;
     int   result;
     int   ret;
 
@@ -221,6 +221,12 @@ int add_contents_to_list(FILE* fp, char* key, char* file, char* datetime, int nt
         }
         goto cleanup;
     }
+
+    // result = asprintf(&file_abs, "%s/%s", dir, file);
+    // if (result < 0){
+    //     ret = MALLOC_ERROR;
+    //     goto cleanup;
+    // }
 
     field = (ListField){
         .key  = key,
@@ -369,7 +375,7 @@ cleanup:
 // return LIST_FORMAT_ERROR if list file is broken
 // return UNKNOWN_ERROR if a bug is found
 // return 0 otherwise
-int get_content_by_key(FILE* fp, const int nkeys, char* const* keys, ListField** field, const int file, const int meta){
+int get_content_by_key(FILE* fp, const char* dir, const int nkeys, char* const* keys, ListField** field, const int file, const int meta){
     char*  line = NULL;
     char*  work_key;
     char*  work_file;
@@ -420,11 +426,21 @@ int get_content_by_key(FILE* fp, const int nkeys, char* const* keys, ListField**
                 }
 
                 if (file == true){
-                    (*field)[i].file = strdup(work_file);
-                    if ((*field)[i].file == NULL){
-                        ret = MALLOC_ERROR;
+                    // result = asprintf(&(*field)[i].file, "%s/%s", dir, work_file);
+                    result = file_to_abs(dir, work_file, &(*field)[i].file);
+                    if (result != 0){
+                        if (result == MALLOC_ERROR){
+                            ret = MALLOC_ERROR;
+                        } else{
+                            ret = UNKNOWN_ERROR;
+                        }
                         goto cleanup;
                     }
+                    // (*field)[i].file = strdup(work_file);
+                    // if ((*field)[i].file == NULL){
+                    //     ret = MALLOC_ERROR;
+                    //     goto cleanup;
+                    // }
                 } else{
                     (*field)[i].file = NULL;
                 }
@@ -463,7 +479,7 @@ cleanup:
 // return MALLOC_ERROR if malloc_failed
 // return LIST_FORMAT_ERROR if list file is broken
 // return 0 otherwise
-int get_content_by_tag(FILE* fp, const int ntags, char* const* tags, int* nlines, ListField** field){
+int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* tags, int* nlines, ListField** field){
     ListField* p    = NULL;
     char*      line = NULL;
     char*  work_line;
@@ -549,9 +565,10 @@ int get_content_by_tag(FILE* fp, const int ntags, char* const* tags, int* nlines
                             (*field)[k] = (ListField){0};
                         }
                     }
+
                     (*field)[*nlines] = (ListField){
                         .key   = strdup(work_key),
-                        .file  = strdup(work_file),
+                        // .file  = strdup(work_file),
                         .meta  = NULL,
                         .date  = strdup(work_datetime),
                         .ntags = work_ntags,
@@ -562,11 +579,11 @@ int get_content_by_tag(FILE* fp, const int ntags, char* const* tags, int* nlines
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
-                    if ((*field)[*nlines].file == NULL){
-                        free_ListField(&(*field)[*nlines]);
-                        ret = MALLOC_ERROR;
-                        goto cleanup;
-                    }
+                    // if ((*field)[*nlines].file == NULL){
+                    //     free_ListField(&(*field)[*nlines]);
+                    //     ret = MALLOC_ERROR;
+                    //     goto cleanup;
+                    // }
                     if ((*field)[*nlines].date == NULL){
                         free_ListField(&(*field)[*nlines]);
                         ret = MALLOC_ERROR;
@@ -585,6 +602,18 @@ int get_content_by_tag(FILE* fp, const int ntags, char* const* tags, int* nlines
                             goto cleanup;
                         }
                     }
+
+                    // result = asprintf(&(*field)[*nlines].file, "%s/%s", dir, work_file);
+                    result = file_to_abs(dir, work_file, &(*field)[*nlines].file);
+                    if (result != 0){
+                        if (result == MALLOC_ERROR){
+                            ret = MALLOC_ERROR;
+                        } else{
+                            ret = UNKNOWN_ERROR;
+                        }
+                        goto cleanup;
+                    }
+
                     *nlines = *nlines + 1;
                     break;
                 }
@@ -616,7 +645,8 @@ cleanup:
 // return LIST_FORMAT_ERROR if list file is broken
 // return UNKNOWN_ERROR if a bug is found
 // return 0 otherwise
-int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int* found_by_key, char** unfound,
+int get_content_by_key_and_tag(FILE* fp, const char* dir,
+                               const int nkeys, char* const* keys, int* found_by_key, char** unfound,
                                const int ntags, char* const* tags, int* found_by_tag,
                                int* found_all, ListField** field, ListField** by_key, ListField** by_tag){
     int unfound_count;
@@ -624,7 +654,7 @@ int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int
     int ret;
     int i;
 
-    result = get_content_by_key(fp, nkeys, keys, by_key, true, true);
+    result = get_content_by_key(fp, dir, nkeys, keys, by_key, true, true);
     if (result != 0){
         if (result == LIST_FORMAT_ERROR){
             ret = LIST_FORMAT_ERROR;
@@ -679,7 +709,7 @@ int get_content_by_key_and_tag(FILE* fp, const int nkeys, char* const* keys, int
     }
 
     rewind(fp);
-    result = get_content_by_tag(fp, ntags, tags, found_by_tag, by_tag);
+    result = get_content_by_tag(fp, dir, ntags, tags, found_by_tag, by_tag);
     if (result != 0){
         if (result == LIST_FORMAT_ERROR){
             ret = LIST_FORMAT_ERROR;

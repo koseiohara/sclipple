@@ -112,6 +112,39 @@ int get_filename(const char* key, char* ext, char** output){
 }
 
 
+int file_to_abs(const char* dir, const char* file, char** output){
+    int result;
+
+    if (file[0] == '/'){
+        *output = strdup(file);
+        if (*output == NULL){
+            return MALLOC_ERROR;
+        }
+    } else{
+        result = asprintf(output, "%s/%s", dir, file);
+        if (result < 0){
+            return MALLOC_ERROR;
+        }
+    }
+    return 0;
+}
+
+
+char* abs_to_file(char* abs){
+    char* p;
+    // char* cp;
+
+    // p = abs;
+    // cp = abs;
+    p = strrchr(abs, '/');
+    if (p == NULL){
+        return abs;
+    }
+
+    return p + 1;
+}
+
+
 // return FILE_FORMAT_ERROR if old file name does not incude "--"
 // return MALLOC_ERROR if asprintf failed
 // return 0 otherwise
@@ -120,54 +153,68 @@ int mv_filename(char* old_file, const char* new_key, char** output){
     char* cp;
     char* prefix;
     char* last;
-    char* fname;
     int   result;
 
     tmp_old_file = strdup(old_file);
     if (tmp_old_file == NULL){
         return MALLOC_ERROR;
     }
-    cp    = tmp_old_file;
-    fname = tmp_old_file;
 
     #ifdef DEBUG
     printf("<DEBUG> mv_filename: %s\n", cp);
     #endif
 
-    while ((cp = strrchr(cp, '/')) != NULL){
-        cp = cp + 1;
-        fname = cp;
+    // while ((cp = strrchr(cp, '/')) != NULL){
+    //     cp = cp + 1;
 
-        #ifdef DEBUG
-        printf("<DEBUG> mv_filename: %s\n", cp);
-        #endif
+    //     #ifdef DEBUG
+    //     printf("<DEBUG> mv_filename: %s\n", cp);
+    //     #endif
+    // }
+    cp   = abs_to_file(tmp_old_file);
+    last = strchr(cp, '.');
+    if (last == NULL){
+        XFREE(tmp_old_file);
+        return FILE_FORMAT_ERROR;
+    }
+
+    if (cp != tmp_old_file){
+        *(cp-1) = '\0';
+        prefix = tmp_old_file;
+        result = asprintf(output, "%s/%s%s", prefix, new_key, last);
+    } else{
+        result = asprintf(output, "%s%s", new_key, last);
     }
 
     #ifdef DEBUG
     printf("<DEBUG> mv_filename: Last / was found\n");
     #endif
 
-    *fname = '\0';
-    prefix = tmp_old_file;
-    cp     = fname + 1;
+    XFREE(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
+    if (result < 0){
+        return MALLOC_ERROR;
+    } else{
+        return 0;
+    }
+
+    // prefix = tmp_old_file;
 
     #ifdef DEBUG
     printf("<DEBUG> mv_filename: prefix is %s\n", prefix);
     #endif
 
-    last = strchr(cp, '.');
-    if (last != NULL){
-        result = asprintf(output, "%s%s%s", prefix, new_key, last);
-        XFREE(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
-        if (result < 0){
-            return MALLOC_ERROR;
-        } else{
-            return 0;
-        }
-    } else{
-        XFREE(tmp_old_file);
-        return FILE_FORMAT_ERROR;
-    }
+    // if (last != NULL){
+    //     result = asprintf(output, "%s%s%s", prefix, new_key, last);
+    //     XFREE(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
+    //     if (result < 0){
+    //         return MALLOC_ERROR;
+    //     } else{
+    //         return 0;
+    //     }
+    // } else{
+    //     XFREE(tmp_old_file);
+    //     return FILE_FORMAT_ERROR;
+    // }
 }
 
 
