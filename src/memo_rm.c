@@ -23,7 +23,7 @@
 // return UNLINK_ERROR if unlink failed
 // return KEY_NOT_FOUND if flag does not exist
 // return 0 otherwise
-int rm(const char* list, const char* dir, const char* trashdir, const char* trashfile, int nkeys, char** keys, int ntags, char** tags){
+int rm(const char* list, const char* dir, const char* subdir, const char* trashdir, const char* trashfile, int nkeys, char** keys, int ntags, char** tags){
     struct stat st;
     FILE*      fp           = NULL;
     ListField* field_by_key = NULL;
@@ -48,10 +48,6 @@ int rm(const char* list, const char* dir, const char* trashdir, const char* tras
         ret = INPUT_ERROR;
         goto cleanup;
     }
-
-    #ifdef DEBUG
-    printf("List file name: %s\n", list);
-    #endif
 
     // chack whether list file is exist
     result = path_status(list, &st);
@@ -102,7 +98,7 @@ int rm(const char* list, const char* dir, const char* trashdir, const char* tras
         }
         unfound[0] = NULL;
     }
-    result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
+    result = get_content_by_key_and_tag(fp, subdir, nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);
     if (result != 0){
@@ -175,7 +171,7 @@ int rm(const char* list, const char* dir, const char* trashdir, const char* tras
         } 
 
         if (rename(field_merged[i].file, tmpfile) != 0){
-            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, tmpfile, strerror(errno));
+            fprintf(stderr, "%s: %s -> %s: %s\n", PACKAGE_NAME, field_merged[i].file, tmpfile, strerror(errno));
             ret = RENAME_ERROR;
             goto cleanup;
         }

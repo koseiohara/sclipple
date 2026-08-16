@@ -63,7 +63,7 @@ cleanup:
 }
 
 
-static inline int show_with_key_tag(const int tty, const char* list, const int nkeys, char* const* keys, const int ntags, char* const* tags){
+static inline int show_with_key_tag(const int tty, const char* list, const char* subdir, const int nkeys, char* const* keys, const int ntags, char* const* tags){
     FILE*      fp           = NULL;
     ListField* field_by_key = NULL;
     ListField* field_by_tag = NULL;
@@ -101,7 +101,7 @@ static inline int show_with_key_tag(const int tty, const char* list, const int n
         }
         unfound[0] = NULL;
     }
-    result = get_content_by_key_and_tag(fp, nkeys, keys, &found_by_keys, unfound, 
+    result = get_content_by_key_and_tag(fp, subdir, nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);
     if (result != 0){
@@ -180,9 +180,10 @@ cleanup:
 }
 
 
-static inline int show_without_key_tag(const int tty, const char* list){
+static inline int show_without_key_tag(const int tty, const char* list, const char* subdir){
     FILE* fp;
-    char* line = NULL;
+    char* line      = NULL;
+    char* work_file = NULL;
     char* work_line;
     char* key;
     char* file;
@@ -211,7 +212,16 @@ static inline int show_without_key_tag(const int tty, const char* list){
             goto cleanup;
         }
 
-        result = show_one_file(tty, key, file);
+        result = file_to_abs(subdir, file, &work_file);
+        if (result != 0){
+            if (result == MALLOC_ERROR){
+                fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+                ret = MALLOC_ERROR;
+            }
+            goto cleanup;
+        }
+
+        result = show_one_file(tty, key, work_file);
         if (result == 0){
             first_echo = false;
         } else{
@@ -224,6 +234,8 @@ static inline int show_without_key_tag(const int tty, const char* list){
             ret = UNKNOWN_ERROR;
             goto cleanup;
         }
+
+        XFREE(work_file);
     }
 
     if (ferror(fp)){
@@ -253,7 +265,7 @@ cleanup:
 // return UNKNOWN_ERROR if program has a bug
 // return KEY_NOT_FOUND if one or more keys do not exist
 // return 0 otherwise
-int show(char* list, int nkeys, char** keys, int ntags, char** tags){
+int show(const char* list, const char* subdir, const int nkeys, char* const* keys, const int ntags, char* const* tags){
     struct stat st;
     int    result;
     int    ret = 0;
@@ -287,9 +299,9 @@ int show(char* list, int nkeys, char** keys, int ntags, char** tags){
         ret = INPUT_ERROR;
         goto cleanup;
     } else if (nkeys > 0 || ntags > 0){
-        result = show_with_key_tag(tty, list, nkeys, keys, ntags, tags);
+        result = show_with_key_tag(tty, list, subdir, nkeys, keys, ntags, tags);
     } else{
-        result = show_without_key_tag(tty, list);
+        result = show_without_key_tag(tty, list, subdir);
     }
 
     ret = result;
