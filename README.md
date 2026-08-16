@@ -59,6 +59,14 @@ Create a note:
 $ sclipple add todo
 ```
 
+Command-line options can temporarily override configuration values. For example:
+
+```sh
+$ sclipple --directory /tmp/notes add scratch
+$ sclipple add draft --extension md
+$ sclipple --editor "nvim -p" draft
+```
+
 Create a note with tags:
 
 ```sh
@@ -198,12 +206,14 @@ selects the note named `project`, every note tagged `work`, and every note tagge
 ### Create notes
 
 ```sh
-$ sclipple add <KEY> [<KEY> ...] [--tag <TAG>]...
+$ sclipple add <KEY> [<KEY> ...] [--tag <TAG>]... [--directory <DIR>] [--extension <EXT>]
 ```
 
 Create one or more notes. Each KEY becomes a new note keyword.
 
 Use `-t TAG` or `--tag TAG` to assign tags at creation time. Repeat the option to assign multiple tags.
+
+Use `--directory DIR` to use a different storage directory for the command, and `--extension EXT` to override the extension used for the newly created note files. `DIR` must be an absolute path.
 
 Examples:
 
@@ -212,6 +222,8 @@ $ sclipple add todo
 $ sclipple add todo ideas
 $ sclipple add todo --tag work
 $ sclipple add todo ideas -t work -t active
+$ sclipple add todo --extension md
+$ sclipple --directory /tmp/notes add scratch
 ```
 
 If the storage directory or list file does not yet exist, `add` initializes them automatically.
@@ -221,12 +233,14 @@ If the storage directory or list file does not yet exist, `add` initializes them
 ### Edit notes
 
 ```sh
-$ sclipple <KEY> [<KEY> ...] [--tag <TAG>]...
+$ sclipple <KEY> [<KEY> ...] [--tag <TAG>]... [--directory <DIR>] [--editor <COMMAND>]
 ```
 
 Open selected notes in the configured editor.
 
 Any first argument that is not a built-in command is treated as a note KEY. Multiple KEY arguments can be specified. Tags may additionally select notes, using the same union semantics described above.
+
+Use `--directory DIR` to select a different storage directory and `--editor COMMAND` to override the configured editor for the command. `DIR` must be an absolute path.
 
 Examples:
 
@@ -235,6 +249,7 @@ $ sclipple project
 $ sclipple project todo
 $ sclipple project --tag work
 $ sclipple project -t work -t urgent
+$ sclipple --editor "nvim -p" project
 ```
 
 ---
@@ -242,7 +257,7 @@ $ sclipple project -t work -t urgent
 ### List notes
 
 ```sh
-$ sclipple ls [<KEY> ...] [--tag <TAG>]...
+$ sclipple ls [<KEY> ...] [--tag <TAG>]... [--directory <DIR>]
 ```
 
 List notes. Without KEY or TAG arguments, all notes are listed.
@@ -271,7 +286,7 @@ $ sclipple ls project -t work -t urgent
 ### Show notes
 
 ```sh
-$ sclipple show [<KEY> ...] [--tag <TAG>]...
+$ sclipple show [<KEY> ...] [--tag <TAG>]... [--directory <DIR>]
 ```
 
 Print full note contents to stdout. Without KEY or TAG arguments, all notes are shown.
@@ -292,7 +307,7 @@ $ sclipple show project -t work -t urgent
 ### Search notes
 
 ```sh
-$ sclipple search <PATTERN> [<KEY> ...] [--tag <TAG>]...
+$ sclipple search <PATTERN> [<KEY> ...] [--tag <TAG>]... [--directory <DIR>]
 ```
 
 Search note contents using a POSIX extended regular expression. The search is case-insensitive.
@@ -316,7 +331,7 @@ $ sclipple search deadline project -t work
 ### Add tags
 
 ```sh
-$ sclipple tag <KEY> [<KEY> ...] --tag <TAG> [--tag <TAG>]...
+$ sclipple tag <KEY> [<KEY> ...] --tag <TAG> [--tag <TAG>]... [--directory <DIR>]
 ```
 
 Add one or more tags to one or more existing notes.
@@ -337,7 +352,7 @@ $ sclipple tag project todo -t work -t active
 ### Remove tags
 
 ```sh
-$ sclipple untag <KEY> [<KEY> ...] --tag <TAG> [--tag <TAG>]...
+$ sclipple untag <KEY> [<KEY> ...] --tag <TAG> [--tag <TAG>]... [--directory <DIR>]
 ```
 
 Remove one or more tags from one or more existing notes.
@@ -358,7 +373,7 @@ $ sclipple untag project todo -t work -t active
 ### Rename notes
 
 ```sh
-$ sclipple mv <OLD_KEY> <NEW_KEY>
+$ sclipple mv <OLD_KEY> <NEW_KEY> [--directory <DIR>]
 ```
 
 Rename a note keyword. The note index is updated and the note file is renamed so that its filename begins with the new KEY.
@@ -376,7 +391,7 @@ $ sclipple mv todo tasks
 ### Remove notes
 
 ```sh
-$ sclipple rm [<KEY> ...] [--tag <TAG>]...
+$ sclipple rm [<KEY> ...] [--tag <TAG>]... [--directory <DIR>]
 ```
 
 Remove notes selected by KEY or tag. The note file and its corresponding index entry are removed.
@@ -395,10 +410,12 @@ $ sclipple rm project -t obsolete -t temporary
 ### Git integration
 
 ```sh
-$ sclipple git <GIT_ARGUMENTS>...
+$ sclipple [--directory <DIR>] git <GIT_ARGUMENTS>...
 ```
 
 Run Git inside the configured sclipple data directory. Arguments are passed directly to Git, so ordinary Git subcommands can be used.
+
+Use `--directory DIR` before `git` to override the storage directory. Because arguments after `git` are passed directly to Git, the option must appear before `git`. `DIR` must be an absolute path.
 
 Git arguments are not interpreted as sclipple KEYs.
 
@@ -409,6 +426,7 @@ $ sclipple git status
 $ sclipple git init
 $ sclipple git add .
 $ sclipple git commit -m "update notes"
+$ sclipple --directory /path/to/notes git log --oneline
 ```
 
 This makes it easy to keep notes under version control.
@@ -450,15 +468,15 @@ extension = txt
 directory = ~/.sclipple
 ```
 
-### Supported options
+### Supported settings
 
-| Option | Description | Default |
+| Setting | Description | Default |
 |---|---|---|
 | `editor` | Editor command used when opening notes | `vim -p` |
 | `extension` | Extension used for newly created notes | `txt` |
 | `directory` | Directory used to store sclipple data | `~/.sclipple` |
 
-The storage location can be changed using the `directory` option. The value must resolve to an absolute path and may contain environment variables or `~`.
+The storage location can be changed using the `directory` setting. The value must resolve to an absolute path and may contain environment variables or `~`.
 
 Notes:
 
@@ -472,5 +490,28 @@ editor = 'nvim -p'
 extension = md
 directory = ~/notes
 ```
+
+### Command-line overrides
+
+The configuration settings can be overridden for a single invocation with command-line options:
+
+| Option | Description |
+|---|---|
+| `--directory DIR` | Override the storage directory. `DIR` must be an absolute path. |
+| `--extension EXT` | Override the extension used for newly created notes. |
+| `--editor COMMAND` | Override the editor command used to open notes. |
+
+Command-line values take precedence over values read from `~/.sclipplerc`. Settings that are not overridden continue to use the value from the configuration file, or the built-in default if the setting is absent.
+
+Examples:
+
+```sh
+$ sclipple --directory /tmp/notes ls
+$ sclipple add draft --extension md
+$ sclipple --editor "nvim -p" draft
+```
+
+`--extension` affects newly created notes and is therefore used with `add`. `--editor` affects opening notes for editing. `--directory` can be used with storage-dependent operations. When using `git`, place `--directory` before `git` because all following arguments are passed directly to Git.
+
 
 
