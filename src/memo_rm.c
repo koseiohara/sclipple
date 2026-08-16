@@ -49,10 +49,6 @@ int rm(const char* list, const char* dir, const char* subdir, const char* trashd
         goto cleanup;
     }
 
-    #ifdef DEBUG
-    printf("List file name: %s\n", list);
-    #endif
-
     // chack whether list file is exist
     result = path_status(list, &st);
     if (result != PATH_EXIST){

@@ -234,6 +234,8 @@ static inline int show_without_key_tag(const int tty, const char* list, const ch
             ret = UNKNOWN_ERROR;
             goto cleanup;
         }
+
+        XFREE(work_file);
     }
 
     if (ferror(fp)){

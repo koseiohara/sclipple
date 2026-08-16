@@ -25,9 +25,6 @@
 int get_env(const char* env, char** output){
     *output = getenv(env);
 
-    #ifdef DEBUG
-    printf("<DEBUG> Expand %s: %s\n", env, *output);
-    #endif
     if (*output == NULL){
         return INPUT_ERROR;
     }
@@ -132,10 +129,7 @@ int file_to_abs(const char* dir, const char* file, char** output){
 
 char* abs_to_file(char* abs){
     char* p;
-    // char* cp;
 
-    // p = abs;
-    // cp = abs;
     p = strrchr(abs, '/');
     if (p == NULL){
         return abs;
@@ -160,17 +154,6 @@ int mv_filename(char* old_file, const char* new_key, char** output){
         return MALLOC_ERROR;
     }
 
-    #ifdef DEBUG
-    printf("<DEBUG> mv_filename: %s\n", cp);
-    #endif
-
-    // while ((cp = strrchr(cp, '/')) != NULL){
-    //     cp = cp + 1;
-
-    //     #ifdef DEBUG
-    //     printf("<DEBUG> mv_filename: %s\n", cp);
-    //     #endif
-    // }
     cp   = abs_to_file(tmp_old_file);
     last = strchr(cp, '.');
     if (last == NULL){
@@ -186,10 +169,6 @@ int mv_filename(char* old_file, const char* new_key, char** output){
         result = asprintf(output, "%s%s", new_key, last);
     }
 
-    #ifdef DEBUG
-    printf("<DEBUG> mv_filename: Last / was found\n");
-    #endif
-
     XFREE(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
     if (result < 0){
         return MALLOC_ERROR;
@@ -197,24 +176,6 @@ int mv_filename(char* old_file, const char* new_key, char** output){
         return 0;
     }
 
-    // prefix = tmp_old_file;
-
-    #ifdef DEBUG
-    printf("<DEBUG> mv_filename: prefix is %s\n", prefix);
-    #endif
-
-    // if (last != NULL){
-    //     result = asprintf(output, "%s%s%s", prefix, new_key, last);
-    //     XFREE(tmp_old_file);     // tmp_old_file must not be freed before asprintf because prefix and last share the memory with tmp_old_file
-    //     if (result < 0){
-    //         return MALLOC_ERROR;
-    //     } else{
-    //         return 0;
-    //     }
-    // } else{
-    //     XFREE(tmp_old_file);
-    //     return FILE_FORMAT_ERROR;
-    // }
 }
 
 

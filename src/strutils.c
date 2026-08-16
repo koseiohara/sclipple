@@ -215,7 +215,8 @@ int arr2line(const int narr, char* const* arr, const char delim, const char left
     len = 0;
     for (i = 0; i < narr; i = i + 1){
         if (arr[i] == NULL){
-            return INPUT_ERROR;
+            ret = INPUT_ERROR;
+            goto cleanup;
         }
         lens[i] = strlen(arr[i]);
         len = len + lens[i];

@@ -260,12 +260,6 @@ int add(const char* list, const char* dir, const char* subdir, int nkeys, char**
             goto cleanup;
         }
 
-        // result = asprintf(&path, "%s/%s", subdir, file);
-        // if (result < 0){
-        //     fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-        //     ret = MALLOC_ERROR;
-        //     goto cleanup;
-        // }
         result = file_to_abs(subdir, file, &path);
         if (result != 0){
             if (result == MALLOC_ERROR){

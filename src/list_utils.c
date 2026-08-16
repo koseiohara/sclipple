@@ -222,12 +222,6 @@ int add_contents_to_list(FILE* fp, char* key, char* file, char* datetime, int nt
         goto cleanup;
     }
 
-    // result = asprintf(&file_abs, "%s/%s", dir, file);
-    // if (result < 0){
-    //     ret = MALLOC_ERROR;
-    //     goto cleanup;
-    // }
-
     field = (ListField){
         .key  = key,
         .file = file,
@@ -426,7 +420,6 @@ int get_content_by_key(FILE* fp, const char* dir, const int nkeys, char* const* 
                 }
 
                 if (file == true){
-                    // result = asprintf(&(*field)[i].file, "%s/%s", dir, work_file);
                     result = file_to_abs(dir, work_file, &(*field)[i].file);
                     if (result != 0){
                         if (result == MALLOC_ERROR){
@@ -436,11 +429,6 @@ int get_content_by_key(FILE* fp, const char* dir, const int nkeys, char* const* 
                         }
                         goto cleanup;
                     }
-                    // (*field)[i].file = strdup(work_file);
-                    // if ((*field)[i].file == NULL){
-                    //     ret = MALLOC_ERROR;
-                    //     goto cleanup;
-                    // }
                 } else{
                     (*field)[i].file = NULL;
                 }
@@ -568,7 +556,6 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
 
                     (*field)[*nlines] = (ListField){
                         .key   = strdup(work_key),
-                        // .file  = strdup(work_file),
                         .meta  = NULL,
                         .date  = strdup(work_datetime),
                         .ntags = work_ntags,
@@ -579,11 +566,6 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
-                    // if ((*field)[*nlines].file == NULL){
-                    //     free_ListField(&(*field)[*nlines]);
-                    //     ret = MALLOC_ERROR;
-                    //     goto cleanup;
-                    // }
                     if ((*field)[*nlines].date == NULL){
                         free_ListField(&(*field)[*nlines]);
                         ret = MALLOC_ERROR;
@@ -603,7 +585,6 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
                         }
                     }
 
-                    // result = asprintf(&(*field)[*nlines].file, "%s/%s", dir, work_file);
                     result = file_to_abs(dir, work_file, &(*field)[*nlines].file);
                     if (result != 0){
                         if (result == MALLOC_ERROR){

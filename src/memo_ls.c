@@ -18,10 +18,7 @@
 #include "list_utils.h"
 #include "memo_ls.h"
 
-// #include "edit_list.h"
 
-
-// #define OUTPUT_TTY  "[\033[34m%s\033[0m]\ncreated: %s\nfile   : %s\n%s\n\n"
 #define OUTPUT_TTY  "[\033[34m%s\033[0m]\n\033[36mcreated\033[0m: %s\n\033[36mfile\033[0m   : %s\n\033[36mtags\033[0m   : %s\n%s\n"
 #define OUTPUT_NTTY "[%s]\ncreated: %s\nfile   : %s\ntags   :%s\n%s\n"
 
