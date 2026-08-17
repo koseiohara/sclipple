@@ -19,9 +19,10 @@
 int init_config(Config* config, char* home){
     int result;
 
-    config->editor = NULL;
-    config->ext    = NULL;
-    config->dir    = NULL;
+    config->editor    = NULL;
+    config->ext       = NULL;
+    config->dir       = NULL;
+    config->tag_match = NULL;
 
     config->editor = strdup("vim -p");
     if (config->editor == NULL){
@@ -39,7 +40,7 @@ int init_config(Config* config, char* home){
     }
 
     config->tag_match = strdup("or");
-    if (result < 0){
+    if (config->tag_match == NULL){
         return MALLOC_ERROR;
     }
     return 0;
@@ -230,10 +231,6 @@ cleanup:
 
     return ret;
 }
-
-
-// int config_validation(RcEntry* entry){
-// }
 
 
 int config_update(Config* base, Config new_config){

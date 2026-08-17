@@ -587,7 +587,6 @@ int get_content_by_tag(FILE* fp, const char* dir, const char* match, const int n
                     if (imatch == match_and && found_count < ntags_filtered){
                         continue;
                     }
-                    found_count = found_count + 1;
                     if (*nlines == capacity){
                         capacity = capacity << 1;
                         p = realloc(*field, (size_t)capacity * sizeof(ListField));

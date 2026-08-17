@@ -101,7 +101,7 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
         if (directory[0] != '/'){
             fprintf(stderr, "%s: Invalid directory: '%s'\n"
                             "Directory must be the absolute path format\n", PACKAGE_NAME, directory);
-            return FILE_FORMAT_ERROR;
+            return ARG_ERROR;
         }
         config->dir = strdup(directory);
         if (config->dir == NULL){
@@ -118,7 +118,7 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
                 fprintf(stderr, "%s: Invalid extension: '%s'\n"
                                 "Extension must consist of alphabets, numbers, '.', '-', and '_'\n"
                                 "Extension cannot start with '.'\n", PACKAGE_NAME, extension);
-                return CHARACTER_NOT_ALLOWED_ERROR;
+                return ARG_ERROR;
             } else{
                 fprintf(stderr, "%s: Unknown Error\n", PACKAGE_NAME);
                 return UNKNOWN_ERROR;
@@ -141,6 +141,12 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
     }
 
     if (tag_match != NULL){
+        if (strcmp(tag_match, "and") != 0 && strcmp(tag_match, "or") != 0){
+            fprintf(stderr, "%s: Invalid tag-match input: %s\n"
+                            "tag-match must be 'and' or 'or'\n", PACKAGE_NAME, tag_match);
+            return ARG_ERROR;
+        }
+
         XFREE(config->tag_match);
         config->tag_match = strdup(tag_match);
         if (config->tag_match == NULL){
