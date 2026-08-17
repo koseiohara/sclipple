@@ -16,6 +16,7 @@ enum {
     OPT_DIRECTORY = 256,
     OPT_EXTENSION,
     OPT_EDITOR,
+    OPT_TAGMATCH,
 };
 
 
@@ -30,6 +31,7 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
     char* directory;
     char* extension;
     char* editor;
+    char* tag_match;
     int opt;
     int result;
     static const struct option opt_list[] = {
@@ -39,6 +41,7 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
                                              {"directory", required_argument, NULL, OPT_DIRECTORY},
                                              {"extension", required_argument, NULL, OPT_EXTENSION},
                                              {"editor"   , required_argument, NULL, OPT_EDITOR},
+                                             {"tag-match", required_argument, NULL, OPT_TAGMATCH},
                                              {NULL       , 0                , NULL,  0 },
                                             };
 
@@ -48,6 +51,7 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
     directory = NULL;
     extension = NULL;
     editor    = NULL;
+    tag_match = NULL;
     while ((opt = getopt_long(argc, argv, "-hvt:", opt_list, NULL)) != -1){
         switch (opt){
             case 'h':
@@ -68,6 +72,9 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
                 break;
             case OPT_EDITOR:
                 editor = optarg;
+                break;
+            case OPT_TAGMATCH:
+                tag_match = optarg;
                 break;
             case 1:
                 if (*nonoptsc == 0 && strcmp(optarg, "git") == 0){
@@ -128,6 +135,15 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
         XFREE(config->editor);
         config->editor = strdup(editor);
         if (config->editor == NULL){
+            fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+            return MALLOC_ERROR;
+        }
+    }
+
+    if (tag_match != NULL){
+        XFREE(config->tag_match);
+        config->tag_match = strdup(tag_match);
+        if (config->tag_match == NULL){
             fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
             return MALLOC_ERROR;
         }

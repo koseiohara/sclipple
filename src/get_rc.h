@@ -9,6 +9,7 @@ typedef struct{
     char* editor;
     char* ext;
     char* dir;
+    char* tag_match;
 } Config;
 
 
@@ -18,7 +19,7 @@ typedef struct{
     size_t len;
 } RcEntry;
 
-#define N_ENTRY 3
+#define N_ENTRY 4
 
 
 int init(Config* config, RcEntry* entry, char* home);

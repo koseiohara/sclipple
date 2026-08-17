@@ -196,7 +196,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = rm(list, config.dir, subdir, TRASHDIR, TRASHFILE, nonoptsc-1, &nonopts[1], ntags, tags);
+        result = rm(list, config.dir, subdir, TRASHDIR, TRASHFILE, config.tag_match, nonoptsc-1, &nonopts[1], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -240,7 +240,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = ls(list, subdir, nonoptsc-1, &nonopts[1], ntags, tags);
+        result = ls(list, subdir, config.tag_match, nonoptsc-1, &nonopts[1], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -264,7 +264,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = search(list, subdir, nonopts[1], nonoptsc-2, &nonopts[2], ntags, tags);
+        result = search(list, subdir, config.tag_match, nonopts[1], nonoptsc-2, &nonopts[2], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -284,7 +284,7 @@ int main(int argc, char** argv){
             goto cleanup;
         }
 
-        result = show(list, subdir, nonoptsc-1, &nonopts[1], ntags, tags);
+        result = show(list, subdir, config.tag_match, nonoptsc-1, &nonopts[1], ntags, tags);
         if (result == 0){
             ret = STOP;
         } else if (result == KEY_NOT_FOUND){
@@ -343,7 +343,7 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    result = memo_edit(list, subdir, config.editor, nonoptsc, nonopts, ntags, tags);
+    result = memo_edit(list, subdir, config.editor, config.tag_match, nonoptsc, nonopts, ntags, tags);
     if (result == 0){
         ret = STOP;
     } else if (result == KEY_NOT_FOUND){

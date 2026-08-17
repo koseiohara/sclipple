@@ -52,7 +52,7 @@ void get_command(char* editor, const int file_num, char* file[], char** command)
 // return EXECVP_ERROR if the shell executable cannot be found or executed
 // return CHILD_ERROR if the editor command does not complete successfully
 // return 0 otherwise
-int memo_edit(const char* list, const char* subdir, char* editor, const int nkeys, char** keys, const int ntags, char** tags){
+int memo_edit(const char* list, const char* subdir, char* editor, const char* match, const int nkeys, char** keys, const int ntags, char** tags){
     struct stat st;
     pid_t  pid;
     FILE*  fp               = NULL;
@@ -123,7 +123,8 @@ int memo_edit(const char* list, const char* subdir, char* editor, const int nkey
         }
         unfound[0] = NULL;
     }
-    result = get_content_by_key_and_tag(fp, subdir, nkeys, keys, &found_by_keys, unfound, 
+    result = get_content_by_key_and_tag(fp, subdir, match,
+                                        nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);
     if (result != 0){

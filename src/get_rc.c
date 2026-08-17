@@ -37,6 +37,11 @@ int init_config(Config* config, char* home){
     if (result < 0){
         return MALLOC_ERROR;
     }
+
+    config->tag_match = strdup("or");
+    if (result < 0){
+        return MALLOC_ERROR;
+    }
     return 0;
 }
 
@@ -45,6 +50,7 @@ void free_config(Config* config){
     XFREE(config->editor);
     XFREE(config->ext);
     XFREE(config->dir);
+    XFREE(config->tag_match);
 }
 
 
@@ -60,6 +66,10 @@ void init_entry(Config* config, RcEntry* entry){
     entry[2].key   = "directory";
     entry[2].value = &config->dir;
     entry[2].len   = strlen(config->dir);
+
+    entry[3].key   = "tag-match";
+    entry[3].value = &config->tag_match;
+    entry[3].len   = strlen(config->tag_match);
 }
 
 
@@ -183,6 +193,14 @@ int read_rc(const char* rc, RcEntry* entry, const size_t n_entry){
                         XFREE(new_value);
                         goto cleanup;
                     }
+                } else if (strcmp(entry[i].key, "tag-match") == 0){
+                    if (strcmp(new_value, "and") != 0 && strcmp(new_value, "or") != 0){
+                        fprintf(stderr, "%s: %s: Invalid tag-match input: %s\n"
+                                        "tag-match must be 'and' or 'or'\n", PACKAGE_NAME, rc, new_value);
+                        ret = RC_ERROR;
+                        XFREE(new_value);
+                        goto cleanup;
+                    }
                 }
             }
 
@@ -214,6 +232,10 @@ cleanup:
 }
 
 
+// int config_validation(RcEntry* entry){
+// }
+
+
 int config_update(Config* base, Config new_config){
     if (new_config.dir != NULL){
         XFREE(base->dir);
@@ -235,6 +257,14 @@ int config_update(Config* base, Config new_config){
         XFREE(base->editor);
         base->editor = strdup(new_config.editor);
         if (base->editor == NULL){
+            return MALLOC_ERROR;
+        }
+    }
+
+    if (new_config.tag_match != NULL){
+        XFREE(base->tag_match);
+        base->tag_match = strdup(new_config.tag_match);
+        if (base->tag_match == NULL){
             return MALLOC_ERROR;
         }
     }

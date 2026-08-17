@@ -23,7 +23,7 @@
 // return UNLINK_ERROR if unlink failed
 // return KEY_NOT_FOUND if flag does not exist
 // return 0 otherwise
-int rm(const char* list, const char* dir, const char* subdir, const char* trashdir, const char* trashfile, int nkeys, char** keys, int ntags, char** tags){
+int rm(const char* list, const char* dir, const char* subdir, const char* trashdir, const char* trashfile, const char* match, int nkeys, char** keys, int ntags, char** tags){
     struct stat st;
     FILE*      fp           = NULL;
     ListField* field_by_key = NULL;
@@ -68,12 +68,12 @@ int rm(const char* list, const char* dir, const char* subdir, const char* trashd
         goto cleanup;
     }
 
-    result = duplication_filter(&ntags, tags);
-    if (result != 0){
-        fprintf(stderr, "%s: Unknown error by dulication_filter()\n", PACKAGE_NAME);
-        ret = UNKNOWN_ERROR;
-        goto cleanup;
-    }
+    // result = duplication_filter(&ntags, tags);
+    // if (result != 0){
+    //     fprintf(stderr, "%s: Unknown error by dulication_filter()\n", PACKAGE_NAME);
+    //     ret = UNKNOWN_ERROR;
+    //     goto cleanup;
+    // }
 
     fp = fopen(list, "r");
     if (fp == NULL){
@@ -98,7 +98,8 @@ int rm(const char* list, const char* dir, const char* subdir, const char* trashd
         }
         unfound[0] = NULL;
     }
-    result = get_content_by_key_and_tag(fp, subdir, nkeys, keys, &found_by_keys, unfound, 
+    result = get_content_by_key_and_tag(fp, subdir, match,
+                                        nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);
     if (result != 0){
