@@ -7,7 +7,14 @@
 
 static void show_common_selection_options(void){
     printf("  -t, --tag TAG          Select notes by tag; may be repeated.\n");
+    printf("      --tag-match MODE   Match repeated tags using 'and' or 'or'.\n");
     printf("      --directory DIR    Use DIR as the storage directory.\n");
+}
+
+static void show_selection_rules(void){
+    printf("Multiple TAG selectors use tag-match: 'or' matches any requested TAG,\n");
+    printf("while 'and' matches all requested TAGs. If both KEY and TAG are specified,\n");
+    printf("notes matching either selection are selected.\n");
 }
 
 void show_help_add(void){
@@ -40,7 +47,7 @@ void show_help_rm(void){
     show_common_selection_options();
     printf("  -h, --help             Show help.\n");
     printf("\n");
-    printf("If both KEY and TAG are specified, notes matching either are selected.\n");
+    show_selection_rules();
 }
 
 void show_help_mv(void){
@@ -62,7 +69,7 @@ void show_help_ls(void){
     show_common_selection_options();
     printf("  -h, --help             Show help.\n");
     printf("\n");
-    printf("If both KEY and TAG are specified, notes matching either are selected.\n");
+    show_selection_rules();
 }
 
 void show_help_search(void){
@@ -75,7 +82,7 @@ void show_help_search(void){
     show_common_selection_options();
     printf("  -h, --help             Show help.\n");
     printf("\n");
-    printf("If both KEY and TAG are specified, notes matching either are selected.\n");
+    show_selection_rules();
 }
 
 void show_help_show(void){
@@ -87,7 +94,7 @@ void show_help_show(void){
     show_common_selection_options();
     printf("  -h, --help             Show help.\n");
     printf("\n");
-    printf("If both KEY and TAG are specified, notes matching either are selected.\n");
+    show_selection_rules();
 }
 
 void show_help_tag(void){
@@ -121,18 +128,18 @@ void show_help_untag(void){
 }
 
 void show_help_edit(void){
-    printf("Usage: %s KEY [KEY ...] [OPTIONS]\n", PACKAGE_NAME);
+    printf("Usage: %s [KEY ...] [OPTIONS]\n", PACKAGE_NAME);
     printf("\n");
-    printf("Open selected notes in the configured editor. A first argument that is not\n");
-    printf("a built-in command is treated as a note KEY.\n");
+    printf("Open notes selected by KEY or tag in the configured editor. A first argument\n");
+    printf("that is not a built-in command is treated as a note KEY. At least one KEY or\n");
+    printf("TAG must be specified.\n");
     printf("\n");
     printf("Options:\n");
-    printf("  -t, --tag TAG          Select notes by tag; may be repeated.\n");
-    printf("      --directory DIR    Use DIR as the storage directory.\n");
+    show_common_selection_options();
     printf("      --editor COMMAND   Use COMMAND instead of the configured editor.\n");
     printf("  -h, --help             Show help.\n");
     printf("\n");
-    printf("If both KEY and TAG are specified, notes matching either are selected.\n");
+    show_selection_rules();
 }
 
 void show_help_git(void){
@@ -158,11 +165,13 @@ void show_help_config(void){
     printf("  directory = PATH      Storage directory. Default: $HOME/%s\n", DIR);
     printf("  extension = EXT       Extension for newly created notes. Default: txt\n");
     printf("  editor = COMMAND      Editor used to open notes. Default: vim -p\n");
+    printf("  tag-match = MODE      Match repeated tags with 'and' or 'or'. Default: or\n");
     printf("\n");
     printf("Command-line overrides:\n");
     printf("  --directory DIR       Override 'directory'. DIR must be an absolute path.\n");
     printf("  --extension EXT       Override 'extension'.\n");
     printf("  --editor COMMAND      Override 'editor'.\n");
+    printf("  --tag-match MODE      Override 'tag-match'. MODE must be 'and' or 'or'.\n");
     printf("\n");
     printf("The configuration file uses 'key = value' syntax. Lines beginning with '#'\n");
     printf("are comments. Surrounding single or double quotes around values are removed.\n");
@@ -171,6 +180,7 @@ void show_help_config(void){
 void show_help_all(void){
     printf("Usage: %s [OPTIONS] COMMAND [ARGS...]\n", PACKAGE_NAME);
     printf("       %s [OPTIONS] KEY [KEY ...]\n", PACKAGE_NAME);
+    printf("       %s [OPTIONS] -t TAG [-t TAG]...\n", PACKAGE_NAME);
     printf("\n");
     printf("Small command-line memo manager using keyword-based notes.\n");
     printf("\n");
@@ -185,13 +195,14 @@ void show_help_all(void){
     printf("  untag     Remove tags from notes\n");
     printf("  git       Run git in the storage directory\n");
     printf("\n");
-    printf("A KEY given instead of a command opens the selected note in the configured\n");
+    printf("KEYs or TAGs given without a command open the selected notes in the configured\n");
     printf("editor.\n");
     printf("\n");
     printf("Options:\n");
     printf("  -h, --help             Show help\n");
     printf("  -v, --version          Show version\n");
     printf("  -t, --tag TAG          Specify or select a tag; may be repeated\n");
+    printf("      --tag-match MODE   Match repeated tags using 'and' or 'or'\n");
     printf("      --directory DIR    Override the storage directory\n");
     printf("      --extension EXT    Override the extension for newly created notes\n");
     printf("      --editor COMMAND   Override the editor command\n");
