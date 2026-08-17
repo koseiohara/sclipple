@@ -151,199 +151,201 @@ int main(int argc, char** argv){
         goto cleanup;
     }
 
-    if (nonoptsc == 0){
-        show_help_all();
-        ret = STOP;
-        goto cleanup;
-    }
+    // if (nonoptsc == 0){
+    //     show_help_all();
+    //     ret = STOP;
+    //     goto cleanup;
+    // }
 
-    if (strcmp(nonopts[0], "add") == 0){
-        if (has_help == true || nonoptsc == 1){
-            show_help_add();
-            if (has_help == true){
+    if (nonoptsc > 0){
+        if (strcmp(nonopts[0], "add") == 0){
+            if (has_help == true || nonoptsc == 1){
+                show_help_add();
+                if (has_help == true){
+                    ret = STOP;
+                } else{
+                    ret = NEGATIVE_STOP;
+                }
+                goto cleanup;
+            }
+
+            now = time(NULL);
+            lt  = localtime(&now);
+
+            result = add(list, config.dir, subdir, nonoptsc-1, &nonopts[1], ntags, tags, config.ext, lt);
+
+            if (result == 0){
                 ret = STOP;
-            } else{
+            } else if (result == KEY_DUPLICATE){
                 ret = NEGATIVE_STOP;
+            } else if (result == INPUT_ERROR || result == UNKNOWN_ERROR){
+                ret = BUG_STOP;
+            } else{
+                ret = ERROR_STOP;
             }
             goto cleanup;
         }
 
-        now = time(NULL);
-        lt  = localtime(&now);
-
-        result = add(list, config.dir, subdir, nonoptsc-1, &nonopts[1], ntags, tags, config.ext, lt);
-
-        if (result == 0){
-            ret = STOP;
-        } else if (result == KEY_DUPLICATE){
-            ret = NEGATIVE_STOP;
-        } else if (result == INPUT_ERROR || result == UNKNOWN_ERROR){
-            ret = BUG_STOP;
-        } else{
-            ret = ERROR_STOP;
-        }
-        goto cleanup;
-    }
-
-    if (strcmp(nonopts[0], "rm") == 0){
-        if (has_help == true){
-            show_help_rm();
+        if (strcmp(nonopts[0], "rm") == 0){
             if (has_help == true){
+                show_help_rm();
+                if (has_help == true){
+                    ret = STOP;
+                } else{
+                    ret = NEGATIVE_STOP;
+                }
+                goto cleanup;
+            }
+
+            result = rm(list, config.dir, subdir, TRASHDIR, TRASHFILE, config.tag_match, nonoptsc-1, &nonopts[1], ntags, tags);
+            if (result == 0){
                 ret = STOP;
-            } else{
+            } else if (result == KEY_NOT_FOUND){
                 ret = NEGATIVE_STOP;
+            } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
+                ret = BUG_STOP;
+            } else{
+                ret = ERROR_STOP;
             }
             goto cleanup;
         }
 
-        result = rm(list, config.dir, subdir, TRASHDIR, TRASHFILE, nonoptsc-1, &nonopts[1], ntags, tags);
-        if (result == 0){
-            ret = STOP;
-        } else if (result == KEY_NOT_FOUND){
-            ret = NEGATIVE_STOP;
-        } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
-            ret = BUG_STOP;
-        } else{
-            ret = ERROR_STOP;
-        }
-        goto cleanup;
-    }
+        if (strcmp(nonopts[0], "mv") == 0){
+            if (has_help == true || nonoptsc != 3){
+                show_help_mv();
+                if (has_help == true){
+                    ret = STOP;
+                } else{
+                    ret = NEGATIVE_STOP;
+                }
+                goto cleanup;
+            }
 
-    if (strcmp(nonopts[0], "mv") == 0){
-        if (has_help == true || nonoptsc != 3){
-            show_help_mv();
-            if (has_help == true){
+            result = mv(list, subdir, nonopts[1], nonopts[2]);
+            if (result == 0){
                 ret = STOP;
-            } else{
+            } else if (result == KEY_NOT_FOUND || result == KEY_DUPLICATE){
                 ret = NEGATIVE_STOP;
+            } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
+                ret = BUG_STOP;
+            } else{
+                ret = ERROR_STOP;
             }
             goto cleanup;
         }
 
-        result = mv(list, subdir, nonopts[1], nonopts[2]);
-        if (result == 0){
-            ret = STOP;
-        } else if (result == KEY_NOT_FOUND || result == KEY_DUPLICATE){
-            ret = NEGATIVE_STOP;
-        } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
-            ret = BUG_STOP;
-        } else{
-            ret = ERROR_STOP;
-        }
-        goto cleanup;
-    }
-
-    if (strcmp(nonopts[0], "ls") == 0){
-        if (has_help == true){
-            show_help_ls();
-            ret = STOP;
-            goto cleanup;
-        }
-
-        result = ls(list, subdir, nonoptsc-1, &nonopts[1], ntags, tags);
-        if (result == 0){
-            ret = STOP;
-        } else if (result == KEY_NOT_FOUND){
-            ret = NEGATIVE_STOP;
-        } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
-            ret = BUG_STOP;
-        } else{
-            ret = ERROR_STOP;
-        }
-        goto cleanup;
-    }
-
-    if (strcmp(nonopts[0], "search") == 0){
-        if (has_help == true || nonoptsc == 1){
-            show_help_search();
+        if (strcmp(nonopts[0], "ls") == 0){
             if (has_help == true){
+                show_help_ls();
                 ret = STOP;
-            } else{
+                goto cleanup;
+            }
+
+            result = ls(list, subdir, config.tag_match, nonoptsc-1, &nonopts[1], ntags, tags);
+            if (result == 0){
+                ret = STOP;
+            } else if (result == KEY_NOT_FOUND){
                 ret = NEGATIVE_STOP;
+            } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
+                ret = BUG_STOP;
+            } else{
+                ret = ERROR_STOP;
             }
             goto cleanup;
         }
 
-        result = search(list, subdir, nonopts[1], nonoptsc-2, &nonopts[2], ntags, tags);
-        if (result == 0){
-            ret = STOP;
-        } else if (result == KEY_NOT_FOUND){
-            ret = NEGATIVE_STOP;
-        } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
-            ret = BUG_STOP;
-        } else{
-            ret = ERROR_STOP;
-        }
-        goto cleanup;
-    }
+        if (strcmp(nonopts[0], "search") == 0){
+            if (has_help == true || nonoptsc == 1){
+                show_help_search();
+                if (has_help == true){
+                    ret = STOP;
+                } else{
+                    ret = NEGATIVE_STOP;
+                }
+                goto cleanup;
+            }
 
-    if (strcmp(nonopts[0], "show") == 0){
-        if (has_help == true){
-            show_help_show();
-            ret = STOP;
+            result = search(list, subdir, config.tag_match, nonopts[1], nonoptsc-2, &nonopts[2], ntags, tags);
+            if (result == 0){
+                ret = STOP;
+            } else if (result == KEY_NOT_FOUND){
+                ret = NEGATIVE_STOP;
+            } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
+                ret = BUG_STOP;
+            } else{
+                ret = ERROR_STOP;
+            }
             goto cleanup;
         }
 
-        result = show(list, subdir, nonoptsc-1, &nonopts[1], ntags, tags);
-        if (result == 0){
-            ret = STOP;
-        } else if (result == KEY_NOT_FOUND){
-            ret = NEGATIVE_STOP;
-        } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
-            ret = BUG_STOP;
-        } else{
-            ret = ERROR_STOP;
-        }
-        goto cleanup;
-    }
+        if (strcmp(nonopts[0], "show") == 0){
+            if (has_help == true){
+                show_help_show();
+                ret = STOP;
+                goto cleanup;
+            }
 
-    if (strcmp(nonopts[0], "tag") == 0){
-        if (has_help == true || nonoptsc <= 1 || ntags <= 0){
-            show_help_tag();
-            ret = STOP;
+            result = show(list, subdir, config.tag_match, nonoptsc-1, &nonopts[1], ntags, tags);
+            if (result == 0){
+                ret = STOP;
+            } else if (result == KEY_NOT_FOUND){
+                ret = NEGATIVE_STOP;
+            } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
+                ret = BUG_STOP;
+            } else{
+                ret = ERROR_STOP;
+            }
             goto cleanup;
         }
 
-        result = tag(list, "tag", nonoptsc-1, &nonopts[1], ntags, tags);
-        if (result == 0){
-            ret = STOP;
-        } else if (result == KEY_NOT_FOUND){
-            ret = NEGATIVE_STOP;
-        } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
-            ret = BUG_STOP;
-        } else{
-            ret = ERROR_STOP;
-        }
-        goto cleanup;
-    }
+        if (strcmp(nonopts[0], "tag") == 0){
+            if (has_help == true || nonoptsc <= 1 || ntags <= 0){
+                show_help_tag();
+                ret = STOP;
+                goto cleanup;
+            }
 
-    if (strcmp(nonopts[0], "untag") == 0){
-        if (has_help == true || nonoptsc <= 1 || ntags <= 0){
-            show_help_untag();
-            ret = STOP;
+            result = tag(list, "tag", nonoptsc-1, &nonopts[1], ntags, tags);
+            if (result == 0){
+                ret = STOP;
+            } else if (result == KEY_NOT_FOUND){
+                ret = NEGATIVE_STOP;
+            } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
+                ret = BUG_STOP;
+            } else{
+                ret = ERROR_STOP;
+            }
             goto cleanup;
         }
 
-        result = tag(list, "utag", nonoptsc-1, &nonopts[1], ntags, tags);
-        if (result == 0){
-            ret = STOP;
-        } else if (result == KEY_NOT_FOUND){
-            ret = NEGATIVE_STOP;
-        } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
-            ret = BUG_STOP;
-        } else{
-            ret = ERROR_STOP;
+        if (strcmp(nonopts[0], "untag") == 0){
+            if (has_help == true || nonoptsc <= 1 || ntags <= 0){
+                show_help_untag();
+                ret = STOP;
+                goto cleanup;
+            }
+
+            result = tag(list, "utag", nonoptsc-1, &nonopts[1], ntags, tags);
+            if (result == 0){
+                ret = STOP;
+            } else if (result == KEY_NOT_FOUND){
+                ret = NEGATIVE_STOP;
+            } else if (result == UNKNOWN_ERROR || result == INPUT_ERROR){
+                ret = BUG_STOP;
+            } else{
+                ret = ERROR_STOP;
+            }
+            goto cleanup;
         }
-        goto cleanup;
     }
 
-    if (has_help == true){
+    if (has_help == true || (nonoptsc == 0 && ntags == 0)){
         show_help_all();
         ret = NEGATIVE_STOP;
         goto cleanup;
     }
 
-    result = memo_edit(list, subdir, config.editor, nonoptsc, nonopts, ntags, tags);
+    result = memo_edit(list, subdir, config.editor, config.tag_match, nonoptsc, nonopts, ntags, tags);
     if (result == 0){
         ret = STOP;
     } else if (result == KEY_NOT_FOUND){

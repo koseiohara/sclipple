@@ -52,7 +52,7 @@ jobs:
           set -euo pipefail
           ./configure
           make -j"$(nproc)"
-          make check
+          make -j"$(nproc)" check VERBOSE=1
           make clean
           make -j"$(nproc)"
 
@@ -63,7 +63,7 @@ jobs:
           autoreconf -fi
           ./configure
           make -j"$(nproc)"
-          make check
+          make -j"$(nproc)" check VERBOSE=1
           make clean
           make -j"$(nproc)"
 
@@ -75,7 +75,7 @@ jobs:
           cd build
           ../configure
           make -j"$(nproc)"
-          make check
+          make -j"$(nproc)" check VERBOSE=1
           make clean
           make -j"$(nproc)"
 
@@ -121,7 +121,7 @@ jobs:
           autoreconf -fi
           ./configure
           make -j"$jobs"
-          make check
+          make -j"$jobs" check VERBOSE=1
 
   distcheck:
     name: distcheck

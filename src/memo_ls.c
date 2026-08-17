@@ -74,7 +74,7 @@ cleanup:
 }
 
 
-static inline int ls_with_key_tag(const int tty, const char* list, const char* subdir, const int nkeys, char* const* keys, const int ntags, char* const* tags){
+static inline int ls_with_key_tag(const int tty, const char* list, const char* subdir, const char* match, const int nkeys, char* const* keys, const int ntags, char* const* tags){
     FILE*      fp           = NULL;
     ListField* field_by_key = NULL;
     ListField* field_by_tag = NULL;
@@ -120,7 +120,8 @@ static inline int ls_with_key_tag(const int tty, const char* list, const char* s
         }
         unfound[0] = NULL;
     }
-    result = get_content_by_key_and_tag(fp, subdir, nkeys, keys, &found_by_keys, unfound, 
+    result = get_content_by_key_and_tag(fp, subdir, match,
+                                        nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);
     if (result != 0){
@@ -342,7 +343,7 @@ cleanup:
 // return KEY_NOT_FOUND if one or more flags is not found
 // return UNKNOWN_ERROR if error handling is not enough
 // return 0 otherwise
-int ls(const char* list, const char* subdir, int nkeys, char** keys, int ntags, char** tags){
+int ls(const char* list, const char* subdir, const char* match, int nkeys, char** keys, int ntags, char** tags){
     struct stat st;
     int    tty;
     int    result;
@@ -377,7 +378,7 @@ int ls(const char* list, const char* subdir, int nkeys, char** keys, int ntags, 
         ret = INPUT_ERROR;
         goto cleanup;
     } else if (nkeys > 0 || ntags > 0){
-        result = ls_with_key_tag(tty, list, subdir, nkeys, keys, ntags, tags);
+        result = ls_with_key_tag(tty, list, subdir, match, nkeys, keys, ntags, tags);
         if (result != 0){
             ret = result;
             goto cleanup;

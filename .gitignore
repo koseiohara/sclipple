@@ -14,5 +14,5 @@
 /config.h
 /stamp-h1
 /test-suite.log
-/tests/cli.sh.log
-/tests/cli.sh.trs
+*.log
+*.trs

@@ -63,7 +63,7 @@ cleanup:
 }
 
 
-static inline int show_with_key_tag(const int tty, const char* list, const char* subdir, const int nkeys, char* const* keys, const int ntags, char* const* tags){
+static inline int show_with_key_tag(const int tty, const char* list, const char* subdir, const char* match, const int nkeys, char* const* keys, const int ntags, char* const* tags){
     FILE*      fp           = NULL;
     ListField* field_by_key = NULL;
     ListField* field_by_tag = NULL;
@@ -101,7 +101,8 @@ static inline int show_with_key_tag(const int tty, const char* list, const char*
         }
         unfound[0] = NULL;
     }
-    result = get_content_by_key_and_tag(fp, subdir, nkeys, keys, &found_by_keys, unfound, 
+    result = get_content_by_key_and_tag(fp, subdir, match,
+                                        nkeys, keys, &found_by_keys, unfound, 
                                         ntags, tags, &found_by_tags, 
                                         &nconts, &field_merged, &field_by_key, &field_by_tag);
     if (result != 0){
@@ -265,7 +266,7 @@ cleanup:
 // return UNKNOWN_ERROR if program has a bug
 // return KEY_NOT_FOUND if one or more keys do not exist
 // return 0 otherwise
-int show(const char* list, const char* subdir, const int nkeys, char* const* keys, const int ntags, char* const* tags){
+int show(const char* list, const char* subdir, const char* match, const int nkeys, char* const* keys, const int ntags, char* const* tags){
     struct stat st;
     int    result;
     int    ret = 0;
@@ -299,7 +300,7 @@ int show(const char* list, const char* subdir, const int nkeys, char* const* key
         ret = INPUT_ERROR;
         goto cleanup;
     } else if (nkeys > 0 || ntags > 0){
-        result = show_with_key_tag(tty, list, subdir, nkeys, keys, ntags, tags);
+        result = show_with_key_tag(tty, list, subdir, match, nkeys, keys, ntags, tags);
     } else{
         result = show_without_key_tag(tty, list, subdir);
     }

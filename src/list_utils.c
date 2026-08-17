@@ -467,7 +467,9 @@ cleanup:
 // return MALLOC_ERROR if malloc_failed
 // return LIST_FORMAT_ERROR if list file is broken
 // return 0 otherwise
-int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* tags, int* nlines, ListField** field){
+int get_content_by_tag(FILE* fp, const char* dir, const char* match, const int ntags, char* const* tags, int* nlines, ListField** field){
+    const int match_and = 1;
+    const int match_or  = 2;
     ListField* p    = NULL;
     char*      line = NULL;
     char*  work_line;
@@ -475,23 +477,55 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
     char*  work_file;
     char*  work_meta;
     char*  work_datetime;
-    char** work_tags = NULL;
+    char** work_tags     = NULL;
+    char** tags_filtered = NULL;
+    int    imatch;
     int    work_ntags;
+    int    ntags_filtered;
     int    result;
     int    ret;
-    int    found;
+    int    found_count;
     int    i;
     int    j;
     int    k;
     int    capacity;
     size_t size = 0;
 
-    if (ntags == 0){
+    if (strcmp(match, "and") == 0){
+        imatch = match_and;
+    } else if (strcmp(match, "or") == 0){
+        imatch = match_or;
+    } else{
+        ret = INPUT_ERROR;
+        #ifdef DEBUG
+        fprintf(stderr, "%s DEBUG: get_content_by_tag(): match is neither 'and' nor 'or': %s\n", PACKAGE_NAME, match);
+        #endif
+        goto cleanup;
+    }
+
+    ntags_filtered = ntags;
+    tags_filtered  = malloc((size_t)(ntags_filtered + 1) * sizeof(char*));      // +1 for final NULL
+    for (i = 0; i < ntags_filtered; i = i + 1){
+        tags_filtered[i] = tags[i];
+    }
+    result = duplication_filter(&ntags_filtered, tags_filtered);
+    if (result != 0){
+        #ifdef DEBUG
+        fprintf(stderr, "%s DEBUG: get_content_by_tag(): duplication_filter() returned %d\n", PACKAGE_NAME, result);
+        #endif
+        ret = UNKNOWN_ERROR;
+        goto cleanup;
+    }
+
+    if (ntags_filtered == 0){
         ret = 0;
         goto cleanup;
     }
 
     if (*field != NULL){
+        #ifdef DEBUG
+        fprintf(stderr, "%s DEBUG: get_content_by_tag(): *field is NULL\n", PACKAGE_NAME);
+        #endif
         ret = INPUT_ERROR;
         goto cleanup;
     }
@@ -499,6 +533,9 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
     capacity = 2;
     *field = malloc((size_t)capacity * sizeof(ListField));
     if (*field == NULL){
+        #ifdef DEBUG
+        fprintf(stderr, "%s DEBUG: get_content_by_tag(): malloc to *field failed\n", PACKAGE_NAME);
+        #endif
         ret = MALLOC_ERROR;
         goto cleanup;
     }
@@ -511,6 +548,9 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
         work_line = line;
         result = parse_line(&work_line, &work_key, &work_file, &work_meta);
         if (result != 0){
+            #ifdef DEBUG
+            fprintf(stderr, "%s DEBUG: get_content_by_tag(): parse_line() returned %d\n", PACKAGE_NAME, result);
+            #endif
             if (result == LIST_FORMAT_ERROR){
                 ret = LIST_FORMAT_ERROR;
             } else{
@@ -521,6 +561,9 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
 
         result = parse_meta(work_meta, &work_datetime, &work_ntags, &work_tags);
         if (result != 0){
+            #ifdef DEBUG
+            fprintf(stderr, "%s DEBUG: get_content_by_tag(): parse_meta() returned %d\n", PACKAGE_NAME, result);
+            #endif
             if (result == LIST_FORMAT_ERROR){
                 ret = LIST_FORMAT_ERROR;
             } else if (result == MALLOC_ERROR){
@@ -536,15 +579,21 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
             continue;
         }
 
-        found = false;
+        found_count = 0;
         for (i = 0; i < work_ntags; i = i + 1){
-            for (j = 0; j < ntags; j = j + 1){
-                if (strcmp(tags[j], work_tags[i]) == 0){
-                    found = true;
+            for (j = 0; j < ntags_filtered; j = j + 1){
+                if (strcmp(tags_filtered[j], work_tags[i]) == 0){
+                    found_count = found_count + 1;
+                    if (imatch == match_and && found_count < ntags_filtered){
+                        continue;
+                    }
                     if (*nlines == capacity){
                         capacity = capacity << 1;
                         p = realloc(*field, (size_t)capacity * sizeof(ListField));
                         if (p == NULL){
+                        #ifdef DEBUG
+                        fprintf(stderr, "%s DEBUG: get_content_by_tag(): realloc to p failed\n", PACKAGE_NAME);
+                        #endif
                             ret = MALLOC_ERROR;
                             goto cleanup;
                         }
@@ -563,22 +612,34 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
                     };
                     if ((*field)[*nlines].key == NULL){
                         free_ListField(&(*field)[*nlines]);
+                        #ifdef DEBUG
+                        fprintf(stderr, "%s DEBUG: get_content_by_tag(): malloc to (*field)[*nlines].key failed\n", PACKAGE_NAME);
+                        #endif
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
                     if ((*field)[*nlines].date == NULL){
                         free_ListField(&(*field)[*nlines]);
+                        #ifdef DEBUG
+                        fprintf(stderr, "%s DEBUG: get_content_by_tag(): malloc to (*field)[*nlines].date failed\n", PACKAGE_NAME);
+                        #endif
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
                     if ((*field)[*nlines].tags == NULL){
                         free_ListField(&(*field)[*nlines]);
+                        #ifdef DEBUG
+                        fprintf(stderr, "%s DEBUG: get_content_by_tag(): malloc to (*field)[*nlines].tags failed\n", PACKAGE_NAME);
+                        #endif
                         ret = MALLOC_ERROR;
                         goto cleanup;
                     }
                     for (k = 0; k < work_ntags; k = k + 1){
                         (*field)[*nlines].tags[k] = strdup(work_tags[k]);
                         if ((*field)[*nlines].tags[k] == NULL){
+                            #ifdef DEBUG
+                            fprintf(stderr, "%s DEBUG: get_content_by_tag(): strdup to (*field)[*nlines].tags[k] failed\n", PACKAGE_NAME);
+                            #endif
                             free_ListField(&(*field)[*nlines]);
                             ret = MALLOC_ERROR;
                             goto cleanup;
@@ -587,6 +648,9 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
 
                     result = file_to_abs(dir, work_file, &(*field)[*nlines].file);
                     if (result != 0){
+                        #ifdef DEBUG
+                        fprintf(stderr, "%s DEBUG: get_content_by_tag(): file_to_abs returned %d\n", PACKAGE_NAME, result);
+                        #endif
                         if (result == MALLOC_ERROR){
                             ret = MALLOC_ERROR;
                         } else{
@@ -599,7 +663,7 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
                     break;
                 }
             }
-            if (found == true){
+            if (found_count == ntags_filtered){
                 break;
             }
         }
@@ -607,6 +671,9 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
     }
 
     if (ferror(fp)){
+        #ifdef DEBUG
+        fprintf(stderr, "%s DEBUG: get_content_by_tag(): ferror failed\n", PACKAGE_NAME);
+        #endif
         ret = IO_ERROR;
         goto cleanup;
     }
@@ -617,6 +684,7 @@ int get_content_by_tag(FILE* fp, const char* dir, const int ntags, char* const* 
 cleanup:
     free(line);
     free(work_tags);
+    free(tags_filtered);
     return ret;
 }
 
@@ -626,7 +694,7 @@ cleanup:
 // return LIST_FORMAT_ERROR if list file is broken
 // return UNKNOWN_ERROR if a bug is found
 // return 0 otherwise
-int get_content_by_key_and_tag(FILE* fp, const char* dir,
+int get_content_by_key_and_tag(FILE* fp, const char* dir, const char* match,
                                const int nkeys, char* const* keys, int* found_by_key, char** unfound,
                                const int ntags, char* const* tags, int* found_by_tag,
                                int* found_all, ListField** field, ListField** by_key, ListField** by_tag){
@@ -690,7 +758,7 @@ int get_content_by_key_and_tag(FILE* fp, const char* dir,
     }
 
     rewind(fp);
-    result = get_content_by_tag(fp, dir, ntags, tags, found_by_tag, by_tag);
+    result = get_content_by_tag(fp, dir, match, ntags, tags, found_by_tag, by_tag);
     if (result != 0){
         if (result == LIST_FORMAT_ERROR){
             ret = LIST_FORMAT_ERROR;

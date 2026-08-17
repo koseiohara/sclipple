@@ -51,6 +51,7 @@
 #define IS_NOT_DIRECTORY_ERROR 20
 #define MKDIR_ERROR 21
 #define EDITOR_ERROR 22
+#define ARG_ERROR 23
 #define UNKNOWN_ERROR 100
 
 

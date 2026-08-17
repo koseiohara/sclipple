@@ -65,6 +65,7 @@ Command-line options can temporarily override configuration values. For example:
 $ sclipple --directory /tmp/notes add scratch
 $ sclipple add draft --extension md
 $ sclipple --editor "nvim -p" draft
+$ sclipple ls -t work -t urgent --tag-match and
 ```
 
 Create a note with tags:
@@ -187,17 +188,28 @@ Adding a tag that a note already has leaves that tag unchanged. Removing a tag t
 
 ### Selecting notes by key and tag
 
-The `rm`, `ls`, `search`, and `show` commands can select notes by KEY, TAG, or both. Editing can also combine KEY selection with TAG selection.
+The `rm`, `ls`, `search`, and `show` commands can select notes by KEY, TAG, or both. Editing supports the same selection rules and may be invoked with KEYs, TAGs, or both.
 
-When KEY and TAG selection are used together, the result is the **union** of both selections: a note is selected if it matches any requested KEY or has any requested TAG. A note matched more than once is processed only once.
+When multiple TAG selectors are given, `tag-match` controls how they are combined:
 
-For example:
+- `or` selects a note if it has at least one requested TAG. This is the default.
+- `and` selects a note only if it has every requested TAG.
+
+The `tag-match` setting affects only the TAG selection. When KEY and TAG selection are used together, the result is the **union** of the KEY selection and the resulting TAG selection. A note matched more than once is processed only once.
+
+For example, with the default `tag-match = or`:
 
 ```sh
 $ sclipple ls project --tag work --tag urgent
 ```
 
-selects the note named `project`, every note tagged `work`, and every note tagged `urgent`.
+selects the note named `project`, every note tagged `work`, and every note tagged `urgent`. With:
+
+```sh
+$ sclipple ls project --tag work --tag urgent --tag-match and
+```
+
+the note named `project` is selected regardless of its tags, while other notes are selected only if they have both `work` and `urgent`.
 
 ---
 
@@ -233,12 +245,14 @@ If the storage directory or list file does not yet exist, `add` initializes them
 ### Edit notes
 
 ```sh
-$ sclipple <KEY> [<KEY> ...] [--tag <TAG>]... [--directory <DIR>] [--editor <COMMAND>]
+$ sclipple [<KEY> ...] [--tag <TAG>]... [--tag-match <MODE>] [--directory <DIR>] [--editor <COMMAND>]
 ```
 
 Open selected notes in the configured editor.
 
-Any first argument that is not a built-in command is treated as a note KEY. Multiple KEY arguments can be specified. Tags may additionally select notes, using the same union semantics described above.
+Any non-option argument that is not a built-in command is treated as a note KEY. Multiple KEY arguments can be specified. TAG selectors may be used with KEYs or by themselves.
+
+Use `--tag-match MODE` to override how multiple TAG selectors are combined for this invocation. `MODE` must be `and` or `or`. The default is `or`.
 
 Use `--directory DIR` to select a different storage directory and `--editor COMMAND` to override the configured editor for the command. `DIR` must be an absolute path.
 
@@ -249,6 +263,7 @@ $ sclipple project
 $ sclipple project todo
 $ sclipple project --tag work
 $ sclipple project -t work -t urgent
+$ sclipple -t work -t urgent --tag-match and
 $ sclipple --editor "nvim -p" project
 ```
 
@@ -257,7 +272,7 @@ $ sclipple --editor "nvim -p" project
 ### List notes
 
 ```sh
-$ sclipple ls [<KEY> ...] [--tag <TAG>]... [--directory <DIR>]
+$ sclipple ls [<KEY> ...] [--tag <TAG>]... [--tag-match <MODE>] [--directory <DIR>]
 ```
 
 List notes. Without KEY or TAG arguments, all notes are listed.
@@ -279,6 +294,7 @@ $ sclipple ls
 $ sclipple ls project todo
 $ sclipple ls --tag work
 $ sclipple ls project -t work -t urgent
+$ sclipple ls -t work -t urgent --tag-match and
 ```
 
 ---
@@ -286,7 +302,7 @@ $ sclipple ls project -t work -t urgent
 ### Show notes
 
 ```sh
-$ sclipple show [<KEY> ...] [--tag <TAG>]... [--directory <DIR>]
+$ sclipple show [<KEY> ...] [--tag <TAG>]... [--tag-match <MODE>] [--directory <DIR>]
 ```
 
 Print full note contents to stdout. Without KEY or TAG arguments, all notes are shown.
@@ -300,6 +316,7 @@ $ sclipple show
 $ sclipple show project
 $ sclipple show --tag work
 $ sclipple show project -t work -t urgent
+$ sclipple show -t work -t urgent --tag-match and
 ```
 
 ---
@@ -307,7 +324,7 @@ $ sclipple show project -t work -t urgent
 ### Search notes
 
 ```sh
-$ sclipple search <PATTERN> [<KEY> ...] [--tag <TAG>]... [--directory <DIR>]
+$ sclipple search <PATTERN> [<KEY> ...] [--tag <TAG>]... [--tag-match <MODE>] [--directory <DIR>]
 ```
 
 Search note contents using a POSIX extended regular expression. The search is case-insensitive.
@@ -324,6 +341,7 @@ $ sclipple search 'todo|urgent'
 $ sclipple search 'error.*log' project
 $ sclipple search deadline --tag work
 $ sclipple search deadline project -t work
+$ sclipple search deadline -t work -t urgent --tag-match and
 ```
 
 ---
@@ -391,7 +409,7 @@ $ sclipple mv todo tasks
 ### Remove notes
 
 ```sh
-$ sclipple rm [<KEY> ...] [--tag <TAG>]... [--directory <DIR>]
+$ sclipple rm [<KEY> ...] [--tag <TAG>]... [--tag-match <MODE>] [--directory <DIR>]
 ```
 
 Remove notes selected by KEY or tag. The note file and its corresponding index entry are removed.
@@ -403,6 +421,7 @@ $ sclipple rm tasks
 $ sclipple rm project todo
 $ sclipple rm --tag obsolete
 $ sclipple rm project -t obsolete -t temporary
+$ sclipple rm -t obsolete -t temporary --tag-match and
 ```
 
 ---
@@ -466,6 +485,7 @@ Example:
 editor = vim -p
 extension = txt
 directory = ~/.sclipple
+tag-match = or
 ```
 
 ### Supported settings
@@ -475,6 +495,7 @@ directory = ~/.sclipple
 | `editor` | Editor command used when opening notes | `vim -p` |
 | `extension` | Extension used for newly created notes | `txt` |
 | `directory` | Directory used to store sclipple data | `~/.sclipple` |
+| `tag-match` | How multiple TAG selectors are combined: `and` or `or` | `or` |
 
 The storage location can be changed using the `directory` setting. The value must resolve to an absolute path and may contain environment variables or `~`.
 
@@ -489,6 +510,7 @@ Another example:
 editor = 'nvim -p'
 extension = md
 directory = ~/notes
+tag-match = and
 ```
 
 ### Command-line overrides
@@ -500,6 +522,7 @@ The configuration settings can be overridden for a single invocation with comman
 | `--directory DIR` | Override the storage directory. `DIR` must be an absolute path. |
 | `--extension EXT` | Override the extension used for newly created notes. |
 | `--editor COMMAND` | Override the editor command used to open notes. |
+| `--tag-match MODE` | Override how multiple TAG selectors are combined. `MODE` must be `and` or `or`. |
 
 Command-line values take precedence over values read from `~/.sclipplerc`. Settings that are not overridden continue to use the value from the configuration file, or the built-in default if the setting is absent.
 
@@ -509,9 +532,10 @@ Examples:
 $ sclipple --directory /tmp/notes ls
 $ sclipple add draft --extension md
 $ sclipple --editor "nvim -p" draft
+$ sclipple ls -t work -t urgent --tag-match and
 ```
 
-`--extension` affects newly created notes and is therefore used with `add`. `--editor` affects opening notes for editing. `--directory` can be used with storage-dependent operations. When using `git`, place `--directory` before `git` because all following arguments are passed directly to Git.
+`--extension` affects newly created notes and is therefore used with `add`. `--editor` affects opening notes for editing. `--tag-match` affects commands that select existing notes by TAG (`rm`, `ls`, `search`, `show`, and editing). `--directory` can be used with storage-dependent operations. When using `git`, place `--directory` before `git` because all following arguments are passed directly to Git.
 
 
 

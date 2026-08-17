@@ -119,7 +119,7 @@ jobs:
           autoreconf -fi
           ./configure CFLAGS="-O3"
           make -j"$jobs"
-          make check
+          make -j"$jobs" check VERBOSE=1
 
           expected="sclipple version $VERSION"
           actual="$(./src/sclipple --version)"
