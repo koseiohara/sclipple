@@ -524,7 +524,9 @@ TESTS_ENVIRONMENT = \
 
 EXTRA_DIST = \
     LICENSE \
-	tests/
+    tests/cli.sh \
+    tests/cli/common.sh \
+    $(TESTS)
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

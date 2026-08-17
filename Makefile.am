@@ -15,6 +15,8 @@ TESTS_ENVIRONMENT = \
 
 EXTRA_DIST = \
     LICENSE \
-	tests/
+    tests/cli.sh \
+    tests/cli/common.sh \
+    $(TESTS)
 
 
