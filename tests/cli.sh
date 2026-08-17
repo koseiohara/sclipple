@@ -191,6 +191,31 @@ extension = txt
 RC
 }
 
+setup_tag_match_fixture() {
+  local mode="$1"
+
+  reset_home
+  cat > "$HOME/.sclipplerc" <<RC
+editor = cat
+extension = txt
+tag-match = $mode
+RC
+
+  run_cmd "$BIN" add tag-both -t red -t blue
+  assert_success
+  run_cmd "$BIN" add tag-red -t red
+  assert_success
+  run_cmd "$BIN" add tag-blue -t blue
+  assert_success
+  run_cmd "$BIN" add tag-none
+  assert_success
+
+  write_note tag-both $'both body\nneedle-match\n'
+  write_note tag-red $'red body\nneedle-match\n'
+  write_note tag-blue $'blue body\nneedle-match\n'
+  write_note tag-none $'none body\nneedle-match\n'
+}
+
 assert_storage_intact_for_new_other() {
   assert_file_exists "$new_path"
   assert_file_exists "$other_path"
@@ -499,7 +524,188 @@ assert_success
 assert_contains "$STDOUT" "first alpha line"
 assert_contains "$STDOUT" "urgent task"
 
-echo "19. rc extension is used for new notes"
+echo "19. rc tag-match controls ls for and and or"
+
+setup_tag_match_fixture and
+run_cmd "$BIN" ls -t red -t blue
+assert_success
+assert_contains "$STDOUT" "[tag-both]"
+assert_not_contains "$STDOUT" "[tag-red]"
+assert_not_contains "$STDOUT" "[tag-blue]"
+assert_not_contains "$STDOUT" "[tag-none]"
+
+setup_tag_match_fixture or
+run_cmd "$BIN" ls -t red -t blue
+assert_success
+assert_contains "$STDOUT" "[tag-both]"
+assert_contains "$STDOUT" "[tag-red]"
+assert_contains "$STDOUT" "[tag-blue]"
+assert_not_contains "$STDOUT" "[tag-none]"
+
+echo "20. command-line tag-match controls ls for and and or"
+
+setup_tag_match_fixture or
+run_cmd "$BIN" --tag-match and ls -t red -t blue
+assert_success
+assert_contains "$STDOUT" "[tag-both]"
+assert_not_contains "$STDOUT" "[tag-red]"
+assert_not_contains "$STDOUT" "[tag-blue]"
+assert_not_contains "$STDOUT" "[tag-none]"
+
+setup_tag_match_fixture and
+run_cmd "$BIN" --tag-match or ls -t red -t blue
+assert_success
+assert_contains "$STDOUT" "[tag-both]"
+assert_contains "$STDOUT" "[tag-red]"
+assert_contains "$STDOUT" "[tag-blue]"
+assert_not_contains "$STDOUT" "[tag-none]"
+
+echo "21. rc tag-match controls show for and and or"
+
+setup_tag_match_fixture and
+run_cmd "$BIN" show -t red -t blue
+assert_success
+assert_contains "$STDOUT" "[tag-both]"
+assert_contains "$STDOUT" "both body"
+assert_not_contains "$STDOUT" "[tag-red]"
+assert_not_contains "$STDOUT" "[tag-blue]"
+assert_not_contains "$STDOUT" "[tag-none]"
+
+setup_tag_match_fixture or
+run_cmd "$BIN" show -t red -t blue
+assert_success
+assert_contains "$STDOUT" "[tag-both]"
+assert_contains "$STDOUT" "[tag-red]"
+assert_contains "$STDOUT" "[tag-blue]"
+assert_not_contains "$STDOUT" "[tag-none]"
+
+echo "22. command-line tag-match controls show for and and or"
+
+setup_tag_match_fixture or
+run_cmd "$BIN" --tag-match and show -t red -t blue
+assert_success
+assert_contains "$STDOUT" "[tag-both]"
+assert_not_contains "$STDOUT" "[tag-red]"
+assert_not_contains "$STDOUT" "[tag-blue]"
+assert_not_contains "$STDOUT" "[tag-none]"
+
+setup_tag_match_fixture and
+run_cmd "$BIN" --tag-match or show -t red -t blue
+assert_success
+assert_contains "$STDOUT" "[tag-both]"
+assert_contains "$STDOUT" "[tag-red]"
+assert_contains "$STDOUT" "[tag-blue]"
+assert_not_contains "$STDOUT" "[tag-none]"
+
+echo "23. rc tag-match controls search for and and or"
+
+setup_tag_match_fixture and
+run_cmd "$BIN" search needle-match -t red -t blue
+assert_success
+assert_contains "$STDOUT" "tag-both"
+assert_not_contains "$STDOUT" "tag-red"
+assert_not_contains "$STDOUT" "tag-blue"
+assert_not_contains "$STDOUT" "tag-none"
+
+setup_tag_match_fixture or
+run_cmd "$BIN" search needle-match -t red -t blue
+assert_success
+assert_contains "$STDOUT" "tag-both"
+assert_contains "$STDOUT" "tag-red"
+assert_contains "$STDOUT" "tag-blue"
+assert_not_contains "$STDOUT" "tag-none"
+
+echo "24. command-line tag-match controls search for and and or"
+
+setup_tag_match_fixture or
+run_cmd "$BIN" --tag-match and search needle-match -t red -t blue
+assert_success
+assert_contains "$STDOUT" "tag-both"
+assert_not_contains "$STDOUT" "tag-red"
+assert_not_contains "$STDOUT" "tag-blue"
+assert_not_contains "$STDOUT" "tag-none"
+
+setup_tag_match_fixture and
+run_cmd "$BIN" --tag-match or search needle-match -t red -t blue
+assert_success
+assert_contains "$STDOUT" "tag-both"
+assert_contains "$STDOUT" "tag-red"
+assert_contains "$STDOUT" "tag-blue"
+assert_not_contains "$STDOUT" "tag-none"
+
+echo "25. rc tag-match controls tag-only edit for and and or"
+
+setup_tag_match_fixture and
+run_cmd "$BIN" -t red -t blue
+assert_success
+assert_contains "$STDOUT" "both body"
+assert_not_contains "$STDOUT" "red body"
+assert_not_contains "$STDOUT" "blue body"
+assert_not_contains "$STDOUT" "none body"
+
+setup_tag_match_fixture or
+run_cmd "$BIN" -t red -t blue
+assert_success
+assert_contains "$STDOUT" "both body"
+assert_contains "$STDOUT" "red body"
+assert_contains "$STDOUT" "blue body"
+assert_not_contains "$STDOUT" "none body"
+
+echo "26. command-line tag-match controls tag-only edit for and and or"
+
+setup_tag_match_fixture or
+run_cmd "$BIN" --tag-match and -t red -t blue
+assert_success
+assert_contains "$STDOUT" "both body"
+assert_not_contains "$STDOUT" "red body"
+assert_not_contains "$STDOUT" "blue body"
+assert_not_contains "$STDOUT" "none body"
+
+setup_tag_match_fixture and
+run_cmd "$BIN" --tag-match or -t red -t blue
+assert_success
+assert_contains "$STDOUT" "both body"
+assert_contains "$STDOUT" "red body"
+assert_contains "$STDOUT" "blue body"
+assert_not_contains "$STDOUT" "none body"
+
+echo "27. rc tag-match controls rm for and and or"
+
+setup_tag_match_fixture and
+run_cmd "$BIN" rm -t red -t blue
+assert_success
+assert_file_not_exists "$(note_path tag-both)"
+assert_file_exists "$(note_path tag-red)"
+assert_file_exists "$(note_path tag-blue)"
+assert_file_exists "$(note_path tag-none)"
+
+setup_tag_match_fixture or
+run_cmd "$BIN" rm -t red -t blue
+assert_success
+assert_file_not_exists "$(note_path tag-both)"
+assert_file_not_exists "$(note_path tag-red)"
+assert_file_not_exists "$(note_path tag-blue)"
+assert_file_exists "$(note_path tag-none)"
+
+echo "28. command-line tag-match controls rm for and and or"
+
+setup_tag_match_fixture or
+run_cmd "$BIN" --tag-match and rm -t red -t blue
+assert_success
+assert_file_not_exists "$(note_path tag-both)"
+assert_file_exists "$(note_path tag-red)"
+assert_file_exists "$(note_path tag-blue)"
+assert_file_exists "$(note_path tag-none)"
+
+setup_tag_match_fixture and
+run_cmd "$BIN" --tag-match or rm -t red -t blue
+assert_success
+assert_file_not_exists "$(note_path tag-both)"
+assert_file_not_exists "$(note_path tag-red)"
+assert_file_not_exists "$(note_path tag-blue)"
+assert_file_exists "$(note_path tag-none)"
+
+echo "29. rc extension is used for new notes"
 
 reset_home
 
@@ -520,7 +726,7 @@ run_cmd "$BIN" show mdnote
 assert_success
 assert_contains "$STDOUT" "markdown body"
 
-echo "20. rc parser handles whitespace, line-head comments, and quotes"
+echo "30. rc parser handles whitespace, line-head comments, and quotes"
 
 reset_home
 
@@ -542,7 +748,7 @@ run_cmd "$BIN" quoted
 assert_success
 assert_contains "$STDOUT" "quoted rc body"
 
-echo "21. rc parser keeps non-leading hash characters"
+echo "31. rc parser keeps non-leading hash characters"
 
 reset_home
 
@@ -556,7 +762,7 @@ assert_failure
 assert_diagnostic
 assert_note_count 0
 
-echo "22. rc directory option is used for storage"
+echo "32. rc directory option is used for storage"
 
 reset_home
 
@@ -585,7 +791,7 @@ run_cmd "$BIN" git init
 assert_success
 assert_file_exists "$custom_dir/.git"
 
-echo "23. --directory overrides rc directory"
+echo "33. --directory overrides rc directory"
 
 reset_home
 
@@ -611,7 +817,7 @@ run_cmd "$BIN" --directory "$cli_dir" show cli-dir
 assert_success
 assert_contains "$STDOUT" "cli directory body"
 
-echo "24. --extension overrides rc extension"
+echo "34. --extension overrides rc extension"
 
 reset_home
 
@@ -627,7 +833,7 @@ assert_file_exists "$HOME/.sclipple/notes/cli-ext.md"
 assert_file_not_exists "$HOME/.sclipple/notes/cli-ext.rcx"
 assert_contains "$(cat "$HOME/.sclipple/.list.csv")" "cli-ext.md"
 
-echo "25. --editor overrides rc editor"
+echo "35. --editor overrides rc editor"
 
 reset_home
 
@@ -647,7 +853,7 @@ run_cmd "$BIN" --editor cat cli-editor
 assert_success
 assert_contains "$STDOUT" "editor override body"
 
-echo "26. invalid rc extension is fatal"
+echo "36. invalid rc extension is fatal"
 
 reset_home
 
@@ -660,7 +866,7 @@ assert_failure
 assert_diagnostic
 assert_note_count 0
 
-echo "27. mv succeeds and preserves content"
+echo "37. mv succeeds and preserves content"
 
 reset_home
 setup_rc
@@ -693,21 +899,21 @@ assert_contains "$STDOUT" "new"
 assert_contains "$STDOUT" "other"
 assert_not_contains "$STDOUT" "[old]"
 
-echo "28. mv missing old key fails with status 1 and preserves existing notes"
+echo "38. mv missing old key fails with status 1 and preserves existing notes"
 
 run_cmd "$BIN" mv missing dst
 assert_status 1
 assert_diagnostic
 assert_storage_intact_for_new_other
 
-echo "29. mv existing new key fails with status 1 and preserves existing notes"
+echo "39. mv existing new key fails with status 1 and preserves existing notes"
 
 run_cmd "$BIN" mv new other
 assert_status 1
 assert_diagnostic
 assert_storage_intact_for_new_other
 
-echo "30. mv invalid new key fails and preserves existing note"
+echo "40. mv invalid new key fails and preserves existing note"
 
 run_cmd "$BIN" mv new ..
 assert_status 2
@@ -719,7 +925,7 @@ run_cmd "$BIN" show new
 assert_success
 assert_contains "$STDOUT" "content for old"
 
-echo "31. rm removes key and note file"
+echo "41. rm removes key and note file"
 
 run_cmd "$BIN" rm new
 assert_success
@@ -730,13 +936,13 @@ run_cmd "$BIN" show new
 assert_failure
 assert_diagnostic
 
-echo "32. rm missing key fails"
+echo "42. rm missing key fails"
 
 run_cmd "$BIN" rm missing
 assert_negative_stop
 assert_stderr_contains "missing"
 
-echo "33. rm supports tag selection"
+echo "43. rm supports tag selection"
 
 run_cmd "$BIN" add trash1 trash2 -t disposable
 assert_success
@@ -756,7 +962,7 @@ run_cmd "$BIN" show keep
 assert_success
 assert_contains "$STDOUT" "keep me"
 
-echo "34. rm combines key and tag selectors with OR semantics"
+echo "44. rm combines key and tag selectors with OR semantics"
 
 run_cmd "$BIN" add rmkey -t retained
 assert_success
@@ -779,7 +985,7 @@ run_cmd "$BIN" show survivor
 assert_success
 assert_contains "$STDOUT" "survive rm union"
 
-echo "35. storage-dependent commands fail before storage exists"
+echo "45. storage-dependent commands fail before storage exists"
 
 reset_home
 setup_rc
@@ -802,7 +1008,7 @@ run_cmd "$BIN" mv x y
 assert_failure
 assert_diagnostic
 
-echo "36. storage path conflicts are rejected"
+echo "46. storage path conflicts are rejected"
 
 reset_home
 setup_rc
@@ -823,7 +1029,7 @@ run_cmd "$BIN" add x
 assert_failure
 assert_diagnostic
 
-echo "37. broken list file is detected"
+echo "47. broken list file is detected"
 
 reset_home
 setup_rc
@@ -845,7 +1051,7 @@ run_cmd "$BIN" search anything
 assert_failure
 assert_diagnostic
 
-echo "38. git subcommand runs inside storage"
+echo "48. git subcommand runs inside storage"
 
 reset_home
 setup_rc
@@ -861,7 +1067,7 @@ run_cmd "$BIN" git status --short
 assert_success
 assert_contains "$STDOUT$STDERR" ".list.csv"
 
-echo "39. git before storage reports diagnostic and exits with status 2"
+echo "49. git before storage reports diagnostic and exits with status 2"
 
 reset_home
 setup_rc
