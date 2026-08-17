@@ -212,7 +212,7 @@ int make_dir(const char* dir){
             return IS_NOT_DIRECTORY_ERROR;
         }
     } else if (result == PATH_NOT_EXIST){
-        if (mkdir(dir, 0755) == -1){
+        if (mkdir(dir, 0700) == -1){
             return MKDIR_ERROR;
         }
         return 0;
@@ -236,7 +236,7 @@ int make_file(const char* path, const int cond){
 
     result = path_status(path, &st);
     if (result == PATH_NOT_EXIST){
-        fd = open(path, cond, 0644);
+        fd = open(path, cond, 0600);
         if (fd == -1){
             return IO_ERROR;
         }
