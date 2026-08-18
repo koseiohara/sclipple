@@ -341,7 +341,7 @@ int main(int argc, char** argv){
 
     if (has_help == true || (nonoptsc == 0 && ntags == 0)){
         show_help_all();
-        ret = NEGATIVE_STOP;
+        ret = STOP;
         goto cleanup;
     }
 
