@@ -523,6 +523,7 @@ TESTS_ENVIRONMENT = \
 	SCLIPPLE_TEST_BIN='$(abs_top_builddir)/src/sclipple'
 
 EXTRA_DIST = \
+    figs/ \
     LICENSE \
     tests/cli.sh \
     tests/cli/common.sh \
