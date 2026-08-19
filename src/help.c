@@ -67,6 +67,7 @@ void show_help_ls(void){
     printf("\n");
     printf("Options:\n");
     show_common_selection_options();
+    printf("  -s, --short            List keys and tags in the short format\n");
     printf("  -h, --help             Show help.\n");
     printf("\n");
     show_selection_rules();
@@ -201,6 +202,7 @@ void show_help_all(void){
     printf("Options:\n");
     printf("  -h, --help             Show help\n");
     printf("  -v, --version          Show version\n");
+    printf("  -s, --short            List keys and tags in the short format\n");
     printf("  -t, --tag TAG          Specify or select a tag; may be repeated\n");
     printf("      --tag-match MODE   Match repeated tags using 'and' or 'or'\n");
     printf("      --directory DIR    Override the storage directory\n");

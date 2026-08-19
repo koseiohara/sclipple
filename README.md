@@ -272,7 +272,7 @@ $ sclipple --editor "nvim -p" project
 ### List notes
 
 ```sh
-$ sclipple ls [<KEY> ...] [--tag <TAG>]... [--tag-match <MODE>] [--directory <DIR>]
+$ sclipple ls [<KEY> ...] [--tag <TAG>]... [--short] [--tag-match <MODE>] [--directory <DIR>]
 ```
 
 List notes. Without KEY or TAG arguments, all notes are listed.
