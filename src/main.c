@@ -43,6 +43,7 @@ int main(int argc, char** argv){
 
     int    has_help    = false;
     int    has_version = false;
+    int    has_short   = false;
     int    nonoptsc;
     int    ntags;
     char** nonopts = NULL;
@@ -57,7 +58,8 @@ int main(int argc, char** argv){
         goto cleanup;
     }
     result_opt = parse_opts(argc, argv,
-                            &has_help, &has_version, &git_pos,
+                            &has_help, &has_version, &has_short,
+                            &git_pos,
                             &nonoptsc, nonopts,
                             &ntags, tags,
                             &config_opt
@@ -241,7 +243,7 @@ int main(int argc, char** argv){
                 goto cleanup;
             }
 
-            result = ls(list, subdir, config.tag_match, nonoptsc-1, &nonopts[1], ntags, tags);
+            result = ls(list, subdir, config.tag_match, has_short, nonoptsc-1, &nonopts[1], ntags, tags);
             if (result == 0){
                 ret = STOP;
             } else if (result == KEY_NOT_FOUND){

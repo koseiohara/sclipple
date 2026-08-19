@@ -22,6 +22,9 @@
 #define OUTPUT_TTY  "[\033[34m%s\033[0m]\n\033[36mcreated\033[0m: %s\n\033[36mfile\033[0m   : %s\n\033[36mtags\033[0m   : %s\n%s\n"
 #define OUTPUT_NTTY "[%s]\ncreated: %s\nfile   : %s\ntags   :%s\n%s\n"
 
+#define OUTPUT_TTY_SHORT  "\033[34m%s\033[0m, \033[36mtags\033[0m: %s\n"
+#define OUTPUT_NTTY_SHORT "%s, tags: %s\n"
+
 // return IO_ERROR if failed to open note
 // return RESULT_EMPTY if note is empty
 // return 0 otherwise
@@ -74,7 +77,7 @@ cleanup:
 }
 
 
-static inline int ls_with_key_tag(const int tty, const char* list, const char* subdir, const char* match, const int nkeys, char* const* keys, const int ntags, char* const* tags){
+static inline int ls_with_key_tag(const int tty, const char* list, const char* subdir, const char* match, const int has_short, const int nkeys, char* const* keys, const int ntags, char* const* tags){
     FILE*      fp           = NULL;
     ListField* field_by_key = NULL;
     ListField* field_by_tag = NULL;
@@ -147,19 +150,7 @@ static inline int ls_with_key_tag(const int tty, const char* list, const char* s
     }
 
     for (j = 0; j < nconts; j = j + 1){
-        if (first_echo == false){
-            putchar('\n');
-        }
-        first_echo = false;
-
         work_list = &field_merged[j];
-
-        result = get_first_line(work_list->file, LS_LINE_LEN, first_line);
-        if (result == IO_ERROR){
-            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, work_list->file, strerror(errno));
-            ret = IO_ERROR;
-            goto cleanup;
-        }
 
         if (work_list->meta != NULL){
             result = parse_meta(work_list->meta, &date, &ntags_all, &tags_all);
@@ -187,10 +178,30 @@ static inline int ls_with_key_tag(const int tty, const char* list, const char* s
             goto cleanup;
         }
 
-        if (tty){
-            printf(OUTPUT_TTY , work_list->key, date, work_list->file, tagline, first_line);
+        if (has_short == true){
+            if (tty){
+                printf(OUTPUT_TTY_SHORT , work_list->key, tagline);
+            } else{
+                printf(OUTPUT_NTTY_SHORT, work_list->key, tagline);
+            }
         } else{
-            printf(OUTPUT_NTTY, work_list->key, date, work_list->file, tagline, first_line);
+            if (first_echo == false){
+                putchar('\n');
+            }
+            first_echo = false;
+
+            result = get_first_line(work_list->file, LS_LINE_LEN, first_line);
+            if (result == IO_ERROR){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, work_list->file, strerror(errno));
+                ret = IO_ERROR;
+                goto cleanup;
+            }
+
+            if (tty){
+                printf(OUTPUT_TTY , work_list->key, date, work_list->file, tagline, first_line);
+            } else{
+                printf(OUTPUT_NTTY, work_list->key, date, work_list->file, tagline, first_line);
+            }
         }
         XFREE(tags_all);
         XFREE(tagline);
@@ -227,7 +238,7 @@ cleanup:
 }
 
 
-static inline int ls_without_key_tag(const int tty, const char* list, const char* subdir){
+static inline int ls_without_key_tag(const int tty, const char* list, const char* subdir, const int has_short){
     FILE*  fp        = NULL;
     char*  line      = NULL;
     char** tags_all  = NULL;
@@ -253,32 +264,11 @@ static inline int ls_without_key_tag(const int tty, const char* list, const char
     }
 
     while (getline(&line, &size, fp) != -1){
-        if (first_echo == false){
-            putchar('\n');
-        }
-        first_echo = false;
-
         work_line = line;
         result = parse_line(&work_line, &key, &file, &meta);
         if (result == LIST_FORMAT_ERROR){
             fprintf(stderr, "%s: List file is broken\n", PACKAGE_NAME);
             ret = LIST_FORMAT_ERROR;
-            goto cleanup;
-        }
-
-        result = file_to_abs(subdir, file, &work_file);
-        if (result != 0){
-            if (result == MALLOC_ERROR){
-                fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
-                ret = MALLOC_ERROR;
-            }
-            goto cleanup;
-        }
-
-        result = get_first_line(work_file, LS_LINE_LEN, first_line);
-        if (result == IO_ERROR){
-            fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, file, strerror(errno));
-            ret = IO_ERROR;
             goto cleanup;
         }
 
@@ -302,13 +292,42 @@ static inline int ls_without_key_tag(const int tty, const char* list, const char
         }
         XFREE(tags_all);
 
-        if (tty){
-            printf(OUTPUT_TTY , key, date, work_file, tagline, first_line);
+        if (has_short == true){
+            if (tty){
+                printf(OUTPUT_TTY_SHORT , key, tagline);
+            } else{
+                printf(OUTPUT_NTTY_SHORT, key, tagline);
+            }
         } else{
-            printf(OUTPUT_NTTY, key, date, work_file, tagline, first_line);
+            result = file_to_abs(subdir, file, &work_file);
+            if (result != 0){
+                if (result == MALLOC_ERROR){
+                    fprintf(stderr, "%s: %s\n", PACKAGE_NAME, strerror(errno));
+                    ret = MALLOC_ERROR;
+                }
+                goto cleanup;
+            }
+
+            result = get_first_line(work_file, LS_LINE_LEN, first_line);
+            if (result == IO_ERROR){
+                fprintf(stderr, "%s: %s: %s\n", PACKAGE_NAME, file, strerror(errno));
+                ret = IO_ERROR;
+                goto cleanup;
+            }
+
+            if (first_echo == false){
+                putchar('\n');
+            }
+            first_echo = false;
+
+            if (tty){
+                printf(OUTPUT_TTY , key, date, work_file, tagline, first_line);
+            } else{
+                printf(OUTPUT_NTTY, key, date, work_file, tagline, first_line);
+            }
+            XFREE(work_file);
         }
         XFREE(tagline);
-        XFREE(work_file);
     }
 
     if (ferror(fp)){
@@ -343,7 +362,7 @@ cleanup:
 // return KEY_NOT_FOUND if one or more flags is not found
 // return UNKNOWN_ERROR if error handling is not enough
 // return 0 otherwise
-int ls(const char* list, const char* subdir, const char* match, int nkeys, char** keys, int ntags, char** tags){
+int ls(const char* list, const char* subdir, const char* match, const int has_short, int nkeys, char** keys, int ntags, char** tags){
     struct stat st;
     int    tty;
     int    result;
@@ -378,13 +397,13 @@ int ls(const char* list, const char* subdir, const char* match, int nkeys, char*
         ret = INPUT_ERROR;
         goto cleanup;
     } else if (nkeys > 0 || ntags > 0){
-        result = ls_with_key_tag(tty, list, subdir, match, nkeys, keys, ntags, tags);
+        result = ls_with_key_tag(tty, list, subdir, match, has_short, nkeys, keys, ntags, tags);
         if (result != 0){
             ret = result;
             goto cleanup;
         }
     } else{
-        result = ls_without_key_tag(tty, list, subdir);
+        result = ls_without_key_tag(tty, list, subdir, has_short);
         if (result != 0){
             ret = result;
             goto cleanup;

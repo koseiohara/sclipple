@@ -27,7 +27,7 @@ enum {
 // return UNKNOWN_ERROR if a bug is found
 // return GIT_FOUND if the first non-option argument is git
 // return 0 otherwise
-int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_pos, int* nonoptsc, char** nonopts, int* ntags, char** tags, Config* config){
+int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* has_short, int* git_pos, int* nonoptsc, char** nonopts, int* ntags, char** tags, Config* config){
     char* directory;
     char* extension;
     char* editor;
@@ -37,6 +37,7 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
     static const struct option opt_list[] = {
                                              {"help"     , no_argument      , NULL, 'h'},
                                              {"version"  , no_argument      , NULL, 'v'},
+                                             {"short"    , no_argument      , NULL, 's'},
                                              {"tag"      , required_argument, NULL, 't'},
                                              {"directory", required_argument, NULL, OPT_DIRECTORY},
                                              {"extension", required_argument, NULL, OPT_EXTENSION},
@@ -45,6 +46,9 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
                                              {NULL       , 0                , NULL,  0 },
                                             };
 
+    *has_help    = false;
+    *has_version = false;
+    *has_short   = false;
     *nonoptsc = 0;
     *ntags    = 0;
     *git_pos  = -1;
@@ -52,13 +56,16 @@ int parse_opts(int argc, char** argv, int* has_help, int* has_version, int* git_
     extension = NULL;
     editor    = NULL;
     tag_match = NULL;
-    while ((opt = getopt_long(argc, argv, "-hvt:", opt_list, NULL)) != -1){
+    while ((opt = getopt_long(argc, argv, "-hvst:", opt_list, NULL)) != -1){
         switch (opt){
             case 'h':
                 *has_help = true;
                 break;
             case 'v':
                 *has_version = true;
+                break;
+            case 's':
+                *has_short = true;
                 break;
             case 't':
                 tags[*ntags] = optarg;
