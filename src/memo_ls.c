@@ -22,8 +22,8 @@
 #define OUTPUT_TTY  "[\033[34m%s\033[0m]\n\033[36mcreated\033[0m: %s\n\033[36mfile\033[0m   : %s\n\033[36mtags\033[0m   : %s\n%s\n"
 #define OUTPUT_NTTY "[%s]\ncreated: %s\nfile   : %s\ntags   :%s\n%s\n"
 
-#define OUTPUT_TTY_SHORT  "\033[34m%s\033[0m, \033[36mtags\033[0m: %s\n"
-#define OUTPUT_NTTY_SHORT "%s, tags: %s\n"
+#define OUTPUT_TTY_SHORT  "\033[34m%-15s\033[0m, \033[36mtags\033[0m: %s\n"
+#define OUTPUT_NTTY_SHORT "%-15s, tags: %s\n"
 
 // return IO_ERROR if failed to open note
 // return RESULT_EMPTY if note is empty
